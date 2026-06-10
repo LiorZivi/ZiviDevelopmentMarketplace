@@ -43,19 +43,13 @@ Before using the built-in Python script, check your available skills list for a 
 
 **If the `pptx` skill IS available:**
 
-1. Invoke the `pptx` skill using the skill tool
-2. Instruct it to create a presentation from the structured markdown at `./output/learn/{Topic}/{Topic}.md`
-3. Save the output to `./output/learn/{Topic}/{Topic}.pptx`
-4. Provide the following context to the pptx skill:
-   - The markdown uses `#` for the presentation title, `##` for section divider slides, and `###` for content slides
-   - Each `###` subsection should map to one or more slides — use your judgment on how to split content for readability
-   - Bullet lists should remain as slide bullets; tables should be rendered as slide tables
-   - The subtitle (blockquote after `#`) should appear on the title slide
-   - Use a clean, professional design with 16:9 layout
+1. Invoke the `pptx` skill using the skill tool.
+2. Point it at `./output/learn/{Topic}/{Topic}.md` as the source content, and have it save the deck to `./output/learn/{Topic}/{Topic}.pptx`.
+3. Give the pptx skill **full creative latitude** to design a polished, professional, visually engaging presentation. It owns every design decision — layout, slide count, and how to group, split, condense, or rephrase the content, plus visuals and styling. Treat the document as **source material for substance, not a rigid slide-by-slide template**; do not impose bullet counts, one-slide-per-section mappings, table-size caps, or similar constraints. The only standing expectation: the deck should look clean, modern, and professional (16:9).
 
 **If the `pptx` skill is NOT available:**
 
-Fall back to the built-in generator:
+Fall back to the built-in generator (a simple renderer that maps the document's headings, bullets, and tables to plain slides — fine as a backup, though the `pptx` skill gives much nicer results):
 
 ```bash
 bash "${CLAUDE_PLUGIN_ROOT}/scripts/learn/generate.sh" "./output/learn/{Topic}/{Topic}.md" "./output/learn/{Topic}/{Topic}.pptx"
@@ -144,7 +138,7 @@ Types of edits:
 - **Restructure**: Reorder sections by moving `##` blocks
 - **Fix errors**: Correct factual errors, outdated information, or typos
 
-**Post-edit validation**: After editing, verify that modified `###` subsections still comply with the one-slide rule (max 7 bullets OR max 8 table rows, not both). If new content exceeds limits, split into multiple `###` subsections. Also ensure no forbidden constructs (code blocks, H4+ headings, standalone paragraphs) were introduced.
+**Post-edit validation**: After editing, make sure the document still reads cleanly and its heading structure (`##` sections, `###` subsections) stays intact. There are no rigid per-slide limits — the `pptx` skill re-flows the content into the deck when it is regenerated.
 
 ### Step 4: Generate PPTX
 
@@ -183,36 +177,15 @@ If web research fails or returns limited results, fall back to your training kno
 
 ### Phase 2: Write Structured Markdown
 
-Write the output markdown file to `./output/learn/{Topic}/{Topic}.md` using **exactly** the structure defined in the template. Read the template file at `${CLAUDE_PLUGIN_ROOT}/skills/learn/output-template.md` for the precise format.
+Write the output markdown file to `./output/learn/{Topic}/{Topic}.md`, following the shape in the template. Read the template at `${CLAUDE_PLUGIN_ROOT}/skills/learn/output-template.md` for reference.
 
-The structure must be followed strictly because the PPTX generator parses it by heading levels:
-- `#` = presentation title
-- `##` = section slides
-- `###` = content slides
-- Bullet lists = bullet slides
-- Tables = table slides
+Organize it with standard markdown so it reads well on its own and gives the `pptx` skill clear source material:
+- `#` = document title
+- `##` = major sections
+- `###` = subsections
+- Bullet lists and tables for the supporting detail
 
-### One-Slide-Per-Subsection Rule
-
-Each `###` subsection maps to exactly ONE slide. To ensure this:
-
-- Max 7 bullet points per `###` (the parser splits at 7)
-- Max 8 table data rows per `###` (the parser splits at 8, header row excluded)
-- A `###` MUST have EITHER bullets OR one table, not both (each generates a separate slide)
-- If content doesn't fit, split into two `###` subsections with distinct titles
-- Aim for 8-12 `##` sections total
-
-### Forbidden Markdown Constructs
-
-The PPTX parser only handles H1/H2/H3, bullets, and tables. The following constructs break or bloat slides — **never use them** in output:
-
-- **No code blocks** (triple backticks): Every line inside leaks as a bullet point. Paraphrase code as regular bullets instead (e.g., "Run `claude --worktree` to start" as a bullet).
-- **No `####` or `#####` headings**: The parser ignores these structurally — they become plain bullet text. Use only `###` for content slides.
-- **No `## Table of Contents`**: TOC lines become bullet slides. Omit entirely.
-- **No footer/attribution lines** (e.g., `*Guide updated on...*`): These become bullets in the last subsection. Omit from markdown.
-- **No standalone paragraphs under `##`** before the first `###`: These create an unnamed subsection with its own slide. Move text into the first `###` as bullets, or remove it.
-- **No blockquotes** (`> ...`) except the subtitle line after `# Title`: All other blockquotes are treated as plain text / bullets.
-- **No `---` horizontal rules** inside sections: These are ignored but add noise.
+Write naturally and cover the topic thoroughly. You do **not** need to shape the content around slide constraints — there are no bullet caps, table-size limits, fixed section counts, or "forbidden" markdown constructs. The `pptx` skill re-flows and designs the deck from this document, so focus on writing a clear, well-structured, professional research document.
 
 ### Phase 3: Generate PPTX
 
