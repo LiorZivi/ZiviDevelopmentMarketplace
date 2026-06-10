@@ -1,0 +1,10 @@
+{
+  "name": "general-ops",
+  "version": "1.9.0",
+  "description": "Bidirectional Copilot CLI ↔ Microsoft Teams bridge via the Teams MCP. Step away from the terminal and keep the agent running by chatting with it through a Teams channel thread — progress posts flow out via MCP, replies auto-inject back in.",
+  "author": {
+    "name": "lizi@microsoft.com"
+  },
+  "keywords": ["teams", "teams-mcp", "remote-work", "copilot-cli", "bidirectional-chat", "infra", "ops"],
+  "hooks": "./hooks/hooks.json"
+}

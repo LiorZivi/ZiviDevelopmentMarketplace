@@ -1,0 +1,9 @@
+{
+  "name": "cmops",
+  "version": "1.0.0",
+  "description": "Azure DevOps CI/CD operations for Kusto Cluster Management — monitor builds, gate PRs, auto-merge when pipelines turn green, and challenge AI code review comments.",
+  "author": {
+    "name": "lizi@microsoft.com"
+  },
+  "keywords": ["devops", "ci-cd", "kusto", "build-monitor", "pr-automation"]
+}

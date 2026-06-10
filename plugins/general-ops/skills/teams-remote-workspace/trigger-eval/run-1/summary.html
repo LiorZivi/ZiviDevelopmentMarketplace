@@ -1,0 +1,228 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Trigger Eval — teams-remote</title>
+<style>
+:root { color-scheme: light dark; }
+body { font-family: ui-sans-serif, -apple-system, system-ui, sans-serif; max-width: 1100px;
+       margin: 24px auto; padding: 0 16px; line-height: 1.45; }
+h1 { margin: 0 0 8px; }
+.sub { color: #777; margin-bottom: 16px; font-size: 13px; }
+.summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+                gap: 12px; margin: 16px 0 24px; }
+.metric { padding: 12px 14px; border: 1px solid #8884; border-radius: 8px; }
+.metric .label { font-size: 11px; text-transform: uppercase; letter-spacing: .5px; color: #888; }
+.metric .value { font-size: 22px; font-weight: 600; margin-top: 4px; }
+.metric.good { background: #2ecc7115; }
+.metric.bad  { background: #e74c3c15; }
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid #8883; vertical-align: top; }
+th { font-size: 11px; text-transform: uppercase; letter-spacing: .5px; color: #777; }
+.q { font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 12px;
+      white-space: pre-wrap; max-width: 560px; }
+.tag { font-size: 11px; color: #888; margin-top: 4px; }
+.pass { color: #2ecc71; font-weight: 600; }
+.fail { color: #e74c3c; font-weight: 600; }
+.miss { background: #e74c3c10; }
+.bool-y { color: #2ecc71; font-weight: 600; }
+.bool-n { color: #888; }
+details summary { cursor: pointer; }
+.confusion { display: inline-grid; grid-template-columns: auto auto auto; gap: 0; margin: 12px 0;
+              border: 1px solid #8884; }
+.confusion div { padding: 8px 12px; border: 1px solid #8884; min-width: 80px; text-align: center; }
+.confusion .hd { background: #8881; font-weight: 600; font-size: 12px; }
+</style>
+<h1>Trigger Eval — <code>teams-remote</code></h1>
+<div class="sub">20 queries · model: <code>(default)</code></div>
+
+<div class="summary-grid">
+  <div class="metric "><div class="label">Accuracy</div>
+    <div class="value">75% <span style="font-size:13px;font-weight:400;color:#888">(15/20)</span></div></div>
+  <div class="metric"><div class="label">Trigger recall</div>
+    <div class="value">100%</div></div>
+  <div class="metric"><div class="label">Non-trigger specificity</div>
+    <div class="value">50%</div></div>
+  <div class="metric bad"><div class="label">False positives</div>
+    <div class="value">5</div></div>
+  <div class="metric good"><div class="label">False negatives</div>
+    <div class="value">0</div></div>
+</div>
+
+<h3>Confusion matrix</h3>
+<div class="confusion">
+  <div class="hd"></div><div class="hd">predicted&nbsp;trigger</div><div class="hd">predicted&nbsp;skip</div>
+  <div class="hd">should trigger</div><div>10</div><div>0</div>
+  <div class="hd">should skip</div><div>5</div><div>5</div>
+</div>
+
+<h3>Results</h3>
+<table>
+<thead><tr>
+  <th>#</th><th>Query</th><th>Expected</th><th>Triggered</th>
+  <th>Skill invoked</th><th>Time (s)</th>
+</tr></thead>
+<tbody>
+<tr class="">
+  <td>1</td>
+  <td><div class="q">ok i need to step into a 90-min planning meeting but the refactor we&#x27;re in the middle of matters. keep going while I&#x27;m away — post updates to my Teams so I can check my phone during the boring bits. The team is &#x27;Platform Eng&#x27; and the channel is &#x27;copilot-remote&#x27;. when I send replies from Teams treat them as instructions.</div><div class="tag">activation: stepping away + post progress</div></td>
+  <td><span class="bool-y">trigger</span></td>
+  <td><span class="bool-y">yes</span></td>
+  <td><code>teams-remote</code></td>
+  <td>50.4</td>
+</tr>
+<tr class="">
+  <td>2</td>
+  <td><div class="q">i&#x27;m headed into a meeting in 5 — please post progress to teams as you go and i&#x27;ll catch up there</div><div class="tag">activation: headed into meeting</div></td>
+  <td><span class="bool-y">trigger</span></td>
+  <td><span class="bool-y">yes</span></td>
+  <td><code>teams-remote</code></td>
+  <td>60.5</td>
+</tr>
+<tr class="">
+  <td>3</td>
+  <td><div class="q">afk mode for the next hour, ping me in teams when you have updates</div><div class="tag">activation: afk mode + ping me</div></td>
+  <td><span class="bool-y">trigger</span></td>
+  <td><span class="bool-y">yes</span></td>
+  <td><code>teams-remote</code></td>
+  <td>58.9</td>
+</tr>
+<tr class="">
+  <td>4</td>
+  <td><div class="q">switch to teams-remote against the LiziTestTeam_MainChannel and keep going on the bug fix while i grab lunch</div><div class="tag">activation: literal teams-remote</div></td>
+  <td><span class="bool-y">trigger</span></td>
+  <td><span class="bool-y">yes</span></td>
+  <td><code>teams-remote</code></td>
+  <td>59.2</td>
+</tr>
+<tr class="">
+  <td>5</td>
+  <td><div class="q">continue in teams - team is &#x27;Platform Eng&#x27;, channel &#x27;copilot-remote&#x27;. i&#x27;ll check in from my phone</div><div class="tag">activation: continue in teams</div></td>
+  <td><span class="bool-y">trigger</span></td>
+  <td><span class="bool-y">yes</span></td>
+  <td><code>teams-remote</code></td>
+  <td>53.1</td>
+</tr>
+<tr class="">
+  <td>6</td>
+  <td><div class="q">i&#x27;m stepping away from the terminal for an hour, talk to me in teams instead. the channel is copilot-remote</div><div class="tag">activation: stepping away</div></td>
+  <td><span class="bool-y">trigger</span></td>
+  <td><span class="bool-y">yes</span></td>
+  <td><code>teams-remote</code></td>
+  <td>62.1</td>
+</tr>
+<tr class="">
+  <td>7</td>
+  <td><div class="q">/teams-remote end</div><div class="tag">end: slash command literal</div></td>
+  <td><span class="bool-y">trigger</span></td>
+  <td><span class="bool-y">yes</span></td>
+  <td><code>teams-remote</code></td>
+  <td>65.0</td>
+</tr>
+<tr class="">
+  <td>8</td>
+  <td><div class="q">ok i&#x27;m back at the terminal, you can stop posting to teams now</div><div class="tag">end: back at terminal</div></td>
+  <td><span class="bool-y">trigger</span></td>
+  <td><span class="bool-y">yes</span></td>
+  <td><code>teams-remote</code></td>
+  <td>70.1</td>
+</tr>
+<tr class="">
+  <td>9</td>
+  <td><div class="q">done being remote, please wrap up and clean up the teams session</div><div class="tag">end: done being remote</div></td>
+  <td><span class="bool-y">trigger</span></td>
+  <td><span class="bool-y">yes</span></td>
+  <td><code>teams-remote</code></td>
+  <td>79.8</td>
+</tr>
+<tr class="">
+  <td>10</td>
+  <td><div class="q">back from afk - close out the teams-remote session and give me a summary here</div><div class="tag">end: back from afk</div></td>
+  <td><span class="bool-y">trigger</span></td>
+  <td><span class="bool-y">yes</span></td>
+  <td><code>teams-remote</code></td>
+  <td>89.2</td>
+</tr>
+<tr class="">
+  <td>11</td>
+  <td><div class="q">send a teams message to sarah@contoso.com saying the deploy is done</div><div class="tag">negative: ad-hoc teams message (not remote bridge)</div></td>
+  <td><span class="bool-n">skip</span></td>
+  <td><span class="bool-n">no</span></td>
+  <td><code>—</code></td>
+  <td>64.8</td>
+</tr>
+<tr class="">
+  <td>12</td>
+  <td><div class="q">post the build status to the #deploys channel in our Platform Eng team - just a one-off</div><div class="tag">negative: one-off channel post</div></td>
+  <td><span class="bool-n">skip</span></td>
+  <td><span class="bool-n">no</span></td>
+  <td><code>—</code></td>
+  <td>48.1</td>
+</tr>
+<tr class="">
+  <td>13</td>
+  <td><div class="q">list my recent teams chats and tell me which ones have unread messages</div><div class="tag">negative: read teams chats (not bridge)</div></td>
+  <td><span class="bool-n">skip</span></td>
+  <td><span class="bool-n">no</span></td>
+  <td><code>—</code></td>
+  <td>40.9</td>
+</tr>
+<tr class="miss">
+  <td>14</td>
+  <td><div class="q">what does the teams-remote skill actually do? walk me through it</div><div class="tag">negative: meta/explain question</div></td>
+  <td><span class="bool-n">skip</span></td>
+  <td><span class="bool-y">yes</span></td>
+  <td><code>teams-remote</code></td>
+  <td>76.5</td>
+</tr>
+<tr class="miss">
+  <td>15</td>
+  <td><div class="q">can you stop polling for new replies in the channel? the rate limit is going to bite us</div><div class="tag">negative: ambiguous &#x27;stop&#x27; but no active session</div></td>
+  <td><span class="bool-n">skip</span></td>
+  <td><span class="bool-y">yes</span></td>
+  <td><code>teams-remote</code></td>
+  <td>63.1</td>
+</tr>
+<tr class="">
+  <td>16</td>
+  <td><div class="q">i&#x27;m going afk for 5 minutes, please don&#x27;t break anything</div><div class="tag">negative: afk without remote-bridge intent</div></td>
+  <td><span class="bool-n">skip</span></td>
+  <td><span class="bool-n">no</span></td>
+  <td><code>—</code></td>
+  <td>61.6</td>
+</tr>
+<tr class="">
+  <td>17</td>
+  <td><div class="q">i need to step away from this PR review for a sec - hold the comments until i&#x27;m back</div><div class="tag">negative: stepping away in unrelated context</div></td>
+  <td><span class="bool-n">skip</span></td>
+  <td><span class="bool-n">no</span></td>
+  <td><code>—</code></td>
+  <td>34.5</td>
+</tr>
+<tr class="miss">
+  <td>18</td>
+  <td><div class="q">the teams MCP server is returning -32001 timeouts on every call. how do i refresh the OAuth token by hand?</div><div class="tag">negative: debugging teams MCP, not bridging</div></td>
+  <td><span class="bool-n">skip</span></td>
+  <td><span class="bool-y">yes</span></td>
+  <td><code>teams-remote</code></td>
+  <td>61.7</td>
+</tr>
+<tr class="miss">
+  <td>19</td>
+  <td><div class="q">post a message to teams saying &#x27;session ended&#x27; - i don&#x27;t need a bridge, just one message</div><div class="tag">negative: one-off post mentioning &#x27;session ended&#x27;</div></td>
+  <td><span class="bool-n">skip</span></td>
+  <td><span class="bool-y">yes</span></td>
+  <td><code>teams-remote</code></td>
+  <td>70.5</td>
+</tr>
+<tr class="miss">
+  <td>20</td>
+  <td><div class="q">disable the github copilot extension in vscode for this workspace</div><div class="tag">negative: disable mode for unrelated tool</div></td>
+  <td><span class="bool-n">skip</span></td>
+  <td><span class="bool-y">yes</span></td>
+  <td><code>teams-remote</code></td>
+  <td>107.9</td>
+</tr>
+</tbody>
+</table>
+
+<h3>Per-log details</h3>
+<p style="color:#888;font-size:12px">Raw JSONL streams from <code>copilot -p</code> are saved alongside this file under <code>logs/qNN.jsonl</code>.</p>

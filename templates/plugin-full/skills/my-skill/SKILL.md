@@ -1,0 +1,15 @@
+---
+name: my-skill
+description: SKILL_DESCRIPTION — when should Claude load this skill?
+argument-hint: "[args]"
+user-invocable: true
+allowed-tools: Read, Grep, Glob
+---
+
+# My Skill
+
+Your skill instructions here. Claude follows these when the skill is invoked.
+
+Arguments provided by the user: `$ARGUMENTS`
+
+Plugin root directory: `${CLAUDE_PLUGIN_ROOT}`

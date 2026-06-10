@@ -1,0 +1,27 @@
+{
+  "prompt": "User invokes /teams-remote against LiziTestTeam_MainChannel. Skill should: post root message, poll for replies, when user posts \"say hello world\" the agent should respond \"hello world\" in the thread, then on end command post a summary.",
+  "assertions": [
+    {
+      "type": "manual",
+      "text": "Root activation message posted to LiziTestTeam_MainChannel"
+    },
+    {
+      "type": "manual",
+      "text": "Skill detects user reply \"say hello world\" via polling"
+    },
+    {
+      "type": "manual",
+      "text": "Agent posts \"hello world\" answer in thread (via ack or follow-up reply)"
+    },
+    {
+      "type": "manual",
+      "text": "End flow posts summary message to thread"
+    },
+    {
+      "type": "auto",
+      "text": "State file is deleted after end --step finalize"
+    }
+  ],
+  "eval_id": 0,
+  "eval_name": "full-loop-against-LiziTestTeam_MainChannel"
+}

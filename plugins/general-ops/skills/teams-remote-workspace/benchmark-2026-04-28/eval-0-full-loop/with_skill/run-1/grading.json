@@ -1,0 +1,49 @@
+{
+  "expectations": [
+    {
+      "id": "root_activation_posted",
+      "text": "Root activation message posted to LiziTestTeam_MainChannel",
+      "passed": true,
+      "evidence": "Root message id 1777382238949 posted via teams-SendMessageToChannel at 2026-04-28T13:17:18Z. See transcript/02_post_root_response.json. activate.py --step finalize confirmed state with team_id, channel_id, root_message_id."
+    },
+    {
+      "id": "skill_detects_reply_via_polling",
+      "text": "Skill detects user reply \"say hello world\" via polling",
+      "passed": true,
+      "evidence": "poll.py --step tick emitted MCP envelope (transcript/04_poll_tick.json). User reply id 1777382561635 ('say hello world eval test') retrieved via teams-ListChannelMessageReplies (transcript/05_replies.json). Reply was advanced into seen_reply_ids and last_processed_id in state."
+    },
+    {
+      "id": "agent_posts_hello_world_in_thread",
+      "text": "Agent posts \"hello world\" answer in thread (via ack or follow-up reply)",
+      "passed": true,
+      "evidence": "Agent posted reply id 1777382778442 with content '@Lior Zivi Copilot agent message: hello world' (contentType=text, mentions array with the user GUID) — honors all three skill rules (literal prefix, leading mention, mentions arg). See transcript/07_ack_response.json. Recorded via poll.py --step record-own."
+    },
+    {
+      "id": "end_flow_posts_summary",
+      "text": "End flow posts summary message to thread",
+      "passed": true,
+      "evidence": "end.py --step run produced post_summary envelope (transcript/08_end_run.json). Summary reply id 1777383018397 posted at 2026-04-28T13:30:18Z via teams-ReplyToChannelMessage (transcript/09_summary_response.json)."
+    },
+    {
+      "id": "state_file_deleted_after_finalize",
+      "text": "State file is deleted after end --step finalize",
+      "passed": true,
+      "evidence": "end.py --step finalize returned {action: ok}. Post-run dir listing of %TEMP%/general-ops/teams-remote/ shows no eval-20260428155629.json file. See transcript/10_end_finalize.json."
+    }
+  ],
+  "score": "5/5",
+  "summary": {
+    "passed": 5,
+    "failed": 0,
+    "total": 5,
+    "pass_rate": 1.0
+  },
+  "timing": {
+    "total_duration_seconds": 780
+  },
+  "notes": [
+    "MCP tool name in skill manifest references teams-PostChannelMessage but agency server exposes teams-SendMessageToChannel — used real tool name.",
+    "user_mention_id was empty after activation; had to call poll.py --step set-user-mention before composing the ack.",
+    "End summary template embeds <at>Lior Zivi</at> as raw HTML rather than via Graph mention markup — accepted but rendered as plain text."
+  ]
+}

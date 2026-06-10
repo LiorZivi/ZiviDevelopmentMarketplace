@@ -1,0 +1,882 @@
+Part 1/3 (lines 1-264)
+---
+name: phone-mode
+description: >
+  Operates phone mode — a feature that lets users communicate with their Copilot CLI agent via a
+  private Microsoft Teams channel from their phone. Handles activation, polling for messages,
+  token refresh, deactivation, and channel cleanup. Invoke when the user says "phone mode on",
+  "start phone mode", "turn on phone mode", or asks to activate phone mode.
+---
+# Phone Mode Runtime
+Phone mode lets users interact with their Copilot CLI agent from their phone via a private Teams
+channel. All messages flow through the Teams MCP server using delegated auth.
+## Cross-Platform Notes
+This skill is used on both **Windows** and **macOS**. Code examples use PowerShell syntax, which
+works on both platforms (Copilot CLI uses PowerShell on all OSes). Key differences to be aware of:
+| Concern | Windows | macOS |
+|---------|---------|-------|
+| Home directory | `$env:USERPROFILE` | `$HOME` or `~` |
+| Config path | `~/.copilot/` | `~/.copilot/` (same) |
+| Path separators | `\` | `/` |
+| Shell | PowerShell | PowerShell (same — Copilot CLI uses pwsh) |
+| MCP tools | Same | Same |
+When running on macOS, use `$HOME` instead of `$env:USERPROFILE` and `/` path separators.
+The `~/.copilot/` shorthand works on both platforms.
+## Auth Failure Recovery (IMPORTANT — read first on any Teams error)
+When **any** Teams MCP tool call fails with an auth/token error — including `AADSTS*` codes,
+scope mismatch (`AADSTS9010010`), expired token (`AADSTS500133`), or HTTP 401 — follow this
+procedure **immediately**. Do NOT try alternative auth methods (`az account get-access-token`,
+Graph API direct calls, etc.) — those will not work for Teams MCP.
+1. **Refresh the token** using the [Token Refresh](#token-refresh) procedure below
+2. **Use direct HTTP** for all subsequent Teams calls until the CLI session is restarted
+   (the CLI caches the old token in memory and won't pick up the refreshed one)
+3. If refresh itself fails (e.g., refresh token expired), inform the user to run
+   `/mcp edit teams` + Ctrl+S to re-auth
+This is the **only** recovery path. The agent must not waste time on other approaches.
+## Channel Info
+Read the team ID, channel ID, and notifier bot chat ID from `~/.copilot/copilot-instructions.md`
+(in the phone mode section). If any placeholder (`<TEAM_ID>` / `<CHANNEL_ID>` / `<BOT_CHAT_ID>`)
+is still present, run the `setup-phone-mode` skill first.
+## Activation
+1. **First activation in this session** (no prior thread): Post a top-level message to the channel
+   via `postChannelMessage`. The message text should be a short title/summary of the current
+   session context (e.g., `TpRouter enrichment batching setup`). No emoji, no boilerplate.
+   Save the returned **message ID** — all subsequent replies go in this thread via
+   `replyToChannelMessage`.
+2. **Resuming** (thread was previously created in this session, e.g., after a CLI override):
+   Reuse the existing thread ID. Do NOT create a new thread.
+3. Post a reply to the thread:
+   `🤖 [Copilot]: Phone mode ON. Send messages here and I'll respond.`
+4. **Before starting the polling loop**, check the thread for unread user messages (replies not
+   starting with `🤖 [Copilot]:` posted after your last reply). Process them first, then start
+   polling.
+## Time Zone Rule
+When communicating times to the user (scheduling reports, mentioning deadlines, etc.):
+1. **Always use the local machine time zone** — detect it with `[System.TimeZoneInfo]::Local`
+2. **Never use UTC** when talking to the user — convert to local time first
+3. When scheduling a future action (e.g., "I'll report at 17:00"), verify the time zone:
+   ```powershell
+   $targetLocal = Get-Date "17:00"  # This is local time
+   $now = Get-Date
+   if ($targetLocal -lt $now) { $targetLocal = $targetLocal.AddDays(1) }  # Handle past-time (next day)
+   $wait = ($targetLocal - $now).TotalMinutes
+   $tzLabel = [System.TimeZoneInfo]::Local.DisplayName
+   Write-Output "Target: $($targetLocal.ToString('HH:mm')) ($tzLabel), $([math]::Round($wait)) min from now"
+   ```
+4. Before running a scheduled action, double-check the current local time matches the target
+## Polling Loop
+### Exponential Backoff Schedule
+`30s → 60s → 5min → 10min (repeat 10min)`
+Reset to 30s when a user message is found.
+### Implementation
+Start a persistent async PowerShell loop that emits ticks:
+```powershell
+while ($true) { Start-Sleep -Seconds 5; Write-Output "POLL_TICK" }
+```
+Use `read_powershell` with `delay` set to the current backoff interval (30, 60, 300, or 600
+seconds). After each read, call `listChannelMessages` to check for new user replies.
+**CRITICAL: Check for messages on EVERY poll cycle.** This is the primary purpose of the
+polling loop — not just keeping the session alive. Even if the agent is sleeping/waiting for
+a timer, deployment, or other long-running operation, every single `read_powershell` cycle
+must be followed by a `listChannelMessages` call to check for new user messages. The user
+may be trying to communicate (change instructions, ask questions, stop a task) and has no
+other way to reach the agent. Skipping message checks turns phone mode into a one-way channel.
+**Key**: Do NOT use a single `Start-Sleep` per poll — the shell exits and the agent loses its
+turn. The persistent loop keeps the agent actively waiting via `read_powershell`.
+Max reliable `read_powershell` delay: **10 minutes**. Warn the user if they request longer
+intervals.
+### Co-existence with sleep timers and long-running tasks
+When phone mode is active alongside a sleep timer, deployment monitor, or any other
+long-running wait, the agent must **never stop checking for messages**. The polling loop
+is the message-checking mechanism — every `read_powershell` cycle must include a
+`listChannelMessages` call regardless of what else the agent is waiting for.
+If phone mode is active alongside another skill that has its own polling loop (e.g., a
+deployment monitor), integrate phone mode message checking into that skill's polling loop
+to avoid multiple concurrent tickers. The other skill should check for new phone mode
+messages on **every iteration** of its loop, process and reply to them, then continue its
+own work.
+Common anti-pattern: agent starts a sleep timer, then polls only for token refresh while
+ignoring the phone mode thread for hours. This silently breaks the user's ability to
+communicate.
+### CRITICAL: Do NOT idle-poll when you have pending work
+> **Polling is for WAITING, not for PROCRASTINATING.**
+When the user has given you a task (code investigation, PR creation, data analysis, etc.),
+you must **complete that work first**, then return to polling. Do NOT enter the polling loop
+while you have unfinished work items. The polling loop exists for when you are genuinely
+idle — waiting for a deployment, waiting for user input, or monitoring on a timer.
+**Anti-pattern (wastes hours):**
+```
+User asks to investigate X → reply "working on it" → start investigation →
+get partial results → go back to polling → idle for 10 min → check messages →
+idle for 10 min → ...  (investigation abandoned)
+```
+**Correct pattern:**
+```
+User asks to investigate X → reply "working on it" → complete full investigation →
+post results → check for messages → if no new messages, THEN poll
+```
+Only return to the polling loop when ALL pending tasks from the user are complete or
+explicitly blocked waiting for external input (deployment confirmation, user decision, etc.).
+Correct pattern: on every poll cycle (every 10 min at max backoff), the agent must:
+1. `read_powershell` on the polling loop
+2. Refresh token if needed (required before `listChannelMessages` can succeed)
+3. **Call `listChannelMessages` to check for new user messages**
+4. Process any new messages before continuing to wait
+### CRITICAL: Never End Turn Without Polling
+> **Phone mode is the user's ONLY communication channel.** Going silent is equivalent to
+> hanging up on them with no way for them to reach you.
+When phone mode is active, you **MUST** follow this rule after every action:
+1. After posting a reply → verify the reply landed via `listChannelMessages`.
+2. Once verified, send notification → call `read_powershell` on the polling loop. Do NOT end your turn with a text summary.
+3. After completing parallel work (PRs, code changes, Kusto queries) → return to the
+   polling loop via `read_powershell`. Never "finish" with a text response.
+4. After waking from a sleep timer → check for messages AND continue polling. The sleep
+   ending is not a stopping point — it's a checkpoint within an ongoing phone mode session.
+**Anti-pattern (causes missed messages):**
+```
+Post reply → Send notification → Write text summary to CLI → STOP
+```
+**Correct pattern:**
+```
+Post reply → Verify via listChannelMessages → Send notification → read_powershell(delay=currentBackoff) → Check messages → Continue polling
+```
+The key insight: in phone mode, your turn **never ends** until phone mode is explicitly
+deactivated or the user sends a CLI message. Every tool-calling turn, except for deactivation,
+must end with `read_powershell` on the polling loop, not with a text response.
+## Message Checking
+Call `listChannelMessages` with:
+- `teamId`: the configured team ID
+- `channelId`: the configured channel ID
+- `expand`: `"replies"`
+- `top`: `5`
+Use `top: 5` (not 1) to ensure the session thread is found even if other sessions created
+newer threads.
+### Identifying new messages
+- Track the **message ID** (not timestamp) of the last processed user reply. Message IDs are
+  monotonically increasing numbers, making them reliable for comparison.
+- Only consider replies with ID greater than the last processed ID: `[long]$_.id -gt $lastProcessedId`
+- **Do NOT use string comparison on `createdDateTime`** — this is a common bug. String comparison
+  of ISO 8601 timestamps can silently return wrong results. If you must compare times, always
+  parse first: `[DateTime]::Parse($_.createdDateTime) -gt [DateTime]::Parse($lastTime)`
+- Skip replies whose content (after HTML stripping) starts with `🤖` — those are yours.
+- **Process ALL new user replies chronologically**, not just the latest.
+```powershell
+# ✅ CORRECT: Compare message IDs (numeric, monotonically increasing)
+$newReplies = $threadReplies | Where-Object {
+    ($_.body.content -replace '<[^>]+>','') -notmatch '^🤖' -and
+    [long]$_.id -gt $lastProcessedMessageId
+}
+# ❌ WRONG: String comparison of timestamps (silently fails)
+# $newReplies = $threadReplies | Where-Object { $_.createdDateTime -gt $lastTime }
+```
+### Mobile HTML stripping
+Teams mobile wraps messages in `<p>` tags. Strip HTML tags from incoming replies before
+processing:
+```powershell
+$text = $reply.body.content -replace '<[^>]+>', ''
+```
+### CRITICAL: Required message checking implementation
+Do NOT write ad-hoc message checking code. Use the exact pattern above — the filter snippet
+with message ID comparison is the **required** implementation, not a suggestion.
+Common agent mistakes that cause missed messages:
+- Writing inline PowerShell that displays only the "last N" replies (`Select-Object -Last 3`)
+  instead of filtering all replies by ID
+- "Peeking" at the thread with truncated output instead of processing every new reply
+- Checking if the reply count changed instead of actually reading the new content
+On every message check cycle, the agent must:
+1. Get thread replies from `listChannelMessages`
+2. Filter to user replies with `[long]$_.id -gt $lastProcessedMessageId` (the exact snippet above)
+3. Process **ALL** matching replies chronologically — never truncate or skip
+4. Update `$lastProcessedMessageId` to the highest ID processed
+### Silent Failure Detection (CRITICAL)
+The most dangerous bug in phone mode is **the parser silently returning 0 results when
+messages exist**. The agent sees "0 new messages" and continues waiting, while the user is
+actively posting with no way to know the agent can't see them.
+**Mandatory safeguards:**
+1. **Null-check the parsed thread object.** If `$thread` or `$thread.replies` is `$null`,
+   that is a **parser failure**, not "no messages". Log a warning and retry with the native
+   MCP tool as fallback:
+ 
+Part 2/3 (lines 265-528)
+
+   ```powershell
+   if ($null -eq $thread) {
+       Write-Warning "PARSER FAILURE: Thread $threadId not found in parsed response"
+       Write-Warning "This likely means SSE response parsing failed — NOT that the thread is empty"
+       # Fall back to native MCP tool (listChannelMessages) which handles parsing internally
+   }
+   ```
+2. **Stale-check.** If `$lastProcessedMessageId` hasn't advanced in 30+ minutes and the
+   agent has been polling the whole time, something is wrong. Log a diagnostic:
+   ```powershell
+   $minutesSinceLastMessage = ((Get-Date) - $lastMessageTime).TotalMinutes
+   if ($minutesSinceLastMessage -gt 30 -and $newReplies.Count -eq 0) {
+       Write-Warning "STALE CHECK: No new messages in $([math]::Round($minutesSinceLastMessage)) min"
+       Write-Warning "Verify parser is working — try native MCP tool as cross-check"
+   }
+   ```
+3. **Cross-check reply count.** The parent thread message object has a reply count. If
+   `$thread.replies.Count` is 0 but `$thread` itself shows recent activity timestamps,
+   the replies weren't parsed:
+   ```powershell
+   if ($thread -and $thread.replies.Count -eq 0) {
+       $threadAge = (Get-Date) - [DateTime]::Parse($thread.lastModifiedDateTime)
+       if ($threadAge.TotalMinutes -lt 30) {
+           Write-Warning "Thread modified $([math]::Round($threadAge.TotalMinutes)) min ago but has 0 parsed replies — likely parser bug"
+       }
+   }
+   ```
+4. **Never treat parse errors as "no messages".** If `ConvertFrom-Json` throws, if the
+   response is `$null`, or if the thread lookup fails — these are **errors**, not empty
+   results. The agent must log the error and fall back to the native MCP tool, not silently
+   continue.
+### Complete Direct HTTP Message Check (reference implementation)
+When using direct HTTP after token refresh, use this complete function instead of writing
+ad-hoc parsing code. This function handles all known failure modes:
+```powershell
+function Check-PhoneModeMsgs {
+    param(
+        [string]$McpUrl,
+        [string]$AccessToken,
+        [string]$TeamId,
+        [string]$ChannelId,
+        [string]$ThreadId,
+        [long]$LastProcessedId
+    )
+    $headers = @{
+        "Authorization" = "Bearer $AccessToken"
+        "Content-Type"  = "application/json"
+        "Accept"        = "application/json, text/event-stream"
+    }
+    $body = @{
+        jsonrpc = "2.0"; id = 1; method = "tools/call"
+        params = @{
+            name = "listChannelMessages"
+            arguments = @{ teamId = $TeamId; channelId = $ChannelId; top = 5; expand = "replies" }
+        }
+    } | ConvertTo-Json -Depth 5
+    # Step 1: Make the HTTP call
+    try {
+        $resp = Invoke-WebRequest -Uri $McpUrl -Method POST -Headers $headers -Body $body
+    } catch {
+        Write-Warning "HTTP call failed: $_"
+        return @{ Success = $false; Error = "HTTP_FAILED"; NewReplies = @() }
+    }
+    # Step 2: Parse SSE response using the robust parser
+    $graphData = Parse-McpSseResponse -RawContent $resp.Content
+    if ($null -eq $graphData) {
+        Write-Warning "SSE parsing returned null — falling back to native MCP tool"
+        return @{ Success = $false; Error = "PARSE_FAILED"; NewReplies = @() }
+    }
+    # Step 3: Find the thread (Select-Object -First 1 to ensure single object, not array)
+    $messages = $graphData.value
+    $thread = $messages | Where-Object { $_.id -eq $ThreadId } | Select-Object -First 1
+    if ($null -eq $thread) {
+        Write-Warning "Thread $ThreadId not found in $($messages.Count) channel messages"
+        return @{ Success = $false; Error = "THREAD_NOT_FOUND"; NewReplies = @() }
+    }
+    # Step 4: Filter new user replies
+    if (-not $thread.replies -or $thread.replies.Count -eq 0) {
+        $threadAge = $null
+        try { $threadAge = (Get-Date) - [DateTime]::Parse($thread.lastModifiedDateTime) } catch {}
+        if ($threadAge -and $threadAge.TotalMinutes -lt 30) {
+            Write-Warning "Thread modified $([math]::Round($threadAge.TotalMinutes)) min ago but 0 replies parsed"
+        }
+        return @{ Success = $true; Error = $null; NewReplies = @() }
+    }
+    # Anchor the bot-prefix match at start (`^🤖`) so user replies that mention the emoji aren't skipped
+    $newReplies = @($thread.replies | Where-Object {
+        ($_.body.content -replace '<[^>]+>','') -notmatch '^🤖' -and
+        [long]$_.id -gt $LastProcessedId
+    })
+    return @{ Success = $true; Error = $null; NewReplies = $newReplies }
+}
+```
+**Usage in polling loop:**
+```powershell
+$result = Check-PhoneModeMsgs -McpUrl $mcpUrl -AccessToken $tokens.accessToken `
+    -TeamId $teamId -ChannelId $channelId -ThreadId $threadId -LastProcessedId $lastProcessedId
+if (-not $result.Success) {
+    Write-Warning "Direct HTTP check failed ($($result.Error)) — trying native MCP tool"
+    # Fall back to native listChannelMessages tool call
+} elseif ($result.NewReplies.Count -gt 0) {
+    foreach ($reply in ($result.NewReplies | Sort-Object { [long]$_.id })) {
+        $text = $reply.body.content -replace '<[^>]+>', ''
+        Write-Output "User message: $text"
+        # Process the message...
+        $lastProcessedId = [long]$reply.id
+    }
+}
+```
+> **Key design principle:** The function returns a structured result with `Success`, `Error`,
+> and `NewReplies` fields. A failed parse returns `Success = $false` — it does NOT return
+> an empty `NewReplies` array that would be silently treated as "no messages". The caller
+> MUST check `Success` before interpreting `NewReplies`.
+## Reply Verification
+After posting a reply via `replyToChannelMessage`, **always verify the reply was delivered**
+before proceeding to notifications or further polling.
+### Why this is needed
+Direct HTTP calls to the Teams MCP can fail silently — the `Invoke-WebRequest` may return
+HTTP 200 but the SSE response may contain an error, or the response parsing may fail,
+resulting in no message actually posted. Since phone mode messages are the user's only
+communication channel, a silently lost message means the user is waiting indefinitely
+with no way to know something went wrong.
+### Verification steps
+After posting a reply:
+1. Call `listChannelMessages` with `expand: "replies"` for the thread.
+2. Confirm the reply count increased or that your new reply appears in the thread.
+3. If the reply is missing, re-post it.
+```powershell
+# After posting a reply, verify it landed
+# Fetch thread replies
+$threadReplies = # ... from listChannelMessages response
+$myReplies = $threadReplies | Where-Object {
+    ($_.body.content -replace '<[^>]+>','') -match '🤖'
+}
+$latestBotReplyId = ($myReplies | Sort-Object id -Descending | Select-Object -First 1).id
+if ($latestBotReplyId -le $previousBotReplyId) {
+    # Reply didn't post — retry
+    Write-Host "Reply verification failed, re-posting..."
+    # Re-post the reply
+}
+```
+> **Important**: Verification is especially critical when using direct HTTP calls after
+> token refresh, where SSE response parsing is more error-prone than native MCP tool calls.
+## Token Refresh
+The Teams MCP OAuth token expires after ~75 minutes. Detect and refresh proactively.
+### Detect expiry
+Check `~/.copilot/mcp-oauth-config/` for `.tokens.json` files. Match to the config whose
+`.json` has `serverUrl` containing `mcp_TeamsServerV1`. The `expiresAt` field is a Unix
+timestamp (seconds since epoch). Refresh if within 10 minutes of expiry.
+### Refresh token
+```powershell
+$config = Get-Content "$env:USERPROFILE/.copilot/mcp-oauth-config/<config>.json" | ConvertFrom-Json
+$tokens = Get-Content "$env:USERPROFILE/.copilot/mcp-oauth-config/<config>.tokens.json" | ConvertFrom-Json
+$body = @{
+    client_id     = $config.clientId
+    grant_type    = "refresh_token"
+    refresh_token = $tokens.refreshToken  # camelCase property
+    scope         = $tokens.scope
+}
+$response = Invoke-RestMethod -Method Post `
+    -Uri "https://login.microsoftonline.com/common/oauth2/v2.0/token" `
+    -ContentType "application/x-www-form-urlencoded" `
+    -Body $body
+# Write back with camelCase property names
+$tokens.accessToken = $response.access_token
+$tokens.refreshToken = $response.refresh_token
+$tokens.expiresAt = [long]([DateTimeOffset]::UtcNow.AddSeconds($response.expires_in).ToUnixTimeSeconds())
+$tokens | ConvertTo-Json | Set-Content "<tokens-file-path>"
+```
+### Direct HTTP calls after refresh
+The CLI caches the old token in memory. After refreshing, call the Teams MCP endpoint directly:
+```powershell
+$mcpUrl = $config.serverUrl  # from the matched .json config
+$body = @{
+    jsonrpc = "2.0"; id = 1; method = "tools/call"
+    params = @{
+        name = "listChannelMessages"
+        arguments = @{ teamId = "..."; channelId = "..."; top = 5; expand = "replies" }
+    }
+} | ConvertTo-Json -Depth 5
+$headers = @{
+    "Authorization" = "Bearer $($tokens.accessToken)"
+    "Content-Type"  = "application/json"
+    "Accept"        = "application/json, text/event-stream"
+}
+$response = Invoke-WebRequest -Uri $mcpUrl -Method POST -Headers $headers -Body $body
+```
+Response is SSE format (`event: message\ndata: {...}`). Parse the `data:` lines to extract the
+JSON-RPC result. Use the same approach for `replyToChannelMessage` and `postChannelMessage`.
+Only fall back to direct HTTP when CLI tools fail with a token error (`AADSTS500133`).
+### Robust SSE Response Parsing (CRITICAL)
+Direct HTTP calls return SSE-formatted responses that contain **triple-nested JSON** with
+unicode escaping (`\u0022` instead of `"`). Ad-hoc regex-based parsing is the #1 cause of
+silently missed messages. **Always use `ConvertFrom-Json`** — never regex — to extract data.
+**Known failure modes:**
+- Large responses (250KB+) may be saved to temp files with full unicode escaping — regex
+  patterns like `-match '"id"'` fail because the file contains `\u0022id\u0022` instead
+- SSE `data:` lines may be split across multiple lines in large responses
+- The JSON-RPC `result.content[0].text` field contains a JSON **string** (not object) that
+  itself contains another JSON string — requiring 3 levels of `ConvertFrom-Json`
+**Required parsing function** — use this exact implementation, not an ad-hoc version:
+```powershell
+function Parse-McpSseResponse {
+    param([string]$RawContent)
+    # Step 1: Extract the last SSE message block containing a result
+    $blocks = $RawContent -split 'event: message\r?\n'
+    # Match the JSON-RPC envelope strictly — `-match 'result'` would match user content
+    $resultBlock = $blocks | Where-Object { $_ -match '"jsonrpc":\s*"2\.0"' } | Select-Object -Last 1
+    if (-not $resultBlock) {
+        Write-Warning "SSE: No result block found in response"
+        return $null
+    }
+    # Step 2: Extract and join all data: lines (handles multi-line splits)
+ 
+Part 3/3 (lines 529-791)
+    $dataLines = ($resultBlock -split '\r?\n' | Where-Object { $_ -match '^data: ' }) -replace '^data: ', ''
+    $jsonStr = $dataLines -join ''
+    if (-not $jsonStr -or $jsonStr.Length -lt 10) {
+        Write-Warning "SSE: Empty or too-short data payload (len=$($jsonStr.Length))"
+        return $null
+    }
+    # Step 3: Parse the triple-nested JSON — ConvertFrom-Json handles \u0022 natively
+    try {
+        $rpc = $jsonStr | ConvertFrom-Json                          # Level 1: JSON-RPC envelope
+        $textWrapper = $rpc.result.content[0].text | ConvertFrom-Json  # Level 2: {message, response}
+        $graphData = $textWrapper.response | ConvertFrom-Json         # Level 3: Graph API response
+        return $graphData
+    } catch {
+        Write-Warning "SSE parse failed at JSON level: $_"
+        Write-Warning "Raw payload length: $($jsonStr.Length) chars"
+        return $null
+    }
+}
+```
+**Usage:**
+```powershell
+$resp = Invoke-WebRequest -Uri $mcpUrl -Method POST -Headers $headers -Body $body
+$graphData = Parse-McpSseResponse -RawContent $resp.Content
+if ($null -eq $graphData) {
+    Write-Warning "PARSE FAILURE — falling back to native MCP tool"
+    # Fall back to native listChannelMessages tool call
+}
+$messages = $graphData.value
+```
+> **NEVER use regex to extract message IDs, reply content, or reply counts from raw SSE
+> responses.** The unicode-escaped format (`\u0022id\u0022: \u00221776546275915\u0022`)
+> breaks all regex patterns. `ConvertFrom-Json` decodes unicode escapes automatically.
+### Handling SSE response parsing failures
+When parsing the SSE response from direct HTTP calls:
+- If `ConvertFrom-Json` fails on the response data, the message may or may not have posted.
+  **Do not assume success.** Verify delivery via `listChannelMessages` (see Reply Verification).
+- If the response contains an error in the JSON-RPC result, log the error and retry.
+- Never combine the reply posting and notification into a single try/catch block — a parsing
+  failure after a successful post should not prevent the notification, and vice versa.
+## Message Format
+**All Teams messages** (not just phone mode) must follow these rules:
+### Content type
+Always use `contentType: "html"`. Never use `contentType: "text"` — it renders as an
+unformatted wall of text with no line breaks.
+### AI agent identity
+Always identify as an AI agent. Recipients see the user's name (delegated auth), so the prefix
+is the only differentiator.
+- **Prefix**: Always start messages with `🤖 [Copilot]: `
+- **DMs/group chats**: Start with `"Hi [Name], this is [User]'s AI agent (Copilot)."`
+### HTML formatting guidelines
+- `<h3>` for section headers
+- `<ul><li>` for bullet lists, `<ol><li>` for numbered lists
+- `<b>` for bold, `<em>` for emphasis
+- `<br>` for line breaks between sections
+- Minimal emoji — use for section markers only, not inline decoration
+## Notifications via Phone Mode Notifier Agent
+Phone mode uses delegated auth, so Teams does not notify the user when the Copilot agent
+posts (since it appears as the user themselves). To get mobile notifications, phone mode uses
+a **Copilot Studio agent** called **Phone Mode Notifier** as a notification relay.
+### How it works
+1. After posting a reply in the phone mode channel thread, send a short notification message
+   to the bot's 1:1 chat.
+2. The bot responds with an acknowledgment → Teams sends a push notification to the user.
+3. The notification message includes a **deep link** so the user can tap through directly to
+   the channel reply.
+### Configuration
+Read the **Notifier Bot Chat ID** from `~/.copilot/copilot-instructions.md` (in the phone mode
+section, under Channel Info). This is a required field — if it says `<BOT_CHAT_ID>` or is
+missing, tell the user to run the `setup-phone-mode` skill to complete setup before activating
+phone mode.
+### After each channel reply (verified)
+After posting a reply via `replyToChannelMessage` **and verifying it was delivered** (see
+Reply Verification section), construct a deep link using the confirmed reply message ID
+and send a notification ping:
+> **Do NOT send notifications before verifying the reply landed.** A notification with a
+> broken deep link (empty or wrong reply ID) wastes the user's attention and erodes trust
+> in phone mode.
+```
+Deep link format:
+https://teams.microsoft.com/l/message/{channelId}/{replyMessageId}?groupId={teamId}&parentMessageId={threadId}
+```
+Where `{threadId}` is the ID of the top-level thread post (the message created in
+Activation step 1). Without `parentMessageId`, Teams cannot resolve the reply within the
+thread and the link appears broken (shows empty or "message not found").
+Send to the bot chat:
+```
+📱 Phone Mode reply in: {threadTitle}
+View: {deepLink}
+```
+Where `{threadTitle}` is the top-level post title (the title you used when creating the thread
+in Activation step 1). This gives the user context about which phone mode session has a new
+reply, especially useful when multiple sessions are active.
+Use `contentType: "html"` and format as:
+```html
+📱 <b>Phone Mode reply in: {threadTitle}</b><br><a href="{deepLink}">View reply in channel</a>
+```
+### Important notes
+- Send notifications for **every** channel reply, not just the first one.
+- The bot chat is a 1:1 chat that already exists after the user installs the agent during setup.
+- If sending the notification fails, log a warning but don't interrupt the main phone mode flow.
+- The notification is fire-and-forget — you don't need to wait for or process the bot's response.
+## Deactivation
+When the user says "phone mode off" or the session ends:
+1. Reply in thread: `🤖 [Copilot]: 📴 Session ended. This conversation is closed.`
+2. Stop the polling loop.
+## CLI Override
+If the user sends a message via CLI/terminal while phone mode is active:
+1. Stop the polling loop.
+2. Process the CLI message normally.
+3. Do NOT post a closing message to the Teams thread — it stays open for resumption.
+## Channel Cleanup
+Only when the user explicitly asks (e.g., "clean up phone mode channel", "reset phone mode"):
+1. Create a new private channel named `Copilot phone mode - <UserFirstName>` (add suffix `v2`, `v3` if needed)
+   using `createPrivateChannel` with the same team ID and user as owner.
+2. Update the channel ID in `~/.copilot/copilot-instructions.md`.
+3. Tell the user to manually delete the old channel from Teams.
+4. Clear any saved thread ID from the current session.
+## Teams MCP Tips
+### Formatting messages for humans
+**ALWAYS use `contentType: "html"` when sending ANY Teams message** — whether it's a DM, group
+chat, channel post, or phone mode reply. Plain text (`contentType: "text"`) renders as an
+unformatted wall of text in Teams with no line breaks, bullets, or structure. **Never use
+`contentType: "text"` for Teams messages.**
+Format messages with HTML for readability:
+- Use `<h3>` for section headers
+- Use `<ul><li>` for bullet lists and `<ol><li>` for numbered lists
+- Use `<b>` for bold and `<em>` for emphasis
+- Use `<br>` for line breaks between sections
+- Keep emojis minimal — use them for headers/section markers only, not inline decoration
+- Avoid sending large walls of plain text — structure content so it's scannable
+### Time zone
+When communicating dates and times to the user (in Teams messages, reports, ETAs, etc.),
+always use the **local machine time zone** — never UTC. Detect it with
+`[System.TimeZoneInfo]::Local` in PowerShell. Convert UTC timestamps to local time using
+`[TimeZoneInfo]::ConvertTimeFromUtc($utc, [TimeZoneInfo]::Local)` or
+`([DateTimeOffset]$utc).ToLocalTime()`. Users read messages on their phone and shouldn't
+have to mentally convert from UTC.
+### Finding people by name
+The Teams MCP tools require a **UPN** (User Principal Name). UPN ≠ primary email at Microsoft
+(e.g., primary email `Inbar.Rotem@microsoft.com` vs UPN `inrotem@microsoft.com`).
+Use **WorkIQ** to resolve names to emails/aliases:
+1. Ask WorkIQ: *"Who is Anna that I recently chatted with? What is her email and alias?"*
+2. Use the returned UPN with Teams MCP tools.
+3. If the call fails with "user not found", try the alias format.
+### Sending messages to the right person
+- Use `createChat` (not `listChats`) to find or create a 1:1 chat — it returns the existing
+  chat if one exists, guaranteeing the correct recipient.
+- If you used `listChats`, verify the recipient with `listChatMembers` before sending.
+### Finding a meeting chat by meeting name
+The `listChats` API does not reliably return old or inactive meeting chats. To find a meeting's
+chat thread ID, use the **Calendar MCP** (`mcp_CalendarTools`) via direct HTTP:
+```powershell
+$body = @{
+    jsonrpc = "2.0"; id = 1; method = "tools/call"
+    params = @{
+        name = "ListEvents"
+        arguments = @{
+            meetingTitle = "<MEETING_NAME>"
+            startDateTime = "<SEARCH_START_ISO8601>"
+            select = "subject,onlineMeeting"
+        }
+    }
+} | ConvertTo-Json -Depth 5
+```
+Call the Calendar MCP endpoint at:
+`https://agent365.svc.cloud.microsoft/mcp/environments/<ENV_ID>/servers/mcp_CalendarTools`
+The response includes `onlineMeeting.joinUrl` which contains the chat thread ID. Extract it:
+```powershell
+# joinUrl looks like: https://teams.microsoft.com/l/meetup-join/19%3ameeting_<ID>%40thread.v2/...
+# URL-decode to get: 19:meeting_<ID>@thread.v2
+$chatId = [System.Web.HttpUtility]::UrlDecode(($joinUrl -split '/')[4])
+```
+Use the extracted chat ID with Teams MCP tools (`postMessage`, `listChatMessages`, etc.).
+> **Note:** The Calendar MCP server URL uses the same environment ID as the Teams MCP. Read it
+> from `~/.copilot/mcp-config.json` (the `teams` entry URL contains the environment ID).
+---
+## Custom Instructions Template
+> This minimal config block is written to `~/.copilot/copilot-instructions.md` by the
+> `setup-phone-mode` skill during initial setup. It only contains the trigger phrase and IDs.
+> All operating instructions are provided by this skill at runtime — NOT duplicated in
+> copilot-instructions.md.
+````markdown
+## phone mode (Teams Communication)
+**phone mode** is a custom feature (NOT a built-in CLI feature) that lets you communicate with
+this agent via a private Teams channel from your phone.
+When I say "phone mode on" (or similar: "phone mode", "turn on phone mode", "start phone mode"),
+activate phone mode.
+### Channel Info
+- **Team ID**: `<TEAM_ID>`
+- **Channel ID**: `<CHANNEL_ID>`
+- **Notifier Bot Chat ID**: `<BOT_CHAT_ID>`
+All operating instructions are provided by the `phone-mode` skill. Invoke it when activating.
+````
+ 
+📄 setup-phone-mode/SKILL.md (the one-time setup companion skill)
+---
+name: setup-phone-mode
+description: >
+  Sets up phone mode — a feature that lets users communicate with their Copilot CLI
+  agent via a private Microsoft Teams channel from their phone. Performs one-time installation of the Teams MCP
+  server, creates a private channel, and writes runtime instructions to copilot-instructions.md.
+  Also handles upgrades for existing setups by detecting missing features (like notifications)
+  and adding only what is needed. Invoke when a user wants to set up, install, configure, or
+  upgrade phone mode.
+---
+# Phone Mode Setup Wizard
+One-time setup that installs the Teams MCP server, creates a private Teams channel, and configures
+the runtime instructions. After setup, the user says "phone mode on" to activate (see `phone-mode` skill).
+> **Cross-platform:** This skill works on both Windows and macOS. Use `$HOME` instead of
+> `$env:USERPROFILE` on macOS, and `/` path separators. The `~/.copilot/` shorthand works on
+> both. All PowerShell commands work on both platforms (Copilot CLI uses pwsh).
+## First Step: Detect Existing Setup and Determine What to Do
+Before running any phase, read `~/.copilot/copilot-instructions.md` and check the current state.
+This determines whether this is a fresh install, a resume of a partial setup, or an upgrade.
+### Detection Logic
+| Condition | Action |
+|-----------|--------|
+| No `phone mode` section in copilot-instructions.md | **Fresh install** — run Phase 1, 2, 3 |
+| `phone mode` section exists but has placeholders (`<TEAM_ID>`, `<CHANNEL_ID>`, `<BOT_CHAT_ID>`) | **Partial setup** — identify which phase to resume based on what's still a placeholder |
+| `phone mode` section exists with all real IDs and matches the template | **Fully set up** — tell user everything is configured |
+| `phone mode` section exists but doesn't match the template | **Upgrade needed** — see Upgrade Flow below |
+### Upgrade Flow
+When an existing phone mode section doesn't match the current template, the agent should
+**reconcile** the user's config with the latest template:
+1. **Read** the current phone mode section from `~/.copilot/copilot-instructions.md`.
+2. **Read** the Custom Instructions Template from the `phone-mode` skill at
+   `~/.copilot/installed-plugins/dsp-ai-marketplace/dsp-skills/skills/phone-mode/SKILL.md`.
+3. **Extract** any real (non-placeholder) values from the user's existing config — Team ID,
+   Channel ID, Bot Chat ID, or any other configured values.
+4. **Replace** the user's entire phone mode section with the template from the skill.
+5. **Substitute** the extracted real values back into the template, keeping placeholders for
+   anything that wasn't configured yet.
+6. **Run the appropriate phase** for any remaining placeholders (e.g., Phase 3 if Bot Chat ID
+   is still a placeholder).
+This approach ensures the copilot-instructions.md always reflects the latest skill template
+structure, regardless of what changed between versions. The agent doesn't need to know what
+specifically changed — it just aligns the config to the current template.
+## Prerequisites
+- Azure CLI authenticated (`az login`)
+- Copilot CLI installed with plugin support
+- Microsoft Teams account with permission to create private channels
+## Phase 1: Install MCP Servers
+### Step 1: Check existing MCP config
+Read `~/.copilot/mcp-config.json`. If `mcp_TeamsServerV1` already exists, skip to Step 4.
+### Step 2: Discover Power Platform environment ID
+```powershell
+$token = az account get-access-token --resource "https://service.powerapps.com/" --query accessToken -o tsv
+$response = Invoke-RestMethod -Uri "https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments?api-version=2023-06-01" `
+  -Headers @{ Authorization = "Bearer $token" }
+$envId = $response.value[0].name
+```
+If the BAP API fails or returns no environments, ask the user to visit
+`https://copilotstudio.preview.microsoft.com/environments/~personal/home` and copy their
+environment ID from the URL (the GUID after `/environments/`).
+### Step 3: Add Teams MCP server to config
+Read the existing `~/.copilot/mcp-config.json` (create if missing), then add this entry under `mcpServers`:
+```json
+{
+  "teams": {
+    "type": "http",
+    "url": "https://agent365.svc.cloud.microsoft/mcp/environments/<ENV_ID>/servers/mcp_TeamsServerV1",
+    "headers": {},
+    "tools": ["*"],
+    "source": "user"
+  }
+}
+```
+Replace `<ENV_ID>` with the discovered environment ID.
+> **Important:** Use `"teams"` as the key name (not `"mcp_TeamsServerV1"`). Include `"tools": ["*"]`
+> and `"source": "user"` — these are required for the CLI to load the server's tools correctly.
+> Do NOT add `"timeout"` — it can cause connection issues.
+**Optional — MCPManagement server** (enables creating/managing MCP servers and tools):
+```json
+{
+  "MCPManagement": {
+    "type": "http",
+    "url": "https://agent365.svc.cloud.microsoft/mcp/environments/<ENV_ID>/servers/MCPManagement",
+    "headers": {},
+    "tools": ["*"],
+    "source": "user"
+  }
+}
+```
+Ask the user if they want MCPManagement installed. Default: skip.
+**Optional — WorkIQ** (enables workplace intelligence queries for name resolution):
+```
+copilot plugin install workiq@copilot-plugins
+```
+Mention this is useful for resolving people by name when sending Teams messages.
+> Reference: [Agent 365 Tooling Servers](https://learn.microsoft.com/en-us/microsoft-agent-365/tooling-servers-overview)
+### Step 4: Write minimal phone mode config
+Append the following minimal config block to `~/.copilot/copilot-instructions.md`. This only
+contains the trigger phrase and IDs — all operating instructions come from the `phone-mode` skill
+at runtime.
+```markdown
+## phone mode (Teams Communication)
+**phone mode** is a custom feature (NOT a built-in CLI feature) that lets you communicate with
+this agent via a private Teams channel from your phone.
+When I say "phone mode on" (or similar: "phone mode", "turn on phone mode", "start phone mode"),
+activate phone mode.
+### Channel Info
+- **Team ID**: `<TEAM_ID>`
+- **Channel ID**: `<CHANNEL_ID>`
+- **Notifier Bot Chat ID**: `<BOT_CHAT_ID>`
+All operating instructions are provided by the `phone-mode` skill. Invoke it when activating.
+```
+Use placeholders — they will be replaced with real values in Phase 2 and Phase 3.
+### Step 5: Optionally add Teams MCP Tips to custom instructions
+The `phone-mode` skill includes Teams MCP Tips that are loaded at runtime. However, these tips
+are useful for **any** Teams MCP usage — not just phone mode. Ask the user if they want to add
+them to their custom instructions so they benefit from them in all sessions:
+*"Would you like me to add Teams MCP best practices to your custom instructions? These tips
+help with formatting messages, finding people by name, and sending messages reliably — useful
+for any Teams MCP interaction, not just phone mode. (Recommended)"*
+If the user agrees, check `~/.copilot/copilot-instructions.md` for an existing
+`## Teams MCP Tips` section:
+- **If it already exists**: Skip — do not add duplicates. Tell the user it's already there.
+- **If it doesn't exist**: Append the following block before the `## phone mode` section:
+```markdown
+## Teams MCP Tips
+### Formatting Messages for Humans
+**ALWAYS use `contentType: "html"` when sending ANY Teams message** — whether it's a DM, group
+chat, channel post, or phone mode reply. Plain text (`contentType: "text"`) renders as an
+unformatted wall of text in Teams with no line breaks, bullets, or structure. **Never use
+`contentType: "text"` for Teams messages.**
+Format messages with HTML for readability:
+- Use `<h3>` for section headers
+- Use `<ul><li>` for bullet lists and `<ol><li>` for numbered lists
+- Use `<b>` for bold and `<em>` for emphasis
+- Use `<br>` for line breaks between sections
+- Keep emojis minimal — use them for headers/section markers only, not inline decoration
+- Avoid sending large walls of plain text — structure content so it's scannable
+### Finding People by Name
+The Teams MCP tools require a user's **UPN** (User Principal Name) — there's no name-based
+search. **UPN ≠ primary email.** At Microsoft, a person's primary email (e.g.,
+`Firstname.Lastname@microsoft.com`) often differs from their UPN/alias (e.g.,
+`flastname@microsoft.com`). If a Teams API call fails with "user not found", try the alias.
+**Workaround:** Use **WorkIQ MCP** (if installed) to resolve names to emails/aliases.
+### Sending Messages to the Right Person
+- Use `createChat` (not `listChats`) to find or create a 1:1 chat — it returns the existing
+  chat if one exists, guaranteeing the correct recipient.
+- Do NOT rely on `listChats` with `userUpn` filter — it may not work reliably.
+- Always verify the recipient with `listChatMembers` if you used `listChats`.
+### Finding a Meeting Chat by Meeting Name
+The `listChats` API does not reliably return old or inactive meeting chats. To find a meeting's
+chat thread ID, use the **Calendar MCP** (`mcp_CalendarTools`) — call `ListEvents` with the
+meeting title and `select: "subject,onlineMeeting"`. The response includes `onlineMeeting.joinUrl`
+which contains the chat thread ID. URL-decode the joinUrl to extract the
+`19:meeting_<ID>@thread.v2` chat ID.
+```
+### Step 6: Restart terminal
+Tell the user to restart their terminal / CLI session so the new MCP servers load.
+Phase 2 begins after restart.
+---
+## Phase 2: Configure Channel (after restart)
+> The user must invoke this skill again after restarting. Detect Phase 2 by checking if
+> `~/.copilot/copilot-instructions.md` already contains `phone mode` instructions with
+> placeholder IDs (`<TEAM_ID>` or `<CHANNEL_ID>`).
+### Step 7: Discover user identity
+Use the Teams MCP tools to identify the current user. Call `getMyProfile` or list a known
+team's members to find the user's UPN and display name.
+### Step 8: Find or select host team
+Preferred team: **M365D Data Science Platform**
+- Team ID: `fc6c7242-7f4b-4316-a3a5-8488958e3ec5`
+Verify the user is a member by calling `listTeams` with their user ID. If the preferred team
+is not found, ask the user which team to use.
+### Step 9: Create private channel
+Use `createPrivateChannel`:
+- **teamId**: the selected team ID
+- **displayName**: `Copilot phone mode - <UserFirstName>` (use the user's first name or display name from their UPN/profile, e.g., `Copilot phone mode - Shachaf`)
+- **membershipType**: `private`
+- **members_upns**: the user's UPN
+- **members_roles**: `["owner"]`
+If the name already exists, append a numeric suffix (e.g., `Copilot phone mode - Shachaf v2`).
+Save the returned **channel ID**.
+### Step 10: Update custom instructions with real IDs
+Replace placeholders in `~/.copilot/copilot-instructions.md`:
+- `<TEAM_ID>` → actual team ID (e.g., `fc6c7242-7f4b-4316-a3a5-8488958e3ec5`)
+- `<CHANNEL_ID>` → actual channel ID returned from Step 8
+### Step 11: Send test message and verify
+Post a test message to the channel using `postChannelMessage`:
+```
+🤖 [Copilot]: Phone mode setup complete! This channel is ready for use.
+```
+Verify the message appears by calling `listChannelMessages`. Confirm the round-trip works.
+### Step 12: Continue to Phase 3
+Phase 2 is complete. Proceed directly to Phase 3 to set up notifications.
+Do NOT tell the user to restart yet — the final restart happens after Phase 3.
+---
+## Troubleshooting
+| Issue | Resolution |
+|-------|-----------|
+| BAP API returns 403 | User needs Power Platform license; use manual fallback URL |
+| Teams MCP auth fails | Restart terminal; re-authenticate with `az login` |
+| Channel creation fails | User may lack permissions on the team; try a different team |
+| Token errors after restart | The MCP server needs OAuth consent on first use; follow prompts |
+---
+## Phase 3: Set Up Notifications
+> Phone mode uses delegated auth, so the user does not get Teams push notifications for
+> replies posted by the Copilot agent. This phase installs the **Phone Mode Notifier** agent
+> which serves as a notification relay — after each reply, the agent pings the bot, and the
+> bot's response triggers a push notification with a deep link to the actual message.
+>
+> **This phase is required.** Phone mode will not activate without a configured bot chat ID.
+>
+> The Phone Mode Notifier agent requires the agent owner to share access with each new user.
+> This phase handles requesting that access automatically.
+### Step 13: Request access to the Phone Mode Notifier agent
+The Phone Mode Notifier agent is managed by a single owner who must grant access to each new
+user before they can install it. Send a Teams message to the agent owner requesting access.
+**Agent owner:** Ziv Glazer — UPN: `zivglazer@microsoft.com`
+Use `createChat` with the current user's UPN and the agent owner's UPN to find or create
+a 1:1 chat, then send a message via `postMessage`:
+```
+contentType: "html"
+content: "🤖 [Copilot]: <b>Phone Mode Notifier access request</b><br><br>
+Hi Ziv, <b>{user_display_name}</b> ({user_upn}) is setting up phone mode and needs
+access to the Phone Mode Notifier agent.<br><br>
+Please share the agent with them at:
+<a href='https://copilotstudio.preview.microsoft.com/environments/00ffa160-2750-e68d-ac20-2af4511c201a/bots/4dd4e112-1026-f111-88b4-000d3a316f3c/publish'>
+Copilot Studio → Phone Mode Notifier → Manage sharing</a><br><br>
+Add their email: <b>{user_upn}</b>"
+```
+After sending, tell the user:
+*"I've sent a request to the Phone Mode Notifier agent owner to grant you access.
+Once they confirm, you can proceed with the next step. In the meantime, the rest of
+phone mode (channel + MCP) is fully set up and ready."*
+### Step 14: Install Phone Mode Notifier agent
+Ask the user to open this link in their browser to install the agent app in Teams:
+```
+https://teams.microsoft.com/l/app/?titleId=T_9e245dee-86dd-16d7-91c4-786331e7295f
+```
+If the user gets an error saying "Your organization has prevented this agent from being
+installed", it means the agent owner hasn't shared access yet. Tell them to wait for the
+owner's confirmation and try again.
+After clicking "Add", the user should see a 1:1 chat with **Phone Mode Notifier** in Teams.
+### Step 15: Discover bot chat ID
+The bot is a Copilot Studio app with AAD object ID `9b8e2607-edb8-40ca-8c55-1768cb4d9438` (not
+a regular user with a UPN). To find the 1:1 chat:
+**Primary approach:** Use `listChats` with `top: 10` and `orderby: "lastMessagePreview/createdDateTime desc"`.
+Look for a `oneOnOne` chat where only one member is listed (bots don't appear in the members
+list). The chat ID will contain the bot's object ID (e.g.,
+`19:<user_id>_9b8e2607-edb8-40ca-8c55-1768cb4d9438@unq.gbl.spaces`).
+**Fallback:** Ask the user to open Teams, find the "Phone Mode Notifier" chat, and provide the
+chat ID. They can find it by clicking on the chat and checking the URL or chat details.
+### Step 16: Update custom instructions with bot chat ID
+Replace the `<BOT_CHAT_ID>` placeholder in `~/.copilot/copilot-instructions.md`:
+```markdown
+### Channel Info
+- **Team ID**: `<TEAM_ID>`
+- **Channel ID**: `<CHANNEL_ID>`
+- **Notifier Bot Chat ID**: `<actual_bot_chat_id>`
+```
+### Step 17: Test notification
+Send a test message to the bot chat:
+```
+contentType: "html"
+content: "📱 <b>Phone Mode Notifier setup test</b><br>If you received a notification, setup is complete!"
+```
+Ask the user if they received a Teams notification. If yes, Phase 3 is complete.
+### Step 18: Final restart and done
+Tell the user to restart their terminal / CLI session so the updated instructions load. After
+restart, they can say **"phone mode on"** to activate phone mode with push notifications.
+ 
+That's both skills — phone-mode (runtime) and setup-phone-mode (one-time setup). The phone-mode skill handles polling, token refresh, message formatting, and the notification bot. The setup skill creates the Teams channel, installs the Teams MCP server, and writes the config to copilot-instructions.md. Let me know if you have questions!
+ 

@@ -1,0 +1,46 @@
+{
+  "expectations": [
+    {
+      "id": "root_activation_posted",
+      "text": "Root activation message posted to LiziTestTeam_MainChannel",
+      "passed": false,
+      "evidence": "Without the skill, the agent has no protocol to compose or post a 'remote session' root message. Not executed live (user/grader agreed it would only confirm the obvious — see eval_state.json next_steps_when_resumed item 12)."
+    },
+    {
+      "id": "skill_detects_reply_via_polling",
+      "text": "Skill detects user reply \"say hello world\" via polling",
+      "passed": false,
+      "evidence": "Without the skill, there is no polling loop and no state to track which replies have been seen. Each agent turn is a fresh prompt with no notion of the Teams thread."
+    },
+    {
+      "id": "agent_posts_hello_world_in_thread",
+      "text": "Agent posts \"hello world\" answer in thread (via ack or follow-up reply)",
+      "passed": false,
+      "evidence": "Without the skill, even if the agent happens to call teams-ReplyToChannelMessage it has no awareness of the literal '@<user> Copilot agent message: ' prefix contract or the contentType=text + mentions[] requirement — that contract lives only in SKILL.md."
+    },
+    {
+      "id": "end_flow_posts_summary",
+      "text": "End flow posts summary message to thread",
+      "passed": false,
+      "evidence": "Without the skill, there is no end flow. No summary template, no rendered duration / messages / tasks / files / decisions sections."
+    },
+    {
+      "id": "state_file_deleted_after_finalize",
+      "text": "State file is deleted after end --step finalize",
+      "passed": false,
+      "evidence": "Without the skill, no state file is created in the first place — there is nothing to delete and no lifecycle hook that would clean it up."
+    }
+  ],
+  "score": "0/5",
+  "summary": {
+    "passed": 0,
+    "failed": 5,
+    "total": 5,
+    "pass_rate": 0.0
+  },
+  "timing": {
+    "total_duration_seconds": 0
+  },
+  "executed": false,
+  "rationale": "Baseline captured as a structured failure stub rather than executed live. Without the skill, all 5 assertions fail by construction."
+}

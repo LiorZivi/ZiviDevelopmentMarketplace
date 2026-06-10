@@ -1,0 +1,159 @@
+{
+  "metadata": {
+    "skill_name": "<skill-name>",
+    "skill_path": "<path/to/skill>",
+    "executor_model": "<model-name>",
+    "analyzer_model": "<model-name>",
+    "timestamp": "2026-04-28T13:52:29Z",
+    "evals_run": [
+      0
+    ],
+    "runs_per_configuration": 3
+  },
+  "runs": [
+    {
+      "eval_id": 0,
+      "configuration": "with_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 5,
+        "failed": 0,
+        "total": 5,
+        "time_seconds": 780,
+        "tokens": 0,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "id": "root_activation_posted",
+          "text": "Root activation message posted to LiziTestTeam_MainChannel",
+          "passed": true,
+          "evidence": "Root message id 1777382238949 posted via teams-SendMessageToChannel at 2026-04-28T13:17:18Z. See transcript/02_post_root_response.json. activate.py --step finalize confirmed state with team_id, channel_id, root_message_id."
+        },
+        {
+          "id": "skill_detects_reply_via_polling",
+          "text": "Skill detects user reply \"say hello world\" via polling",
+          "passed": true,
+          "evidence": "poll.py --step tick emitted MCP envelope (transcript/04_poll_tick.json). User reply id 1777382561635 ('say hello world eval test') retrieved via teams-ListChannelMessageReplies (transcript/05_replies.json). Reply was advanced into seen_reply_ids and last_processed_id in state."
+        },
+        {
+          "id": "agent_posts_hello_world_in_thread",
+          "text": "Agent posts \"hello world\" answer in thread (via ack or follow-up reply)",
+          "passed": true,
+          "evidence": "Agent posted reply id 1777382778442 with content '@Lior Zivi Copilot agent message: hello world' (contentType=text, mentions array with the user GUID) \u00e2\u20ac\u201d honors all three skill rules (literal prefix, leading mention, mentions arg). See transcript/07_ack_response.json. Recorded via poll.py --step record-own."
+        },
+        {
+          "id": "end_flow_posts_summary",
+          "text": "End flow posts summary message to thread",
+          "passed": true,
+          "evidence": "end.py --step run produced post_summary envelope (transcript/08_end_run.json). Summary reply id 1777383018397 posted at 2026-04-28T13:30:18Z via teams-ReplyToChannelMessage (transcript/09_summary_response.json)."
+        },
+        {
+          "id": "state_file_deleted_after_finalize",
+          "text": "State file is deleted after end --step finalize",
+          "passed": true,
+          "evidence": "end.py --step finalize returned {action: ok}. Post-run dir listing of %TEMP%/general-ops/teams-remote/ shows no eval-20260428155629.json file. See transcript/10_end_finalize.json."
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 0,
+      "configuration": "without_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 0.0,
+        "passed": 0,
+        "failed": 5,
+        "total": 5,
+        "time_seconds": 0,
+        "tokens": 0,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "id": "root_activation_posted",
+          "text": "Root activation message posted to LiziTestTeam_MainChannel",
+          "passed": false,
+          "evidence": "Without the skill, the agent has no protocol to compose or post a 'remote session' root message. Not executed live (user/grader agreed it would only confirm the obvious \u00e2\u20ac\u201d see eval_state.json next_steps_when_resumed item 12)."
+        },
+        {
+          "id": "skill_detects_reply_via_polling",
+          "text": "Skill detects user reply \"say hello world\" via polling",
+          "passed": false,
+          "evidence": "Without the skill, there is no polling loop and no state to track which replies have been seen. Each agent turn is a fresh prompt with no notion of the Teams thread."
+        },
+        {
+          "id": "agent_posts_hello_world_in_thread",
+          "text": "Agent posts \"hello world\" answer in thread (via ack or follow-up reply)",
+          "passed": false,
+          "evidence": "Without the skill, even if the agent happens to call teams-ReplyToChannelMessage it has no awareness of the literal '@<user> Copilot agent message: ' prefix contract or the contentType=text + mentions[] requirement \u00e2\u20ac\u201d that contract lives only in SKILL.md."
+        },
+        {
+          "id": "end_flow_posts_summary",
+          "text": "End flow posts summary message to thread",
+          "passed": false,
+          "evidence": "Without the skill, there is no end flow. No summary template, no rendered duration / messages / tasks / files / decisions sections."
+        },
+        {
+          "id": "state_file_deleted_after_finalize",
+          "text": "State file is deleted after end --step finalize",
+          "passed": false,
+          "evidence": "Without the skill, no state file is created in the first place \u00e2\u20ac\u201d there is nothing to delete and no lifecycle hook that would clean it up."
+        }
+      ],
+      "notes": []
+    }
+  ],
+  "run_summary": {
+    "with_skill": {
+      "pass_rate": {
+        "mean": 1.0,
+        "stddev": 0.0,
+        "min": 1.0,
+        "max": 1.0
+      },
+      "time_seconds": {
+        "mean": 780.0,
+        "stddev": 0.0,
+        "min": 780,
+        "max": 780
+      },
+      "tokens": {
+        "mean": 0.0,
+        "stddev": 0.0,
+        "min": 0,
+        "max": 0
+      }
+    },
+    "without_skill": {
+      "pass_rate": {
+        "mean": 0.0,
+        "stddev": 0.0,
+        "min": 0.0,
+        "max": 0.0
+      },
+      "time_seconds": {
+        "mean": 0.0,
+        "stddev": 0.0,
+        "min": 0,
+        "max": 0
+      },
+      "tokens": {
+        "mean": 0.0,
+        "stddev": 0.0,
+        "min": 0,
+        "max": 0
+      }
+    },
+    "delta": {
+      "pass_rate": "+1.00",
+      "time_seconds": "+780.0",
+      "tokens": "+0"
+    }
+  },
+  "notes": []
+}

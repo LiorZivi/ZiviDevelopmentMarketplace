@@ -1,0 +1,2 @@
+data: {"jsonrpc":"2.0","result":{"content":[{"text":"Error: Tool 'PostChannelMessage' not found in MCP server 'mcp_TeamsServer'","type":"text"},{"text":"CorrelationId: d99f262a-a41d-4ca6-95ca-c62acb24069e, TimeStamp: 2026-04-28_12:58:14","type":"text"}],"isError":true},"id":1}
+

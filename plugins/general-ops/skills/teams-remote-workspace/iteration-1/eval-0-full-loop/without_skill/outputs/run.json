@@ -1,0 +1,19 @@
+{
+  "executed": false,
+  "rationale": "Without the teams-remote skill, the agent has no protocol for activation, polling, ack composition, end-flow summarization, or state-file lifecycle. Running the live loop would only confirm the obvious. User and grader agreed (eval_state.json next_steps_when_resumed item 12) to capture this as a structured failure stub rather than execute live.",
+  "expected_failure_modes": [
+    "Agent does not post any 'remote session' root message to the channel — no protocol for it.",
+    "Agent does not poll teams-ListChannelMessageReplies on a cadence — every turn is a fresh prompt with no state.",
+    "Even if the agent happens to call teams-ReplyToChannelMessage, it will not honor the ack contract (literal '@<user> Copilot agent message: ' prefix, contentType=text, mentions array) — that contract lives only in SKILL.md.",
+    "Agent does not emit any end-of-session summary message.",
+    "No tempdir state file is created or torn down — there is no state subsystem without the skill."
+  ],
+  "assertions": {
+    "root_activation_posted": false,
+    "skill_detects_reply_via_polling": false,
+    "agent_posts_hello_world_in_thread": false,
+    "end_flow_posts_summary": false,
+    "state_file_deleted_after_finalize": false
+  },
+  "score": "0/5"
+}
