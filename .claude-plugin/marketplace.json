@@ -13,14 +13,6 @@
       "tags": ["research", "education", "presentations", "linkedin", "content"]
     },
     {
-      "name": "cmops",
-      "source": "./plugins/cmops",
-      "description": "Azure DevOps CI/CD operations for Kusto Cluster Management — monitor builds, gate PRs, auto-merge when pipelines turn green, and challenge AI code review comments.",
-      "version": "1.0.0",
-      "author": { "name": "lizi@microsoft.com" },
-      "tags": ["devops", "ci-cd", "kusto", "build-monitor", "pr-automation"]
-    },
-    {
       "name": "general-ops",
       "source": "./plugins/general-ops",
       "description": "Bidirectional Copilot CLI ↔ Microsoft Teams bridge via the Teams MCP. Step away from the terminal and keep the agent running by chatting with it through a Teams channel thread — progress posts flow out via MCP, replies auto-inject back in.",

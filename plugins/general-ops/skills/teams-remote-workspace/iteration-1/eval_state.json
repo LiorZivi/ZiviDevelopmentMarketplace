@@ -1,9 +1,9 @@
 {
   "status": "complete-with-skill-pass",
   "skill_under_test": "teams-remote",
-  "skill_path": "C:/Dev/Work/Platform-Vnext-Marketplace/plugins/general-ops/skills/teams-remote",
-  "scripts_path": "C:/Dev/Work/Platform-Vnext-Marketplace/plugins/general-ops/scripts/teams-remote",
-  "workspace": "C:/Dev/Work/Platform-Vnext-Marketplace/plugins/general-ops/skills/teams-remote-workspace",
+  "skill_path": "C:/Dev/Work/ZiviDevelopmentMarketplace/plugins/general-ops/skills/teams-remote",
+  "scripts_path": "C:/Dev/Work/ZiviDevelopmentMarketplace/plugins/general-ops/scripts/teams-remote",
+  "workspace": "C:/Dev/Work/ZiviDevelopmentMarketplace/plugins/general-ops/skills/teams-remote-workspace",
   "iteration": 1,
   "eval": {
     "id": 0,

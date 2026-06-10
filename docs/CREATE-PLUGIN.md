@@ -244,7 +244,7 @@ copilot --plugin-dir ./plugins/<my-plugin-name>
 ```
 For example:
 ```bash
-copilot --plugin-dir ./plugins/cmops
+copilot --plugin-dir ./plugins/content-ai
 ```
 
 `./plugins/my-plugin-name` is the path to your plugin directory (the folder containing `.claude-plugin/plugin.json`).

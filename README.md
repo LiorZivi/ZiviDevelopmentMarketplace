@@ -11,7 +11,6 @@ Copilot plugin marketplace for ZiviDevelopment team. A curated collection of ski
 | Plugin | Description |
 |--------|-------------|
 | [content-ai](plugins/content-ai/) | AI-powered content generation — research, comparison, and visual documentation |
-| [cmops](plugins/cmops/) | Azure DevOps CI/CD operations — monitor builds, gate PRs, and auto-merge |
 
 ## Repository Structure
 
@@ -21,8 +20,7 @@ ZiviDevelopmentMarketplace/
 │   └── plugin/
 │       └── marketplace.json              # Plugin registry
 ├── plugins/
-│   ├── content-ai/                   # AI content generation plugin
-│   └── cmops/                        # Azure DevOps CI/CD operations
+│   └── content-ai/                   # AI content generation plugin
 ├── templates/
 │   ├── plugin-basic/                 # Minimal plugin scaffold
 │   └── plugin-full/                  # Full-featured plugin scaffold
