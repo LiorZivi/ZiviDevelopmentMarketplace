@@ -1,13 +1,13 @@
 ---
 name: learn
-description: "Deep-dive research skill that investigates any technology topic and produces a comprehensive markdown document plus a branded PowerPoint presentation, and can then repackage them into LinkedIn content — a long-form newsletter ARTICLE plus a short summary POST that links to it, formatted for LinkedIn's editors so they are ready to paste. Also supports editing existing output: adding, updating, removing, or restructuring sections. Use this skill whenever the user wants to learn about, research, or create educational content about any technology, framework, tool, concept, or methodology, or wants to publish that content to LinkedIn. Triggers on: 'learn about X', 'research X', 'teach me X', 'create a presentation on X', 'explore topic X', 'edit the presentation', 'add a section about X', 'update the Y document', 'restructure the presentation', 'make a LinkedIn article', 'turn this into a LinkedIn post', 'write a LinkedIn newsletter issue about X', 'create a summary post for X', 'publish X to LinkedIn'."
+description: "Deep-dive research skill that investigates any technology topic and produces a comprehensive markdown document plus a branded PowerPoint presentation. Also supports editing existing output: adding, updating, removing, or restructuring sections. After producing a topic's document and deck, it hands off to the linked-in-post skill for LinkedIn content. Use this skill whenever the user wants to learn about, research, or create educational content about any technology, framework, tool, concept, or methodology. Triggers on: 'learn about X', 'research X', 'teach me X', 'create a presentation on X', 'explore topic X', 'edit the presentation', 'add a section about X', 'update the Y document', 'restructure the presentation'."
 argument-hint: "[topic]"
 user-invocable: true
 ---
 
 # LearnAI: Topic Research & Presentation Generator
 
-You are a senior technology researcher and educator. You either create new research documents from scratch or edit existing ones. The markdown file is always the source of truth — the PPTX is regenerated from it after every change.
+You are a senior technology researcher and educator. You either create new research documents from scratch or edit existing ones. The markdown file is always the source of truth — the PPTX is regenerated from it after every change. Turning a topic into LinkedIn content is delegated to the separate `linked-in-post` skill.
 
 ## Plugin Paths
 
@@ -17,19 +17,18 @@ You are a senior technology researcher and educator. You either create new resea
 - **Markdown document**: `./output/learn/{Topic}/{Topic}.md`
 - **Presentation**: `./output/learn/{Topic}/{Topic}.pptx`
 - **Output template**: `${CLAUDE_PLUGIN_ROOT}/skills/learn/output-template.md`
-- **LinkedIn template**: `${CLAUDE_PLUGIN_ROOT}/skills/learn/linkedin-template.md`
-- **Slide images directory**: `./output/learn/{Topic}/images`
-- **LinkedIn outputs**: `./output/learn/{Topic}/linkedin-article.md` and `./output/learn/{Topic}/linkedin-post.md`
+- **LinkedIn output**: produced by the separate `linked-in-post` skill (see Phase 4), written into the same `./output/learn/{Topic}/` folder
 
 ## Mode Detection
 
 Before starting, determine the mode:
 
-1. **Create Mode** — No existing output for this topic, OR user explicitly asks to research/learn a new topic. Follow the full workflow (Research -> Write -> Generate PPTX).
+1. **Create Mode** — No existing output for this topic, OR user explicitly asks to research/learn a new topic. Follow the full workflow (Research -> Write -> Generate PPTX -> LinkedIn).
 2. **Edit Mode** — Output already exists at `./output/learn/{Topic}/{Topic}.md` AND the user asks to modify it (add sections, update content, remove parts, fix errors, restructure). Follow the edit workflow (Read -> Edit -> Regenerate PPTX).
-3. **LinkedIn Mode** — `./output/learn/{Topic}/{Topic}.md` already exists and the user asks specifically for LinkedIn content (e.g., "make a LinkedIn article from the Kubernetes doc", "write a summary post for X"). Skip research/writing/PPTX and run only the **LinkedIn Publishing** section against the existing files.
 
-To detect: check if `./output/learn/{Topic}/{Topic}.md` exists using Glob or Read. If the user references an existing topic ("update the Kubernetes doc", "add Helm to the diffusion models presentation"), look for a matching file. If found and the user wants changes, use Edit Mode. If not found or the user wants a fresh start, use Create Mode. If a matching file exists and the user only wants LinkedIn content, use LinkedIn Mode.
+To detect: check if `./output/learn/{Topic}/{Topic}.md` exists using Glob or Read. If the user references an existing topic ("update the Kubernetes doc", "add Helm to the diffusion models presentation"), look for a matching file. If found and the user wants changes, use Edit Mode. If not found or the user wants a fresh start, use Create Mode.
+
+LinkedIn content is handled by the separate `linked-in-post` skill — Create Mode hands off to it automatically (Phase 4). If the user only wants LinkedIn content from a topic that already exists, the `linked-in-post` skill serves that request directly.
 
 ---
 
@@ -60,52 +59,6 @@ The wrapper script will:
 - Install `python-pptx` if needed
 - Generate the PPTX and report the slide count
 - If Python is not found, it will output a `SKIP_PPTX` message with install guidance
-
----
-
-## LinkedIn Publishing
-
-Once the document and presentation exist, repackage them into two ready-to-post LinkedIn assets:
-
-1. A **newsletter article** -> `./output/learn/{Topic}/linkedin-article.md` — the long-form issue.
-2. A **summary post** -> `./output/learn/{Topic}/linkedin-post.md` — a short feed teaser that links to the article.
-
-`{Topic}.md` is the source of truth for substance; the presentation slides become the article's visuals. Why two artifacts: a short native post is what LinkedIn's feed rewards with reach, while the article/newsletter is the durable, subscribable home for the full content — the post exists to drive people to the article.
-
-**Read the format spec at `${CLAUDE_PLUGIN_ROOT}/skills/learn/linkedin-template.md` before writing.** It defines both artifacts precisely, including the critical difference that articles use real rich text while feed posts do not.
-
-### Step 1: Export slide images
-
-Turn the deck into per-slide PNGs the user can drop into the article:
-
-```bash
-bash "${CLAUDE_PLUGIN_ROOT}/scripts/learn/export_slides.sh" "./output/learn/{Topic}/{Topic}.pptx" "./output/learn/{Topic}/images" "{Topic}"
-```
-
-This writes `./output/learn/{Topic}/images/{Topic}-slide-01.png`, `-02`, … in deck order (title slide first, then each section), and prints a `SLIDE NN -> path` manifest plus a final `EXPORTED <n>`. It uses Microsoft PowerPoint (Windows) if present, then LibreOffice, and prints `SKIP_EXPORT` if neither is available.
-
-If export is skipped — or the PPTX was never generated — still write the article: keep the `〔🖼 SLIDE NN〕` markers and tell the user how to export slides by hand (PowerPoint: File > Export > PNG). **Never block article creation on image export.** Reference only the filenames the manifest actually reported.
-
-### Step 2: Write the newsletter article
-
-Follow PART A of the template. The essentials:
-
-- Articles support **real rich text**, so write clean Markdown (headings, bold, lists, images) — do **not** use the Unicode-bold trick here; that is only for feed posts.
-- **Reframe** the deck's terse bullets into flowing, plain-English prose. The document is a skeleton; the article is the narrative a reader enjoys. Aim for a 3–5 minute read (~600–1,200 words) and curate to 4–7 sections.
-- Place **3–6** slide images where they reinforce the text (the architecture image near the architecture section, the comparison-table slide near the comparison), using the real exported filenames at the `〔🖼 SLIDE NN〕` markers.
-- Open the file with the template's "HOW TO POST" comment block so publishing is mechanical, and close with a **Key takeaways** list and a subscribe CTA.
-
-### Step 3: Write the summary post
-
-Follow PART B of the template. The essentials:
-
-- The feed has no formatting, so use **Unicode bold/italic** for emphasis, a 2-line **hook** above the "…see more" fold, short scannable lines, and 3–6 hashtags.
-- Keep links **out of the post body** (LinkedIn throttles them) — provide a ready-to-paste **first comment** containing the article link instead.
-- End with a subscribe/connect CTA so each post compounds the user's brand.
-
-### Step 4: Personalize and report
-
-Fill `{Author}`, `{role}`, and `{Newsletter name}` from what you know about the user; if genuinely unknown, leave the placeholder and ask them to fill it once — don't invent a newsletter name. Then tell the user both file locations and the one-line publish flow.
 
 ---
 
@@ -144,7 +97,7 @@ Types of edits:
 
 After editing the markdown, generate the PPTX following the **PPTX Generation** section above.
 
-If LinkedIn artifacts (`linkedin-article.md` / `linkedin-post.md`) already exist for this topic, or the user asks for them, refresh them too by following the **LinkedIn Publishing** section so the article and post stay in sync with the edited document.
+If LinkedIn artifacts (`linkedin-article.md` / `linkedin-post.md`) already exist for this topic, or the user asks for them, refresh them by invoking the `linked-in-post` skill so the article and post stay in sync with the edited document.
 
 ### Step 5: Report
 
@@ -193,9 +146,10 @@ After writing the markdown file, generate the PPTX following the **PPTX Generati
 
 ### Phase 4: LinkedIn Publishing
 
-Repackage the document and presentation into LinkedIn content by following the **LinkedIn Publishing** section above — produce both the newsletter article and the summary post.
+Hand off to the `linked-in-post` skill to produce the LinkedIn article and summary post for this topic:
 
-Skip this phase only if the user explicitly said they want just the research/presentation. Otherwise generate both artifacts: they are cheap to produce and are the main way the user turns what they learned into shared, brand-building content.
+- Invoke the `linked-in-post` skill (via the skill tool), passing a **reference to the document** you just wrote — `./output/learn/{Topic}/{Topic}.md`. It repackages that content into `linkedin-article.md` and `linkedin-post.md` next to it, generating its own visuals and handling all LinkedIn formatting.
+- Skip this phase only if the user explicitly said they want just the research/presentation. Otherwise hand off to it — the LinkedIn assets are the main way the user turns what they learned into shared, brand-building content.
 
 ### Phase 5: Report
 
@@ -207,7 +161,7 @@ Tell the user:
   - **macOS**: `brew install python` or download from python.org
   - **Linux**: `sudo apt install python3` (Ubuntu/Debian) or `sudo dnf install python3` (Fedora)
   - After installing Python, they can re-run `/learn {Topic}` in edit mode to generate the PPTX
-- The LinkedIn article and summary post file locations, plus a one-line reminder of how to publish: Write article -> select your newsletter -> paste the article, then publish the teaser post and put the article link in its first comment
+- If LinkedIn content was generated, note that the `linked-in-post` skill produced and reported the article + summary post locations (it owns that output)
 - Any sections where web research was limited and training data was used instead
 
 ## Quality Guidelines
