@@ -13,21 +13,23 @@ You are a senior technology researcher and educator. You either create new resea
 
 - **Plugin root**: `${CLAUDE_PLUGIN_ROOT}`
 - **Scripts directory**: `${CLAUDE_PLUGIN_ROOT}/scripts/learn`
-- **Output directory**: `./output/learn` (relative to user's working directory)
+- **Output directory**: `./output/learn/{Topic}` — a dedicated per-topic folder (relative to the user's working directory). Every artifact for a topic lives inside this folder, so topics never share a flat directory.
+- **Markdown document**: `./output/learn/{Topic}/{Topic}.md`
+- **Presentation**: `./output/learn/{Topic}/{Topic}.pptx`
 - **Output template**: `${CLAUDE_PLUGIN_ROOT}/skills/learn/output-template.md`
 - **LinkedIn template**: `${CLAUDE_PLUGIN_ROOT}/skills/learn/linkedin-template.md`
-- **Slide images directory**: `./output/learn/images`
-- **LinkedIn outputs**: `./output/learn/{Topic}-linkedin-article.md` and `./output/learn/{Topic}-linkedin-post.md`
+- **Slide images directory**: `./output/learn/{Topic}/images`
+- **LinkedIn outputs**: `./output/learn/{Topic}/linkedin-article.md` and `./output/learn/{Topic}/linkedin-post.md`
 
 ## Mode Detection
 
 Before starting, determine the mode:
 
 1. **Create Mode** — No existing output for this topic, OR user explicitly asks to research/learn a new topic. Follow the full workflow (Research -> Write -> Generate PPTX).
-2. **Edit Mode** — Output already exists at `./output/learn/{Topic}.md` AND the user asks to modify it (add sections, update content, remove parts, fix errors, restructure). Follow the edit workflow (Read -> Edit -> Regenerate PPTX).
-3. **LinkedIn Mode** — `./output/learn/{Topic}.md` already exists and the user asks specifically for LinkedIn content (e.g., "make a LinkedIn article from the Kubernetes doc", "write a summary post for X"). Skip research/writing/PPTX and run only the **LinkedIn Publishing** section against the existing files.
+2. **Edit Mode** — Output already exists at `./output/learn/{Topic}/{Topic}.md` AND the user asks to modify it (add sections, update content, remove parts, fix errors, restructure). Follow the edit workflow (Read -> Edit -> Regenerate PPTX).
+3. **LinkedIn Mode** — `./output/learn/{Topic}/{Topic}.md` already exists and the user asks specifically for LinkedIn content (e.g., "make a LinkedIn article from the Kubernetes doc", "write a summary post for X"). Skip research/writing/PPTX and run only the **LinkedIn Publishing** section against the existing files.
 
-To detect: check if `./output/learn/{Topic}.md` exists using Glob or Read. If the user references an existing topic ("update the Kubernetes doc", "add Helm to the diffusion models presentation"), look for a matching file. If found and the user wants changes, use Edit Mode. If not found or the user wants a fresh start, use Create Mode. If a matching file exists and the user only wants LinkedIn content, use LinkedIn Mode.
+To detect: check if `./output/learn/{Topic}/{Topic}.md` exists using Glob or Read. If the user references an existing topic ("update the Kubernetes doc", "add Helm to the diffusion models presentation"), look for a matching file. If found and the user wants changes, use Edit Mode. If not found or the user wants a fresh start, use Create Mode. If a matching file exists and the user only wants LinkedIn content, use LinkedIn Mode.
 
 ---
 
@@ -42,8 +44,8 @@ Before using the built-in Python script, check your available skills list for a 
 **If the `pptx` skill IS available:**
 
 1. Invoke the `pptx` skill using the skill tool
-2. Instruct it to create a presentation from the structured markdown at `./output/learn/{Topic}.md`
-3. Save the output to `./output/learn/{Topic}.pptx`
+2. Instruct it to create a presentation from the structured markdown at `./output/learn/{Topic}/{Topic}.md`
+3. Save the output to `./output/learn/{Topic}/{Topic}.pptx`
 4. Provide the following context to the pptx skill:
    - The markdown uses `#` for the presentation title, `##` for section divider slides, and `###` for content slides
    - Each `###` subsection should map to one or more slides — use your judgment on how to split content for readability
@@ -56,7 +58,7 @@ Before using the built-in Python script, check your available skills list for a 
 Fall back to the built-in generator:
 
 ```bash
-bash "${CLAUDE_PLUGIN_ROOT}/scripts/learn/generate.sh" "./output/learn/{Topic}.md" "./output/learn/{Topic}.pptx"
+bash "${CLAUDE_PLUGIN_ROOT}/scripts/learn/generate.sh" "./output/learn/{Topic}/{Topic}.md" "./output/learn/{Topic}/{Topic}.pptx"
 ```
 
 The wrapper script will:
@@ -71,8 +73,8 @@ The wrapper script will:
 
 Once the document and presentation exist, repackage them into two ready-to-post LinkedIn assets:
 
-1. A **newsletter article** -> `./output/learn/{Topic}-linkedin-article.md` — the long-form issue.
-2. A **summary post** -> `./output/learn/{Topic}-linkedin-post.md` — a short feed teaser that links to the article.
+1. A **newsletter article** -> `./output/learn/{Topic}/linkedin-article.md` — the long-form issue.
+2. A **summary post** -> `./output/learn/{Topic}/linkedin-post.md` — a short feed teaser that links to the article.
 
 `{Topic}.md` is the source of truth for substance; the presentation slides become the article's visuals. Why two artifacts: a short native post is what LinkedIn's feed rewards with reach, while the article/newsletter is the durable, subscribable home for the full content — the post exists to drive people to the article.
 
@@ -83,10 +85,10 @@ Once the document and presentation exist, repackage them into two ready-to-post 
 Turn the deck into per-slide PNGs the user can drop into the article:
 
 ```bash
-bash "${CLAUDE_PLUGIN_ROOT}/scripts/learn/export_slides.sh" "./output/learn/{Topic}.pptx" "./output/learn/images" "{Topic}"
+bash "${CLAUDE_PLUGIN_ROOT}/scripts/learn/export_slides.sh" "./output/learn/{Topic}/{Topic}.pptx" "./output/learn/{Topic}/images" "{Topic}"
 ```
 
-This writes `./output/learn/images/{Topic}-slide-01.png`, `-02`, … in deck order (title slide first, then each section), and prints a `SLIDE NN -> path` manifest plus a final `EXPORTED <n>`. It uses Microsoft PowerPoint (Windows) if present, then LibreOffice, and prints `SKIP_EXPORT` if neither is available.
+This writes `./output/learn/{Topic}/images/{Topic}-slide-01.png`, `-02`, … in deck order (title slide first, then each section), and prints a `SLIDE NN -> path` manifest plus a final `EXPORTED <n>`. It uses Microsoft PowerPoint (Windows) if present, then LibreOffice, and prints `SKIP_EXPORT` if neither is available.
 
 If export is skipped — or the PPTX was never generated — still write the article: keep the `〔🖼 SLIDE NN〕` markers and tell the user how to export slides by hand (PowerPoint: File > Export > PNG). **Never block article creation on image export.** Reference only the filenames the manifest actually reported.
 
@@ -117,7 +119,7 @@ Fill `{Author}`, `{role}`, and `{Newsletter name}` from what you know about the 
 
 ### Step 1: Read Existing Content
 
-Read the existing `./output/learn/{Topic}.md` to understand current structure and content.
+Read the existing `./output/learn/{Topic}/{Topic}.md` to understand current structure and content.
 
 ### Step 2: Research (if needed)
 
@@ -127,7 +129,7 @@ If the edit is structural (reorder sections, remove content, fix wording), skip 
 
 ### Step 3: Edit the Markdown
 
-Use the Edit tool to make targeted changes to `./output/learn/{Topic}.md`. Preserve the existing structure and formatting conventions:
+Use the Edit tool to make targeted changes to `./output/learn/{Topic}/{Topic}.md`. Preserve the existing structure and formatting conventions:
 - `##` for section headings
 - `###` for subsection headings
 - Bullet lists for content
@@ -148,7 +150,7 @@ Types of edits:
 
 After editing the markdown, generate the PPTX following the **PPTX Generation** section above.
 
-If LinkedIn artifacts (`{Topic}-linkedin-article.md` / `{Topic}-linkedin-post.md`) already exist for this topic, or the user asks for them, refresh them too by following the **LinkedIn Publishing** section so the article and post stay in sync with the edited document.
+If LinkedIn artifacts (`linkedin-article.md` / `linkedin-post.md`) already exist for this topic, or the user asks for them, refresh them too by following the **LinkedIn Publishing** section so the article and post stay in sync with the edited document.
 
 ### Step 5: Report
 
@@ -181,7 +183,7 @@ If web research fails or returns limited results, fall back to your training kno
 
 ### Phase 2: Write Structured Markdown
 
-Write the output markdown file to `./output/learn/{Topic}.md` using **exactly** the structure defined in the template. Read the template file at `${CLAUDE_PLUGIN_ROOT}/skills/learn/output-template.md` for the precise format.
+Write the output markdown file to `./output/learn/{Topic}/{Topic}.md` using **exactly** the structure defined in the template. Read the template file at `${CLAUDE_PLUGIN_ROOT}/skills/learn/output-template.md` for the precise format.
 
 The structure must be followed strictly because the PPTX generator parses it by heading levels:
 - `#` = presentation title

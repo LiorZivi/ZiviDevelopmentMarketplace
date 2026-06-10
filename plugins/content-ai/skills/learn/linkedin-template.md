@@ -3,8 +3,8 @@
 This file defines the exact format for the two LinkedIn artifacts the `learn` skill produces
 from a finished `{Topic}.md` (the substance) and `{Topic}.pptx` (the visuals):
 
-1. A **newsletter article** → `./output/learn/{Topic}-linkedin-article.md`
-2. A **summary post** → `./output/learn/{Topic}-linkedin-post.md`
+1. A **newsletter article** → `./output/learn/{Topic}/linkedin-article.md`
+2. A **summary post** → `./output/learn/{Topic}/linkedin-post.md`
 
 LinkedIn treats these two surfaces very differently, and getting the formatting right is what
 makes them "paste-and-go" for the user. The single most important rule:
@@ -18,7 +18,7 @@ just to show structure — don't wrap the real file in a code fence).
 
 ---
 
-## PART A — Newsletter Article → `{Topic}-linkedin-article.md`
+## PART A — Newsletter Article → `linkedin-article.md`
 
 A newsletter issue is a long-form article. Reframe the deck's terse bullets into flowing,
 plain-English prose — the document is a skeleton, the article is the narrative a reader actually
@@ -38,7 +38,7 @@ HOW TO POST THIS AS A LINKEDIN NEWSLETTER ISSUE
    - For **bold** / *italic* -> apply with the toolbar (LinkedIn does not parse Markdown).
    - At every brace-and-frame slide marker -> click the image button and insert the named PNG.
 5. Delete this comment block and every slide marker before publishing.
-6. Publish, then post {Topic}-linkedin-post.md and paste the article link as its first comment.
+6. Publish, then post linkedin-post.md and paste the article link as its first comment.
 -->
 
 TITLE: {Compelling, curiosity + benefit title — e.g., "Stop confusing AI agents with chatbots"}
@@ -88,7 +88,7 @@ TITLE: {Compelling, curiosity + benefit title — e.g., "Stop confusing AI agent
 
 ---
 
-## PART B — Summary Post → `{Topic}-linkedin-post.md`
+## PART B — Summary Post → `linkedin-post.md`
 
 This is the short **feed post** that teases the article and drives clicks. It is where reach
 happens, so it must earn the "…see more" tap and survive LinkedIn's plain-text feed.
