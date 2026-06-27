@@ -16,8 +16,9 @@ Copilot plugin marketplace for ZiviDevelopment team. A curated collection of ski
 | [code-simplifier](https://github.com/anthropics/claude-plugins-official/tree/main/plugins/code-simplifier) | Referenced → Anthropic | Simplifies and refines code for clarity, consistency, and maintainability |
 | [frontend-design](https://github.com/anthropics/claude-plugins-official/tree/main/plugins/frontend-design) | Referenced → Anthropic | Production-grade frontend interfaces with high design quality |
 | [skill-creator](https://github.com/anthropics/claude-plugins-official/tree/main/plugins/skill-creator) | Referenced → Anthropic | Create, improve, and measure the performance of skills |
+| [document-skills](https://github.com/anthropics/skills/tree/main/skills) | Referenced → Anthropic | Document processing suite — Excel (xlsx), Word (docx), PowerPoint (pptx), and PDF |
 
-> **Referenced** plugins are not copied into this repo — their marketplace entry points at a subdirectory of [anthropics/claude-plugins-official](https://github.com/anthropics/claude-plugins-official) via a `github` source, so `/plugin install` pulls them live from Anthropic's official marketplace.
+> **Referenced** plugins are not copied into this repo — their marketplace entry points at Anthropic's official repos ([claude-plugins-official](https://github.com/anthropics/claude-plugins-official) and [skills](https://github.com/anthropics/skills)) via a `github` source, so `/plugin install` pulls them live from Anthropic. `document-skills` selects the `xlsx`, `docx`, `pptx`, and `pdf` skills from `anthropics/skills` (`strict: false` + a `skills` list).
 
 ## Repository Structure
 

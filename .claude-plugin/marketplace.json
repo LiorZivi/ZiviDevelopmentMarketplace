@@ -69,6 +69,21 @@
       "category": "development",
       "tags": ["skills", "authoring", "evals", "tooling", "anthropic"],
       "homepage": "https://github.com/anthropics/claude-plugins-official/tree/main/plugins/skill-creator"
+    },
+    {
+      "name": "document-skills",
+      "source": {
+        "source": "github",
+        "repo": "anthropics/skills",
+        "ref": "main"
+      },
+      "strict": false,
+      "skills": ["./skills/xlsx", "./skills/docx", "./skills/pptx", "./skills/pdf"],
+      "description": "Document processing suite — create, read, and edit Excel (xlsx), Word (docx), PowerPoint (pptx), and PDF files.",
+      "author": { "name": "Anthropic", "email": "support@anthropic.com" },
+      "category": "productivity",
+      "tags": ["documents", "xlsx", "docx", "pptx", "pdf", "office", "anthropic"],
+      "homepage": "https://github.com/anthropics/skills/tree/main/skills"
     }
   ]
 }
