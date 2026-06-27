@@ -93,13 +93,15 @@ Types of edits:
 
 **Post-edit validation**: After editing, make sure the document still reads cleanly and its heading structure (`##` sections, `###` subsections) stays intact. There are no rigid per-slide limits — the `pptx` skill re-flows the content into the deck when it is regenerated.
 
-### Step 4: Generate PPTX
+### Step 4: Edit PPTX
 
-After editing the markdown, generate the PPTX following the **PPTX Generation** section above.
+If PPTX artifacts exist for this topic, or the user asks for them, edit them by invoking the `pptx` skill or using the built-in script so the slides stay in sync with the edited markdown.
 
-If LinkedIn artifacts (`linkedin-article.md` / `linkedin-post.md`) already exist for this topic, or the user asks for them, refresh them by invoking the `linked-in-post` skill so the article and post stay in sync with the edited document.
+### Step 5: Edit LinkedIn artifacts
 
-### Step 5: Report
+If LinkedIn artifacts (`linkedin-article.md` / `linkedin-post.md`) already exist for this topic, or the user asks for them, edit them by invoking the `linked-in-post` skill so the article and post stay in sync with the edited document.
+
+### Step 6: Report
 
 Tell the user:
 - What was changed in the markdown (sections added/modified/removed)
