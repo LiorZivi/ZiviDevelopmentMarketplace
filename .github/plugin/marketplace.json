@@ -28,6 +28,45 @@
       "description": "Third-party skills vendored from external repositories. Includes humanizer: removes signs of AI-generated writing to make text sound natural and human-written.",
       "version": "1.0.0",
       "tags": ["humanizer", "writing", "humanize", "ai-writing", "content"]
+    },
+    {
+      "name": "code-simplifier",
+      "source": {
+        "source": "github",
+        "repo": "anthropics/claude-plugins-official",
+        "path": "plugins/code-simplifier",
+        "ref": "main"
+      },
+      "description": "Agent that simplifies and refines code for clarity, consistency, and maintainability while preserving functionality. Focuses on recently modified code.",
+      "category": "productivity",
+      "tags": ["code-quality", "refactoring", "maintainability", "agent", "anthropic"],
+      "homepage": "https://github.com/anthropics/claude-plugins-official/tree/main/plugins/code-simplifier"
+    },
+    {
+      "name": "frontend-design",
+      "source": {
+        "source": "github",
+        "repo": "anthropics/claude-plugins-official",
+        "path": "plugins/frontend-design",
+        "ref": "main"
+      },
+      "description": "Create distinctive, production-grade frontend interfaces with high design quality. Generates creative, polished code that avoids generic AI aesthetics.",
+      "category": "development",
+      "tags": ["frontend", "design", "ui", "ux", "anthropic"],
+      "homepage": "https://github.com/anthropics/claude-plugins-official/tree/main/plugins/frontend-design"
+    },
+    {
+      "name": "skill-creator",
+      "source": {
+        "source": "github",
+        "repo": "anthropics/claude-plugins-official",
+        "path": "plugins/skill-creator",
+        "ref": "main"
+      },
+      "description": "Create new skills, improve existing skills, and measure skill performance. Use when users want to create a skill from scratch, update or optimize an existing skill, run evals to test a skill, or benchmark skill performance with variance analysis.",
+      "category": "development",
+      "tags": ["skills", "authoring", "evals", "tooling", "anthropic"],
+      "homepage": "https://github.com/anthropics/claude-plugins-official/tree/main/plugins/skill-creator"
     }
   ]
 }
