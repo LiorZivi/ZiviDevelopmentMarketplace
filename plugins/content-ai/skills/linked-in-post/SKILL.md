@@ -143,19 +143,24 @@ Rules:
 
 The **feed** has no rich text, so this stays plain text with **Unicode bold/italic** for emphasis. First 2 lines must hook above the "…see more" fold; short lines; **3–6 hashtags**; **800–1,500 chars**. Keep links **out of the body** (LinkedIn throttles them) — give the article link as a ready-to-paste **first comment**.
 
+Write it to feel **personal**, not corporate: use **first person**, lead with your own angle — why this mattered to you, what surprised you, a genuine opinion or hot take — and keep the voice conversational, like *you* sharing something with your network rather than a press release. Avoid generic hype and AI-isms (the Step 6 humanizer pass reinforces this).
+
+Because the article link lives in the first comment (not the body), the post **must include a line telling readers the link is in the comments** — some variation of *"I pasted the link to the full article in the comments."*
+
 ```
-{𝗨𝗻𝗶𝗰𝗼𝗱𝗲-𝗯𝗼𝗹𝗱 hook line 1}
+{𝗨𝗻𝗶𝗰𝗼𝗱𝗲-𝗯𝗼𝗹𝗱 personal hook line 1 — first person, your angle or a surprising take}
 {hook line 2 that earns the "…see more" tap}
 
-{2–4 short lines previewing the value}
+{2–4 short lines previewing the value, in your own voice}
 
 𝗜𝗻𝘀𝗶𝗱𝗲 𝘁𝗵𝗲 𝗳𝘂𝗹𝗹 𝗶𝘀𝘀𝘂𝗲:
 ◈ {point 1}
 ◈ {point 2}
 
-{one-line takeaway}
+{one-line personal takeaway — what you think, or what you'd do with this}
 
-♻️ Repost if useful. Full breakdown in the comments 👇
+📎 {variation of "I pasted the link to the full article in the comments"} 👇
+♻️ Repost if it's useful to someone in your network.
 
 #Hashtag1 #Hashtag2 #Hashtag3
 ```
