@@ -25,9 +25,9 @@
     {
       "name": "remote-skills",
       "source": "./plugins/remote-skills",
-      "description": "Third-party skills vendored from external repositories. Includes humanizer: removes signs of AI-generated writing to make text sound natural and human-written.",
-      "version": "1.0.0",
-      "tags": ["humanizer", "writing", "humanize", "ai-writing", "content"]
+      "description": "Third-party skills vendored from external repositories. Includes humanizer (removes signs of AI-generated writing) and brainstorming (explores intent, requirements, and design before implementation).",
+      "version": "1.1.0",
+      "tags": ["humanizer", "brainstorming", "writing", "design", "ideation", "ai-writing", "content"]
     },
     {
       "name": "code-simplifier",
