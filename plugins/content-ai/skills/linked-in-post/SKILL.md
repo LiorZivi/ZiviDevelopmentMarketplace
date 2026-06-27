@@ -88,7 +88,7 @@ cover: images/cover.png
 
 ## Step 2: Humanize the article — `{DocName}-LinkedIn-Article.md`
 
-Run the **`humanizer`** skill (from the `remote-plugin` plugin) on `{DocName}-LinkedIn-Article.md` so it reads as human-written rather than AI-generated, then save the humanized text back to `{DocName}-LinkedIn-Article.md`. This must run **before Step 4** — the paste-ready HTML is rendered from this file, so it needs to reflect the humanized text. If the `humanizer` skill isn't installed, apply its principles inline (cut AI tells and filler, vary sentence rhythm) and continue.
+Run the **`humanizer`** skill (from the `remote-plugin-blader` plugin) on `{DocName}-LinkedIn-Article.md` so it reads as human-written rather than AI-generated, then save the humanized text back to `{DocName}-LinkedIn-Article.md`. This must run **before Step 4** — the paste-ready HTML is rendered from this file, so it needs to reflect the humanized text. If the `humanizer` skill isn't installed, apply its principles inline (cut AI tells and filler, vary sentence rhythm) and continue.
 
 ## Step 3: Generate the cover image and inline visuals
 
@@ -169,7 +169,7 @@ Then give the **first comment** text (the article link) ready to paste.
 
 ## Step 6: Humanize the summary post — `{DocName}-LinkedIn-FeedTeaser-Post.md`
 
-Run the **`humanizer`** skill (from the `remote-plugin` plugin) on `{DocName}-LinkedIn-FeedTeaser-Post.md` so it sounds like a human wrote it, then save the humanized text back. If the `humanizer` skill isn't installed, apply its principles inline and continue.
+Run the **`humanizer`** skill (from the `remote-plugin-blader` plugin) on `{DocName}-LinkedIn-FeedTeaser-Post.md` so it sounds like a human wrote it, then save the humanized text back. If the `humanizer` skill isn't installed, apply its principles inline and continue.
 
 ## Step 7: Personalize and report the publish workflow
 

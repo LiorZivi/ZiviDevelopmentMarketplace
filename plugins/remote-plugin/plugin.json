@@ -1,8 +1,0 @@
-{
-  "name": "remote-plugin",
-  "version": "1.2.0",
-  "description": "Third-party skills vendored from external repositories. Includes humanizer (removes signs of AI-generated writing), brainstorming (explores intent, requirements, and design before implementation), and deep-research (multi-source research with citation tracking and structured reports).",
-  "author": {
-    "name": "lizi@microsoft.com"
-  }
-}

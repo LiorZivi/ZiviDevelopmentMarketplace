@@ -39,7 +39,7 @@ visual brainstorming companion (`visual-companion.md` + `scripts/` local server)
 Because this is a copy, upstream changes are **not** pulled automatically. To refresh it:
 
 ```powershell
-$skill = "plugins/remote-plugin/skills/brainstorming"
+$skill = "plugins/remote-plugin-obra/skills/brainstorming"
 $tmp = Join-Path $env:TEMP "sp-refresh"
 git clone --depth 1 https://github.com/obra/superpowers.git $tmp
 Remove-Item "$skill/*" -Recurse -Force -Exclude "SOURCE.md"
@@ -52,7 +52,7 @@ Remove-Item $tmp -Recurse -Force
 Then:
 
 1. Update the **Commit copied** / **Commit date** / **Copied on** rows in the table above.
-2. Bump the `remote-plugin` version in all four manifest/registry files per the repository
-   `AGENTS.md` version-sync rule (`plugins/remote-plugin/plugin.json`,
-   `plugins/remote-plugin/.claude-plugin/plugin.json`, `.claude-plugin/marketplace.json`,
+2. Bump the `remote-plugin-obra` version in all four manifest/registry files per the repository
+   `AGENTS.md` version-sync rule (`plugins/remote-plugin-obra/plugin.json`,
+   `plugins/remote-plugin-obra/.claude-plugin/plugin.json`, `.claude-plugin/marketplace.json`,
    `.github/plugin/marketplace.json`).

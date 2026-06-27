@@ -1,0 +1,8 @@
+{
+  "name": "remote-plugin-199-biotechnologies",
+  "version": "1.0.0",
+  "description": "Vendored skill from 199-biotechnologies/claude-deep-research-skill: deep-research — multi-source research with citation tracking and structured reports.",
+  "author": {
+    "name": "lizi@microsoft.com"
+  }
+}

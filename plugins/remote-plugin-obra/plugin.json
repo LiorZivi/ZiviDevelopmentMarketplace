@@ -1,0 +1,8 @@
+{
+  "name": "remote-plugin-obra",
+  "version": "1.0.0",
+  "description": "Vendored skill from obra/superpowers: brainstorming — explores intent, requirements, and design before implementation.",
+  "author": {
+    "name": "lizi@microsoft.com"
+  }
+}

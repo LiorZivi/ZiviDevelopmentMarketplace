@@ -12,7 +12,9 @@ Copilot plugin marketplace for ZiviDevelopment team. A curated collection of ski
 |--------|--------|-------------|
 | [content-ai](plugins/content-ai/) | Local | AI-powered content generation — research, comparison, and visual documentation |
 | [general-ops](plugins/general-ops/) | Local | Bidirectional Copilot CLI ↔ Microsoft Teams bridge via the Teams MCP |
-| [remote-plugin](plugins/remote-plugin/) | Local | Third-party skills vendored from external repos (humanizer, brainstorming, deep-research) |
+| [remote-plugin-blader](plugins/remote-plugin-blader/) | Local | humanizer — removes signs of AI-generated writing (from blader/humanizer) |
+| [remote-plugin-obra](plugins/remote-plugin-obra/) | Local | brainstorming — explore intent & design before implementation (from obra/superpowers) |
+| [remote-plugin-199-biotechnologies](plugins/remote-plugin-199-biotechnologies/) | Local | deep-research — multi-source research with citations (from 199-biotechnologies) |
 | [code-simplifier](https://github.com/anthropics/claude-plugins-official/tree/main/plugins/code-simplifier) | Referenced → Anthropic | Simplifies and refines code for clarity, consistency, and maintainability |
 | [frontend-design](https://github.com/anthropics/claude-plugins-official/tree/main/plugins/frontend-design) | Referenced → Anthropic | Production-grade frontend interfaces with high design quality |
 | [skill-creator](https://github.com/anthropics/claude-plugins-official/tree/main/plugins/skill-creator) | Referenced → Anthropic | Create, improve, and measure the performance of skills |
