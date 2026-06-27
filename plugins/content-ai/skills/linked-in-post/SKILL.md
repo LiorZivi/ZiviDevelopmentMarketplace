@@ -10,7 +10,7 @@ user-invocable: true
 Turn a finished document into ready-to-publish LinkedIn assets:
 
 1. A **newsletter article** — `linkedin-article.md` (readable source) + `linkedin-article.html` (the **paste-ready** file).
-2. A **summary post** (`linkedin-post.md`) — a short feed teaser that links to the article.
+2. A **summary post** (`linkedin-feed-teaser-post.md`) — a short feed teaser that links to the article.
 3. A **cover image** (`images/cover.png`) — always generated, sized for LinkedIn.
 
 This skill is **independent** — it repackages whatever source content you point it at. `learn` can trigger it and hand over a reference, but you can also run it directly on any document.
@@ -38,22 +38,14 @@ Write everything **next to the source document** (same directory):
 
 - `linkedin-article.md` — readable article source
 - `linkedin-article.html` — the paste-ready article body
-- `linkedin-post.md` — the feed summary post
+- `linkedin-feed-teaser-post.md` — the feed summary post
 - `images/` — `cover.png` plus any inline visuals
 
 If content was given inline (no source path), create `./output/linkedin/{slug}/` and write there.
 
-## Step 1: Generate the cover image and inline visuals
+## Step 1: Write the article source — `linkedin-article.md`
 
-Create images **directly from the content** — no dependency on any deck/PPTX.
-
-- **Cover image (always):** `images/cover.png` at **1920 × 1080 px** (16:9; LinkedIn's official article/newsletter cover spec), PNG/JPEG/WEBP — **not GIF**, < 5 MB. Keep on-image text minimal (LinkedIn overlays UI on thumbnails).
-- **Inline visuals:** pick 3–6 ideas worth a visual (architecture, flow, comparison, before/after); generate each into `images/` using whatever image/diagram capability is available (an image/diagram skill, or emit Mermaid/SVG and render). Note each filename.
-- **No raster-image capability?** Don't block: keep inline `[📷 …]` markers as placeholders; for the cover, if a PNG can't be rendered, write `images/cover.svg` (1920 × 1080) and tell the user to export it to PNG.
-
-## Step 2: Write the article source — `linkedin-article.md`
-
-Reframe the source into flowing prose: a **3–5 minute read (~600–1,200 words)**, **4–7 sections**, leading with *why this matters now*. No hashtags in articles. Use this marker syntax (the readable source):
+Reframe the source into flowing prose: a **3–5 minute read (~600–1,200 words)**, **4–7 sections**, leading with *why this matters now*. No hashtags in articles. As you write, drop a `[📷 images/{name}.png — {what the visual shows}]` marker wherever a visual belongs, and reference the cover as `images/cover.png` — **Step 3 generates the actual image files to match these names.** Use this marker syntax (the readable source):
 
 ````
 ---
@@ -92,7 +84,19 @@ cover: images/cover.png
 *Written by {Author}, {role}.*
 ````
 
-## Step 3: Render the paste-ready HTML — `linkedin-article.html`
+## Step 2: Humanize the article — `linkedin-article.md`
+
+Run the **`humanizer`** skill (from the `remote-skills` plugin) on `linkedin-article.md` so it reads as human-written rather than AI-generated, then save the humanized text back to `linkedin-article.md`. This must run **before Step 4** — the paste-ready HTML is rendered from this file, so it needs to reflect the humanized text. If the `humanizer` skill isn't installed, apply its principles inline (cut AI tells and filler, vary sentence rhythm) and continue.
+
+## Step 3: Generate the cover image and inline visuals
+
+Now that the article exists, create the images it references — **directly from the content**, no dependency on any deck/PPTX.
+
+- **Cover image (always):** `images/cover.png` at **1920 × 1080 px** (16:9; LinkedIn's official article/newsletter cover spec), PNG/JPEG/WEBP — **not GIF**, < 5 MB. Keep on-image text minimal (LinkedIn overlays UI on thumbnails).
+- **Inline visuals:** for each `[📷 images/{name}.png — …]` marker in the article (3–6 is ideal; architecture, flow, comparison, before/after), generate the named file into `images/` using whatever image/diagram capability is available (an image/diagram skill, or emit Mermaid/SVG and render). Keep the filenames matching the markers.
+- **No raster-image capability?** Don't block: leave the inline `[📷 …]` markers as placeholders; for the cover, if a PNG can't be rendered, write `images/cover.svg` (1920 × 1080) and tell the user to export it to PNG.
+
+## Step 4: Render the paste-ready HTML — `linkedin-article.html`
 
 Convert the source to an HTML **body** using EXACTLY this mapping (all verified to survive paste). This is the file the user copies from a browser.
 
@@ -112,7 +116,7 @@ Convert the source to an HTML **body** using EXACTLY this mapping (all verified 
 | `[📷 file — caption]` | `<p>[📷 file — caption]</p>` (literal text) | Upload reminder |
 
 Rules:
-- **Do NOT put the title in the body** — it goes in LinkedIn's separate Title field (report it in Step 5). Do **not** emit `<h1>` (it does not map cleanly).
+- **Do NOT put the title in the body** — it goes in LinkedIn's separate Title field (report it in Step 7). Do **not** emit `<h1>` (it does not map cleanly).
 - **Use only these tags**: `h2, h3, p, strong, em, code, pre, ul, ol, li, blockquote, a, br`. No `class`, `style`, `div`, `span`, `<img>`, `<hr>`, tables, colors, or font-size — LinkedIn strips or breaks them.
 - **No `<img>`**: keep each image as the literal `[📷 …]` marker so the user uploads it at that spot.
 - Wrap in a minimal document so a browser renders it cleanly:
@@ -133,7 +137,7 @@ Rules:
 </body></html>
 ```
 
-## Step 4: Write the summary post — `linkedin-post.md`
+## Step 5: Write the summary post — `linkedin-feed-teaser-post.md`
 
 The **feed** has no rich text, so this stays plain text with **Unicode bold/italic** for emphasis. First 2 lines must hook above the "…see more" fold; short lines; **3–6 hashtags**; **800–1,500 chars**. Keep links **out of the body** (LinkedIn throttles them) — give the article link as a ready-to-paste **first comment**.
 
@@ -156,7 +160,11 @@ The **feed** has no rich text, so this stays plain text with **Unicode bold/ital
 
 Then give the **first comment** text (the article link) ready to paste.
 
-## Step 5: Personalize and report the publish workflow
+## Step 6: Humanize the summary post — `linkedin-feed-teaser-post.md`
+
+Run the **`humanizer`** skill (from the `remote-skills` plugin) on `linkedin-feed-teaser-post.md` so it sounds like a human wrote it, then save the humanized text back. If the `humanizer` skill isn't installed, apply its principles inline and continue.
+
+## Step 7: Personalize and report the publish workflow
 
 Fill `{Author}`, `{role}`, `{Newsletter name}` from what you know; if unknown, leave the placeholder and ask once. Optionally open the HTML in the user's browser for them (e.g. `Start-Process msedge "file:///<abs-path>/linkedin-article.html"`). Then report this exact flow:
 
@@ -168,6 +176,6 @@ Fill `{Author}`, `{role}`, `{Newsletter name}` from what you know; if unknown, l
 5. At each **`[📷 …]`** marker, click the image button and upload the named file from `images/`, then delete the marker text.
 
 **Feed post**
-6. Paste `linkedin-post.md` into a new feed post, publish, then paste the article link as the **first comment**.
+6. Paste `linkedin-feed-teaser-post.md` into a new feed post, publish, then paste the article link as the **first comment**.
 
 Report: the title, cover path, both file locations, the visuals generated (or placeholders), and the steps above.

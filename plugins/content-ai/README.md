@@ -70,7 +70,7 @@ If Python is not installed, the skill will create the markdown document and guid
 | `learn` presentation | `./output/learn/{Topic}/{Topic}.pptx` | Python 3 |
 | `linked-in-post` article (paste-ready) | `linkedin-article.html` next to the source doc | Nothing |
 | `linked-in-post` article (source) | `linkedin-article.md` next to the source doc | Nothing |
-| `linked-in-post` post | `linkedin-post.md` next to the source doc | Nothing |
+| `linked-in-post` post | `linkedin-feed-teaser-post.md` next to the source doc | Nothing |
 | `linked-in-post` cover image | `images/cover.png` (1920×1080) | image tool |
 | `linked-in-post` visuals | `images/` next to the article | image/diagram tool |
 | `ramp-up` markdown | `./output/ramp-up/{Topic}.md` | Workspace + (optional) bluebird MCP |

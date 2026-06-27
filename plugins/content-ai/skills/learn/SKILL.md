@@ -99,7 +99,7 @@ If PPTX artifacts exist for this topic, or the user asks for them, edit them by 
 
 ### Step 5: Edit LinkedIn artifacts
 
-If LinkedIn artifacts (`linkedin-article.md` / `linkedin-post.md`) already exist for this topic, or the user asks for them, edit them by invoking the `linked-in-post` skill so the article and post stay in sync with the edited document.
+If LinkedIn artifacts (`linkedin-article.md` / `linkedin-feed-teaser-post.md`) already exist for this topic, or the user asks for them, edit them by invoking the `linked-in-post` skill so the article and post stay in sync with the edited document.
 
 ### Step 6: Report
 
@@ -150,7 +150,7 @@ After writing the markdown file, generate the PPTX following the **PPTX Generati
 
 Hand off to the `linked-in-post` skill to produce the LinkedIn article and summary post for this topic:
 
-- Invoke the `linked-in-post` skill (via the skill tool), passing a **reference to the document** you just wrote — `./output/learn/{Topic}/{Topic}.md`. It repackages that content into `linkedin-article.md` and `linkedin-post.md` next to it, generating its own visuals and handling all LinkedIn formatting.
+- Invoke the `linked-in-post` skill (via the skill tool), passing a **reference to the document** you just wrote — `./output/learn/{Topic}/{Topic}.md`. It repackages that content into `linkedin-article.md` and `linkedin-feed-teaser-post.md` next to it, generating its own visuals and handling all LinkedIn formatting.
 - Skip this phase only if the user explicitly said they want just the research/presentation. Otherwise hand off to it — the LinkedIn assets are the main way the user turns what they learned into shared, brand-building content.
 
 ### Phase 5: Report
