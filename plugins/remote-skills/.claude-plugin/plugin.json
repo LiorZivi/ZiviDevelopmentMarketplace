@@ -1,0 +1,8 @@
+{
+  "name": "remote-skills",
+  "version": "1.0.0",
+  "description": "Third-party skills vendored from external repositories. Includes humanizer: removes signs of AI-generated writing to make text sound natural and human-written.",
+  "author": {
+    "name": "lizi@microsoft.com"
+  }
+}

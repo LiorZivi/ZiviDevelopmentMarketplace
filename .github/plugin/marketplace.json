@@ -21,6 +21,13 @@
       "description": "Bidirectional Copilot CLI ↔ Microsoft Teams bridge via the Teams MCP. Step away from the terminal and keep the agent running by chatting with it through a Teams channel thread — progress posts flow out via MCP, replies auto-inject back in.",
       "version": "1.9.0",
       "tags": ["teams", "teams-mcp", "remote-work", "copilot-cli", "bidirectional-chat", "infra", "ops"]
+    },
+    {
+      "name": "remote-skills",
+      "source": "./plugins/remote-skills",
+      "description": "Third-party skills vendored from external repositories. Includes humanizer: removes signs of AI-generated writing to make text sound natural and human-written.",
+      "version": "1.0.0",
+      "tags": ["humanizer", "writing", "humanize", "ai-writing", "content"]
     }
   ]
 }
