@@ -8,7 +8,7 @@
       "name": "content-ai",
       "source": "./plugins/content-ai",
       "description": "AI-powered content generation plugin with skills for research, presentations, LinkedIn articles, and architecture planning.",
-      "version": "3.5.2",
+      "version": "3.5.3",
       "author": { "name": "lizi@microsoft.com" },
       "tags": ["research", "education", "presentations", "linkedin", "content"]
     },
@@ -21,12 +21,12 @@
       "tags": ["teams", "teams-mcp", "remote-work", "copilot-cli", "bidirectional-chat", "infra", "ops"]
     },
     {
-      "name": "remote-skills",
-      "source": "./plugins/remote-skills",
-      "description": "Third-party skills vendored from external repositories. Includes humanizer (removes signs of AI-generated writing) and brainstorming (explores intent, requirements, and design before implementation).",
-      "version": "1.1.0",
+      "name": "remote-plugin",
+      "source": "./plugins/remote-plugin",
+      "description": "Third-party skills vendored from external repositories. Includes humanizer (removes signs of AI-generated writing), brainstorming (explores intent, requirements, and design before implementation), and deep-research (multi-source research with citation tracking and structured reports).",
+      "version": "1.2.0",
       "author": { "name": "lizi@microsoft.com" },
-      "tags": ["humanizer", "brainstorming", "writing", "design", "ideation", "ai-writing", "content"]
+      "tags": ["humanizer", "brainstorming", "deep-research", "research", "writing", "design", "ai-writing", "content"]
     },
     {
       "name": "code-simplifier",

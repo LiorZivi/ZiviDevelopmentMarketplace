@@ -1,8 +1,0 @@
-{
-  "name": "remote-skills",
-  "version": "1.1.0",
-  "description": "Third-party skills vendored from external repositories. Includes humanizer (removes signs of AI-generated writing) and brainstorming (explores intent, requirements, and design before implementation).",
-  "author": {
-    "name": "lizi@microsoft.com"
-  }
-}
