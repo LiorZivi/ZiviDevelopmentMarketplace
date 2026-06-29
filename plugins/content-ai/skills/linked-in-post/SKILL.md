@@ -31,6 +31,7 @@ You are given a reference to the source content — usually a path to a markdown
 
 1. Resolve it: if it's a path, read that file; if the user names a topic without a path, search the working directory for a matching document and confirm; if content is inline, use it directly.
 2. If no source content can be found, ask the user for the document path (or content) and stop — this skill repackages existing content, it does not research the topic.
+3. **Optional art direction:** the user may also pass image instructions beyond the defaults — a visual style (e.g. "anime," "Pixar-style 3D"), specific elements to include or avoid, mood, palette/brand colors, composition, or which image(s) it applies to. Capture all of it — Step 3 folds it into the prompts.
 
 ## Output location
 
@@ -94,9 +95,34 @@ Run the **`humanizer`** skill (from the `remote-plugin-blader` plugin) on `{DocN
 
 Now that the article exists, create the images it references — **directly from the content**, no dependency on any deck/PPTX.
 
-- **Cover image (always):** `images/cover.png` at **1920 × 1080 px** (16:9; LinkedIn's official article/newsletter cover spec), PNG/JPEG/WEBP — **not GIF**, < 5 MB. Keep on-image text minimal (LinkedIn overlays UI on thumbnails).
-- **Inline visuals:** for each `[📷 images/{name}.png — …]` marker in the article (3–6 is ideal; architecture, flow, comparison, before/after), generate the named file into `images/` using whatever image/diagram capability is available (an image/diagram skill, or emit Mermaid/SVG and render). Keep the filenames matching the markers.
-- **No raster-image capability?** Don't block: leave the inline `[📷 …]` markers as placeholders; for the cover, if a PNG can't be rendered, write `images/cover.svg` (1920 × 1080) and tell the user to export it to PNG.
+**Image generator — prefer the `ai-local-diffusion-invoker` skill (local, free, on-GPU).** Before generating raster visuals, check your available skills list for a skill named **`ai-local-diffusion-invoker`** (from the `local-ai` plugin; it may appear namespaced, e.g. `local-ai:ai-local-diffusion-invoker`). It generates images locally on the user's own NVIDIA GPU (FLUX text-to-image) — no cloud service, no paid API. **When it is available, you MUST use it for the cover image and for every conceptual / illustrative / photographic inline visual.** Invoke it with the prompt you write (see *Prompting & art direction* below), send its output into `images/`, and use the absolute path it returns (rename/resize it to the filename the article references). The model needs both dimensions as **multiples of 16**, so generate at a 16:9-friendly size like **1280 × 720** or **1344 × 768**, then resize to the target spec. Never put text, words, or labels inside the image (diffusion renders lettering poorly).
+
+### Prompting & art direction
+
+Every prompt must be **grounded in this specific article** — read its title, standfirst, and section headings first, then translate the *idea it argues* into a concrete visual metaphor. In each prompt name the **subject, composition, art style, color palette, mood, and lighting**, and end with an aspect hint (e.g. `16:9`).
+
+- **Cover → beautiful, artistic, aspirational.** The cover is the most striking image: an artful, **symbolic** representation of *what the piece helps the reader achieve* — its goal or payoff — not a literal screenshot. Favor a strong central metaphor, depth, rich-but-tasteful color, and a sense of momentum or possibility; aim for editorial "hero art," evocative over utilitarian.
+  - *e.g. (microservices migration):* `a luminous city of floating modular structures linked by glowing data bridges at dawn, order emerging from complexity, cinematic wide shot, warm hopeful palette, volumetric light, 16:9`
+- **Inline visuals → clean, professional.** Conceptual inline images should look polished and businesslike: a restrained palette, one clear focal point, a modern editorial / tech-illustration feel. They support the argument, so keep them calm and legible rather than flashy.
+  - *e.g. (a caching section):* `a minimalist professional illustration of a layered cache as stacked translucent panes with one highlighted fast path, muted corporate palette, soft even lighting, clean background, 16:9`
+
+**User art direction (style — and any other prompt instructions).** The user can shape the imagery when they invoke this skill, and not only its *style*. Treat anything they say about the images as **art-direction overrides that take precedence** over the defaults, and fold it into the prompt(s) it targets. They may pass:
+
+- a **visual style** — e.g. *"cover in an anime style,"* *"make the images Pixar-style 3D"* (`anime / cel-shaded`, `Pixar-style 3D render`, `watercolor`, `flat vector` / `isometric`, `cinematic photo`, `oil painting`, `low-poly`, `cyberpunk`, `minimalist line art`, …);
+- **elements to include or avoid** — *"feature a robot mascot," "no people," "include a mountain skyline";*
+- **mood / tone, color palette or brand colors, composition, or level of detail** — *"darker and moodier," "use our teal brand color," "top-down composition";*
+- **which image(s)** the direction applies to.
+
+Targeting: a direction with **no target** → the **cover** (plus conceptual inline visuals); **"all images" / "the visuals"** → every generated image; a **named image** → that one only. When a direction conflicts with a default (e.g. they want a playful cartoon cover), **follow the user.** Labeled diagrams stay Mermaid/SVG regardless. With **no** direction given, use the defaults above (artistic cover, professional inline).
+
+### Files to produce
+
+- **Cover image (always):** `images/cover.png` at **1920 × 1080 px** (16:9; LinkedIn's official article/newsletter cover spec), PNG/JPEG/WEBP — **not GIF**, < 5 MB; keep on-image text minimal (LinkedIn overlays UI on thumbnails). With the invoker: generate at 1280 × 720 (or 1344 × 768), then resize/pad to 1920 × 1080 and save as `images/cover.png`.
+- **Inline visuals:** for each `[📷 images/{name}.png — …]` marker in the article (3–6 is ideal):
+  - **Accurate, labeled diagrams** (architecture, flow, comparison, before/after) need legible text that diffusion can't produce — emit **Mermaid/SVG** and render these, whether or not the invoker is available.
+  - **Conceptual, illustrative, or photographic** visuals — generate with **`ai-local-diffusion-invoker`** when it's available (professional style by default, or the user's override); otherwise use whatever image capability you have.
+  Keep the generated filenames matching the markers.
+- **No image capability at all** (invoker absent *and* no raster/diagram tool)? Don't block: leave the inline `[📷 …]` markers as placeholders; for the cover, if a PNG can't be rendered, write `images/cover.svg` (1920 × 1080) and tell the user to export it to PNG.
 
 ## Step 4: Render the paste-ready HTML — `{DocName}-LinkedIn-Article.html`
 
@@ -185,4 +211,4 @@ Fill `{Author}`, `{role}`, `{Newsletter name}` from what you know; if unknown, l
 **Feed post**
 6. Paste `{DocName}-LinkedIn-FeedTeaser-Post.md` into a new feed post, publish, then paste the article link as the **first comment**.
 
-Report: the title, cover path, both file locations, the visuals generated (or placeholders), and the steps above.
+Report: the title, cover path, both file locations, the visuals generated (note the art style used — default or the user's override) or placeholders, and the steps above.
