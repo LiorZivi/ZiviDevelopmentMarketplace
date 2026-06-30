@@ -48,7 +48,21 @@ If content was given inline (no source path), derive `{DocName}` from the title 
 
 ## Step 1: Write the article source — `{DocName}-LinkedIn-Article.md`
 
-Reframe the source into flowing prose: a **3–5 minute read (~600–1,200 words)**, **4–7 sections**, leading with *why this matters now*. No hashtags in articles. As you write, drop a `[📷 images/{name}.png — {what the visual shows}]` marker wherever a visual belongs, and reference the cover as `images/cover.png` — **Step 3 generates the actual image files to match these names.** Use this marker syntax (the readable source):
+Reframe the source into flowing prose: a **3–5 minute read (~600–1,200 words)**, **4–7 sections**, leading with *why this matters now*. No hashtags in articles. As you write, drop a `[📷 images/{name}.png — {what the visual shows}]` marker wherever a visual belongs, and reference the cover as `images/cover.png` — **Step 3 generates the actual image files to match these names.**
+
+### Voice: write it as your own story, from your own experience
+
+Write the article as the **author's first-person account of figuring this out**, not a neutral explainer. The reader should feel that a real person is teaching them what they learned, not that an agent generated a summary.
+
+- **Open from lived experience.** Put the author in the story: what they noticed, wrestled with, or got curious about recently, and what they then went and learned. A pattern that works well: *"For the last few months I kept noticing X. So last week I dug into Y, and once it clicked, Z stopped being mysterious. Here are the takeaways I collected."* Use real first person ("I", "my").
+- **Make the prologue captivating.** The standfirst and the first two or three sentences have to hook the reader and make them want the full read: a relatable tension, a surprising realization, or a vivid "it felt like..." moment. No textbook openers like "In this article we will...". Earn the click.
+- **Keep the experiential thread through the body.** The middle sections can be technical and precise, but anchor them in the author's perspective ("the part that tripped me up was...", "the mental model that finally made this click for me..."). They are teaching what they learned, in their own words.
+- **Humor: optional and sparing.** At most one or two light, tasteful asides or analogies in the entire article, and zero is perfectly fine. Never force it; the piece should read as smart and human, not as a comedy set.
+- **Close in their own voice.** End on a genuine personal takeaway, or what they are changing in how they work, not a generic upbeat conclusion.
+
+Match the author's known newsletter voice (Step 7 has the author identity), and keep the Step 2 humanizer rules in mind as you draft: no em dashes, varied sentence rhythm, concrete detail.
+
+Use this marker syntax (the readable source):
 
 ````
 ---
@@ -56,7 +70,7 @@ title: {curiosity + benefit title — goes in LinkedIn's Title field}
 cover: images/cover.png
 ---
 
-*{one-sentence standfirst}*
+*{one-sentence standfirst: a personal, intriguing hook in the author's own voice}*
 
 {2–4 sentence opening}
 
@@ -171,10 +185,12 @@ The **feed** has no rich text, so this stays plain text with **Unicode bold/ital
 
 Write it to feel **personal**, not corporate: use **first person**, lead with your own angle — why this mattered to you, what surprised you, a genuine opinion or hot take — and keep the voice conversational, like *you* sharing something with your network rather than a press release. Avoid generic hype and AI-isms (the Step 6 humanizer pass reinforces this).
 
+This teaser is the **most personal of the three assets**: it is *you* telling your network what you just learned and why it grabbed you. Lead from your own experience (what you noticed, what surprised you, what you went and dug into), and make the **first two lines fascinating and inviting** so people stop scrolling and want the full article. A single light, tasteful joke is welcome if it fits naturally.
+
 Because the article link lives in the first comment (not the body), the post **must include a line telling readers the link is in the comments** — some variation of *"I pasted the link to the full article in the comments."*
 
 ```
-{𝗨𝗻𝗶𝗰𝗼𝗱𝗲-𝗯𝗼𝗹𝗱 personal hook line 1 — first person, your angle or a surprising take}
+{𝗨𝗻𝗶𝗰𝗼𝗱𝗲-𝗯𝗼𝗹𝗱 personal hook line 1 — first person, from your own experience: a surprising realization or relatable tension that stops the scroll}
 {hook line 2 that earns the "…see more" tap}
 
 {2–4 short lines previewing the value, in your own voice}
