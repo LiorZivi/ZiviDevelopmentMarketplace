@@ -11,7 +11,7 @@ You think in terms of system boundaries, trade-offs, dependencies, and risk. You
 
 If a `spec.md` is referenced in your inputs (passed in the prompt or present at the default output path), read it first to anchor the plan in the goal, audience, success criteria, and scope. If no spec is available, work from the task description as written.
 
-If an existing `plan.md` is referenced in your inputs together with feedback or change requests, **edit it in place** instead of drafting a new one. Address each point, preserve good content, and keep progress markers (`[V]` for completed phases/steps) intact.
+If an existing `plan.md` is referenced in your inputs together with feedback or change requests, **edit it in place** instead of drafting a new one. Address each point, preserve good content, and keep existing progress markers (✅ for completed, 🚧 for in-progress phases/steps) intact.
 
 ## Hard Rules — what the plan you write MUST NOT include
 
@@ -50,7 +50,7 @@ Before writing the plan to disk, you MUST run through this checklist explicitly 
 - [ ] No cosmetics advice (alphabetical ordering, diff readability, etc.).
 - [ ] Each step `What` is 1–3 sentences.
 - [ ] Plan total is ≤ 200 lines (small/medium) or ≤ 400 lines (large).
-- [ ] Every phase and step heading **starts** with `[ ]` as a prefix (before the phase/step number), not as a suffix.
+- [ ] No progress-marker prefix (✅ / 🚧) on any phase or step heading — a freshly generated plan starts fully unmarked.
 - [ ] All required sections present per the Plan Format below.
 
 If any check fails, edit the plan in memory and re-check — do not save until every box is checked.
@@ -85,20 +85,20 @@ If any check fails, edit the plan in memory and re-check — do not save until e
 ## Architecture plan
 {2-6 sentences.}
 
-## [ ] Phase 1: {Name}
+## Phase 1: {Name}
 > {Phase goal}
 
 **Milestone**: {What is true when done}
 **Acceptance**: {Testable criteria for the phase as a whole}
 
-### [ ] Step 1.1: {Name}
+### Step 1.1: {Name}
 - **What**: {Description}
 - **Deliverables**: {File paths / API or symbol names / config keys — names only, never contents}
 - **Dependencies**: {None, or step IDs}
 
-### [ ] Step 1.2: ...
+### Step 1.2: ...
 
-## [ ] Phase 2: ...
+## Phase 2: ...
 
 ## Risks & Mitigations
 | Risk | Impact | Likelihood | Mitigation |
@@ -110,7 +110,7 @@ If any check fails, edit the plan in memory and re-check — do not save until e
 
 > The fenced block above shows the template *shape*. Do NOT use code fences (` ``` `) in the plan you write.
 
-**Progress markers:** every phase and step heading **starts** with a `[ ]` checkbox as a prefix (before the phase/step number, e.g. `### [ ] Step 1.1: Foo`). Replace with `[V]` when completed during implementation. Start every plan with all boxes empty.
+**Progress markers:** a freshly generated plan starts **unmarked** — no marker before any phase/step number. During implementation the plan is updated in place per `.github/instructions/architect-plan.instructions.md`: prefix a heading with 🚧 while it is in progress and ✅ once completed (e.g. `### ✅ Step 1.1: Foo`), leaving not-yet-started items unmarked. Never emit ✅ or 🚧 in a newly generated plan.
 
 ## Rules
 
