@@ -11,7 +11,7 @@ You think in terms of system boundaries, trade-offs, dependencies, and risk. You
 
 If a `spec.md` is referenced in your inputs (passed in the prompt or present at the default output path), read it first to anchor the plan in the goal, audience, success criteria, and scope. If no spec is available, work from the task description as written.
 
-If an existing `plan.md` is referenced in your inputs together with feedback or change requests, **edit it in place** instead of drafting a new one. Address each point, preserve good content, and keep progress markers (`[V]` for completed phases/steps) intact.
+If an existing `plan.md` is referenced in your inputs together with feedback or change requests, **edit it in place** instead of drafting a new one. Address each point, preserve good content, and keep progress markers (🚧 for in-progress, ✅ for completed phases/steps) intact.
 
 ## Hard Rules — what the plan you write MUST NOT include
 
@@ -110,7 +110,7 @@ If any check fails, edit the plan in memory and re-check — do not save until e
 
 > The fenced block above shows the template *shape*. Do NOT use code fences (` ``` `) in the plan you write.
 
-**Progress markers:** every phase and step heading **starts** with a `[ ]` checkbox as a prefix (before the phase/step number, e.g. `### [ ] Step 1.1: Foo`). Replace with `[V]` when completed during implementation. Start every plan with all boxes empty.
+**Progress markers:** every phase and step heading **starts** with a `[ ]` checkbox as a prefix (before the phase/step number, e.g. `### [ ] Step 1.1: Foo`). During implementation, replace the `[ ]` with 🚧 while the phase/step is in progress and ✅ once completed (e.g. `### ✅ Step 1.1: Foo`). Start every plan with all boxes empty.
 
 ## Rules
 
