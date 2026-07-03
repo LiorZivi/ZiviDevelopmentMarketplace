@@ -1,9 +1,13 @@
 # Fix: `teams-remote` Stop hook leaks across CLI sessions
 
 **Plugin**: `zivi-development-marketplace/general-ops`
+
 **Component**: `teams-remote` skill — `Stop` hook
+
 **Severity**: High (functional defect; pollutes every concurrent CLI session belonging to the same user)
+
 **Type**: Isolation / scoping bug
+
 **Owner**: zivi-development-marketplace · general-ops · teams-remote subsystem
 
 ---

@@ -1,8 +1,6 @@
 # Source & Attribution — `humanizer` skill
 
-This skill is a **vendored copy** of a third-party, open-source skill. The files in this
-folder (`SKILL.md`, `LICENSE`) were copied **verbatim** from the upstream repository. This
-is a snapshot — it does **not** auto-update from upstream.
+This skill is a **vendored copy** of a third-party, open-source skill. The files in this folder (`SKILL.md`, `LICENSE`) were copied **verbatim** from the upstream repository. This is a snapshot — it does **not** auto-update from upstream.
 
 ## Upstream
 
@@ -19,10 +17,7 @@ is a snapshot — it does **not** auto-update from upstream.
 
 ## What it does
 
-Removes signs of AI-generated writing from text — inflated symbolism, promotional language,
-em-dash overuse, the "rule of three", AI vocabulary words, vague attributions, negative
-parallelisms, passive voice, and filler phrases — so prose reads as natural and human-written.
-Based on Wikipedia's "Signs of AI writing" guide (WikiProject AI Cleanup).
+Removes signs of AI-generated writing from text — inflated symbolism, promotional language, em-dash overuse, the "rule of three", AI vocabulary words, vague attributions, negative parallelisms, passive voice, and filler phrases — so prose reads as natural and human-written. Based on Wikipedia's "Signs of AI writing" guide (WikiProject AI Cleanup).
 
 ## Updating this vendored copy
 
@@ -38,7 +33,4 @@ gh api repos/blader/humanizer/commits/main --jq '.sha'   # the new "Commit copie
 Then:
 
 1. Update the **Commit copied** / **Commit date** / **Copied on** rows in the table above.
-2. Bump the `remote-plugin-blader` version in all four manifest/registry files per the repository
-   `AGENTS.md` version-sync rule (`plugins/remote-plugin-blader/plugin.json`,
-   `plugins/remote-plugin-blader/.claude-plugin/plugin.json`, `.claude-plugin/marketplace.json`,
-   `.github/plugin/marketplace.json`).
+2. Bump the `remote-plugin-blader` version in all four manifest/registry files per the repository `AGENTS.md` version-sync rule (`plugins/remote-plugin-blader/plugin.json`, `plugins/remote-plugin-blader/.claude-plugin/plugin.json`, `.claude-plugin/marketplace.json`, `.github/plugin/marketplace.json`).

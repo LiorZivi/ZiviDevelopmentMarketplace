@@ -1,10 +1,6 @@
 # Source & Attribution — `brainstorming` skill
 
-This skill is a **vendored copy** of a single skill taken from a third-party, open-source
-**monorepo**. The files in this folder (`SKILL.md`, `visual-companion.md`,
-`spec-document-reviewer-prompt.md`, `scripts/`, `LICENSE`) were copied **verbatim** from the
-upstream repository's `skills/brainstorming/` directory. This is a snapshot — it does **not**
-auto-update from upstream.
+This skill is a **vendored copy** of a single skill taken from a third-party, open-source **monorepo**. The files in this folder (`SKILL.md`, `visual-companion.md`, `spec-document-reviewer-prompt.md`, `scripts/`, `LICENSE`) were copied **verbatim** from the upstream repository's `skills/brainstorming/` directory. This is a snapshot — it does **not** auto-update from upstream.
 
 ## Upstream
 
@@ -22,17 +18,11 @@ auto-update from upstream.
 
 ## Why vendored (and not referenced)
 
-The `superpowers` repo *is* referenceable as a whole plugin (its root has a
-`.claude-plugin/plugin.json`), but referencing it installs **all 14** skills. A single skill
-inside a plugin cannot be referenced on its own, and `skills/brainstorming/` has no manifest of
-its own. To expose **only** this one skill under our marketplace, it must be vendored. MIT
-permits this provided the copyright notice and license text are retained (see `LICENSE`).
+The `superpowers` repo *is* referenceable as a whole plugin (its root has a `.claude-plugin/plugin.json`), but referencing it installs **all 14** skills. A single skill inside a plugin cannot be referenced on its own, and `skills/brainstorming/` has no manifest of its own. To expose **only** this one skill under our marketplace, it must be vendored. MIT permits this provided the copyright notice and license text are retained (see `LICENSE`).
 
 ## What it does
 
-Explores user intent, requirements, and design **before** implementation — for any creative
-work such as creating features, building components, or modifying behavior. Includes an optional
-visual brainstorming companion (`visual-companion.md` + `scripts/` local server).
+Explores user intent, requirements, and design **before** implementation — for any creative work such as creating features, building components, or modifying behavior. Includes an optional visual brainstorming companion (`visual-companion.md` + `scripts/` local server).
 
 ## Updating this vendored copy
 
@@ -52,7 +42,4 @@ Remove-Item $tmp -Recurse -Force
 Then:
 
 1. Update the **Commit copied** / **Commit date** / **Copied on** rows in the table above.
-2. Bump the `remote-plugin-obra` version in all four manifest/registry files per the repository
-   `AGENTS.md` version-sync rule (`plugins/remote-plugin-obra/plugin.json`,
-   `plugins/remote-plugin-obra/.claude-plugin/plugin.json`, `.claude-plugin/marketplace.json`,
-   `.github/plugin/marketplace.json`).
+2. Bump the `remote-plugin-obra` version in all four manifest/registry files per the repository `AGENTS.md` version-sync rule (`plugins/remote-plugin-obra/plugin.json`, `plugins/remote-plugin-obra/.claude-plugin/plugin.json`, `.claude-plugin/marketplace.json`, `.github/plugin/marketplace.json`).

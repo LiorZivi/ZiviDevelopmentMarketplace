@@ -1,10 +1,6 @@
 # Source & Attribution — `deep-research` skill
 
-This skill is a **vendored copy** of a third-party, open-source skill. The files in this folder
-(`SKILL.md`, `reference/`, `schemas/`, `scripts/`, `templates/`, `requirements.txt`, `README.md`)
-were copied **verbatim** from the upstream repository (the skill lives at the repo root). This is
-a snapshot — it does **not** auto-update from upstream. The upstream `tests/` directory and
-`.gitignore` were intentionally **not** vendored (not needed at runtime).
+This skill is a **vendored copy** of a third-party, open-source skill. The files in this folder (`SKILL.md`, `reference/`, `schemas/`, `scripts/`, `templates/`, `requirements.txt`, `README.md`) were copied **verbatim** from the upstream repository (the skill lives at the repo root). This is a snapshot — it does **not** auto-update from upstream. The upstream `tests/` directory and `.gitignore` were intentionally **not** vendored (not needed at runtime).
 
 ## Upstream
 
@@ -21,19 +17,11 @@ a snapshot — it does **not** auto-update from upstream. The upstream `tests/` 
 
 ## Why vendored (and not referenced)
 
-The upstream repo is a **bare skill** — a `SKILL.md` at the repo root with no
-`.claude-plugin/plugin.json` (and no `marketplace.json`). Copilot CLI can only reference a
-remote source that resolves to a packaged plugin (one with a `plugin.json`), so this skill
-cannot be referenced from our marketplace. Vendoring is the only way to expose it; MIT permits
-this provided attribution is retained (see `LICENSE` and this file).
+The upstream repo is a **bare skill** — a `SKILL.md` at the repo root with no `.claude-plugin/plugin.json` (and no `marketplace.json`). Copilot CLI can only reference a remote source that resolves to a packaged plugin (one with a `plugin.json`), so this skill cannot be referenced from our marketplace. Vendoring is the only way to expose it; MIT permits this provided attribution is retained (see `LICENSE` and this file).
 
 ## What it does
 
-Multi-source research with citation tracking, evidence persistence, and structured report
-generation. Triggers on "deep research", "comprehensive analysis", "research report",
-"compare X vs Y", "analyze trends", or "state of the art" — not for simple lookups. Ships Python
-helper scripts (`scripts/`) and JSON schemas (`schemas/`); see `requirements.txt` for Python
-dependencies and the upstream `README.md` for usage details.
+Multi-source research with citation tracking, evidence persistence, and structured report generation. Triggers on "deep research", "comprehensive analysis", "research report", "compare X vs Y", "analyze trends", or "state of the art" — not for simple lookups. Ships Python helper scripts (`scripts/`) and JSON schemas (`schemas/`); see `requirements.txt` for Python dependencies and the upstream `README.md` for usage details.
 
 ## Updating this vendored copy
 
@@ -55,7 +43,4 @@ Remove-Item $tmp -Recurse -Force
 Then:
 
 1. Update the **Commit copied** / **Commit date** / **Copied on** rows in the table above.
-2. Bump the `remote-plugin-199-biotechnologies` version in all four manifest/registry files per the repository
-   `AGENTS.md` version-sync rule (`plugins/remote-plugin-199-biotechnologies/plugin.json`,
-   `plugins/remote-plugin-199-biotechnologies/.claude-plugin/plugin.json`, `.claude-plugin/marketplace.json`,
-   `.github/plugin/marketplace.json`).
+2. Bump the `remote-plugin-199-biotechnologies` version in all four manifest/registry files per the repository `AGENTS.md` version-sync rule (`plugins/remote-plugin-199-biotechnologies/plugin.json`, `plugins/remote-plugin-199-biotechnologies/.claude-plugin/plugin.json`, `.claude-plugin/marketplace.json`, `.github/plugin/marketplace.json`).

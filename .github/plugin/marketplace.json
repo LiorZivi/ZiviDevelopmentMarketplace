@@ -47,7 +47,7 @@
       "name": "local-ai",
       "source": "./plugins/local-ai",
       "description": "Invokes a separately-installed LocalAIExecution `localai` CLI to generate images locally on your own NVIDIA GPU (FLUX text-to-image) via its stable --json subprocess contract. Discovers the external tool at runtime and vendors none of its code.",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "tags": ["image-generation", "text-to-image", "local-ai", "diffusion", "flux", "gpu", "invoker"]
     },
     {
