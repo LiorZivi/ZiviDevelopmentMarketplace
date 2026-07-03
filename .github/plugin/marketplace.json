@@ -12,7 +12,7 @@
       "name": "content-ai",
       "source": "./plugins/content-ai",
       "description": "AI-powered content generation plugin with skills for research, presentations, LinkedIn articles, and architecture planning.",
-      "version": "3.6.0",
+      "version": "3.7.0",
       "tags": ["research", "education", "presentations", "linkedin", "content"]
     },
     {

@@ -1,16 +1,16 @@
 ---
 name: linked-in-post
-description: "Repackage a source document into ready-to-post LinkedIn content: a paste-ready newsletter article (an HTML file you open in a browser and copy → LinkedIn keeps the formatting), a short summary post, and an auto-generated cover image. Works on any document you reference; independent of the learn skill, though learn can trigger it. Triggers on: 'make a LinkedIn article', 'turn this into a LinkedIn post', 'create a summary post for X', 'publish X to LinkedIn'."
+description: "Repackage a source document into ready-to-post LinkedIn content: a paste-ready newsletter article (an HTML file you open in a browser and copy → LinkedIn keeps the formatting), a ready-to-paste newsletter announcement, and an auto-generated cover image. Works on any document you reference; independent of the learn skill, though learn can trigger it. Triggers on: 'make a LinkedIn article', 'turn this into a LinkedIn post', 'create a summary post for X', 'publish X to LinkedIn'."
 argument-hint: "[topic or path to source content]"
 user-invocable: true
 ---
 
-# LinkedIn Post: Source Document → Paste-Ready LinkedIn Article + Post
+# LinkedIn Post: Source Document → Paste-Ready LinkedIn Article + Announcement
 
 Turn a finished document into ready-to-publish LinkedIn assets:
 
 1. A **newsletter article** — `{DocName}-LinkedIn-Article.md` (readable source) + `{DocName}-LinkedIn-Article.html` (the **paste-ready** file).
-2. A **summary post** (`{DocName}-LinkedIn-FeedTeaser-Post.md`) — a short feed teaser that links to the article.
+2. A **newsletter announcement** (`{DocName}-LinkedIn-Announcement.md`) — the short post text you paste into LinkedIn's publish box; publishing the newsletter attaches the article automatically, so it *is* your feed post (no separate post, no link in the comments).
 3. A **cover image** (`images/cover.png`) — always generated, sized for LinkedIn.
 
 This skill is **independent** — it repackages whatever source content you point it at. `learn` can trigger it and hand over a reference, but you can also run it directly on any document.
@@ -41,7 +41,7 @@ Write everything **next to the source document** (same directory):
 
 - `{DocName}-LinkedIn-Article.md` — readable article source
 - `{DocName}-LinkedIn-Article.html` — the paste-ready article body
-- `{DocName}-LinkedIn-FeedTeaser-Post.md` — the feed summary post
+- `{DocName}-LinkedIn-Announcement.md` — the newsletter announcement post text
 - `images/` — `cover.png` plus any inline visuals
 
 If content was given inline (no source path), derive `{DocName}` from the title (PascalCase, e.g. "Agent marketplaces" → `AgentMarketplaces`), create `./output/linkedin/{slug}/`, and write the same `{DocName}-…` files there.
@@ -179,15 +179,17 @@ Rules:
 </body></html>
 ```
 
-## Step 5: Write the summary post — `{DocName}-LinkedIn-FeedTeaser-Post.md`
+## Step 5: Write the newsletter announcement — `{DocName}-LinkedIn-Announcement.md`
 
-The **feed** has no rich text, so this stays plain text with **Unicode bold/italic** for emphasis. First 2 lines must hook above the "…see more" fold; short lines; **3–6 hashtags**; **800–1,500 chars**. Keep links **out of the body** (LinkedIn throttles them) — give the article link as a ready-to-paste **first comment**.
+This is the text you paste into the **share box of LinkedIn's newsletter publish flow** (the "add your thoughts" field shown when you publish the article). Publishing the newsletter posts this text to the feed **with the article attached as a card**, so it *is* your feed post — you do **not** write a separate standalone post, and you do **not** put the article link in the body or in a first comment (the attached article already carries the click).
+
+The feed has no rich text, so this stays plain text with **Unicode bold/italic** for emphasis. First 2 lines must hook above the "…see more" fold; short lines; **3–6 hashtags**; **800–1,500 chars**.
 
 Write it to feel **personal**, not corporate: use **first person**, lead with your own angle — why this mattered to you, what surprised you, a genuine opinion or hot take — and keep the voice conversational, like *you* sharing something with your network rather than a press release. Avoid generic hype and AI-isms (the Step 6 humanizer pass reinforces this).
 
-This teaser is the **most personal of the three assets**: it is *you* telling your network what you just learned and why it grabbed you. Lead from your own experience (what you noticed, what surprised you, what you went and dug into), and make the **first two lines fascinating and inviting** so people stop scrolling and want the full article. A single light, tasteful joke is welcome if it fits naturally.
+This announcement is the **most personal of the three assets**: it is *you* telling your network what you just learned and why it grabbed you. Lead from your own experience (what you noticed, what surprised you, what you went and dug into), and make the **first two lines fascinating and inviting** so people stop scrolling and want the full article. A single light, tasteful joke is welcome if it fits naturally.
 
-Because the article link lives in the first comment (not the body), the post **must include a line telling readers the link is in the comments** — some variation of *"I pasted the link to the full article in the comments."*
+Do **not** add any "link in the comments" line: because this is the newsletter's own publish-flow post, LinkedIn attaches the full article to it automatically, so the click is already there.
 
 ```
 {𝗨𝗻𝗶𝗰𝗼𝗱𝗲-𝗯𝗼𝗹𝗱 personal hook line 1 — first person, from your own experience: a surprising realization or relatable tension that stops the scroll}
@@ -201,17 +203,16 @@ Because the article link lives in the first comment (not the body), the post **m
 
 {one-line personal takeaway — what you think, or what you'd do with this}
 
-📎 {variation of "I pasted the link to the full article in the comments"} 👇
 ♻️ Repost if it's useful to someone in your network.
 
 #Hashtag1 #Hashtag2 #Hashtag3
 ```
 
-Then give the **first comment** text (the article link) ready to paste.
+> Optional follow-up: to re-surface the piece later, you can write a *separate* feed post a day or two afterward — but give it a **different angle/hook** than this announcement, not the same words.
 
-## Step 6: Humanize the summary post — `{DocName}-LinkedIn-FeedTeaser-Post.md`
+## Step 6: Humanize the announcement — `{DocName}-LinkedIn-Announcement.md`
 
-Run the **`humanizer`** skill (from the `remote-plugin-blader` plugin) on `{DocName}-LinkedIn-FeedTeaser-Post.md` so it sounds like a human wrote it, then save the humanized text back. If the `humanizer` skill isn't installed, apply its principles inline and continue.
+Run the **`humanizer`** skill (from the `remote-plugin-blader` plugin) on `{DocName}-LinkedIn-Announcement.md` so it sounds like a human wrote it, then save the humanized text back. If the `humanizer` skill isn't installed, apply its principles inline and continue.
 
 ## Step 7: Personalize and report the publish workflow
 
@@ -224,7 +225,7 @@ Fill `{Author}`, `{role}`, `{Newsletter name}` from what you know; if unknown, l
 4. **Body:** open `{DocName}-LinkedIn-Article.html` **in a browser** — paste its `file:///…` path into the address bar (do NOT open it in a code editor). **Ctrl+A → Ctrl+C** on the rendered page, click the article body, **Ctrl+V**. Headings, subheadings, bold, italic, lists, quotes, code blocks, and links all carry over.
 5. At each **`[📷 …]`** marker, click the image button and upload the named file from `images/`, then delete the marker text.
 
-**Feed post**
-6. Paste `{DocName}-LinkedIn-FeedTeaser-Post.md` into a new feed post, publish, then paste the article link as the **first comment**.
+**Newsletter announcement** (same publish action — not a separate post)
+6. When you click **Publish**, LinkedIn shows a share-to-feed box. Paste `{DocName}-LinkedIn-Announcement.md` there. Publishing posts it to your feed **with the article attached as a card** — so there's no separate feed post to write, and no link to drop in the comments.
 
-Report: the title, cover path, both file locations, the visuals generated (note the art style used — default or the user's override) or placeholders, and the steps above.
+Report: the title, cover path, all output file locations, the visuals generated (note the art style used — default or the user's override) or placeholders, and the steps above.

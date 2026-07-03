@@ -8,7 +8,7 @@ AI-powered content generation plugin with skills for research, presentations, Li
 Deep-dive research skill that investigates any technology topic and produces a comprehensive markdown document plus a branded PowerPoint presentation. Once the document and deck exist, it hands off to the `linked-in-post` skill to generate LinkedIn content.
 
 ### linked-in-post
-Repackages any source document you reference into ready-to-post LinkedIn content: a **paste-ready** newsletter article (an HTML file you open in a browser and copy — headings, subheadings, bold, italic, lists, quotes, code blocks, and links all survive the paste into LinkedIn), a short summary post, and an auto-generated cover image (1920×1080). Independent of `learn` — works on any document — but `learn` can trigger it automatically.
+Repackages any source document you reference into ready-to-post LinkedIn content: a **paste-ready** newsletter article (an HTML file you open in a browser and copy — headings, subheadings, bold, italic, lists, quotes, code blocks, and links all survive the paste into LinkedIn), a ready-to-paste newsletter announcement, and an auto-generated cover image (1920×1080). Independent of `learn` — works on any document — but `learn` can trigger it automatically.
 
 ### ramp-up
 Workspace-grounded onboarding skill that produces a markdown explainer plus matching PPTX deck about an internal subsystem, flow, or codebase area. Every claim is cited to a real file, wiki page, or commit in the user's workspace or Azure DevOps — never the open web or training data. Uses the `ramp-up-explorer` sub-agent to scan workspace + Azure DevOps (via the bluebird MCP server) and return ranked citations per section.
@@ -41,7 +41,7 @@ If Python is not installed, the skill will create the markdown document and guid
 ### linked-in-post — turn a topic into LinkedIn content
 
 ```
-/zivi-development-marketplace:linked-in-post make a LinkedIn article and summary post from the Kubernetes topic
+/zivi-development-marketplace:linked-in-post make a LinkedIn article and announcement from the Kubernetes topic
 ```
 
 ### ramp-up — explain an internal subsystem
@@ -70,7 +70,7 @@ If Python is not installed, the skill will create the markdown document and guid
 | `learn` presentation | `./output/learn/{Topic}/{Topic}.pptx` | Python 3 |
 | `linked-in-post` article (paste-ready) | `{DocName}-LinkedIn-Article.html` next to the source doc | Nothing |
 | `linked-in-post` article (source) | `{DocName}-LinkedIn-Article.md` next to the source doc | Nothing |
-| `linked-in-post` post | `{DocName}-LinkedIn-FeedTeaser-Post.md` next to the source doc | Nothing |
+| `linked-in-post` announcement | `{DocName}-LinkedIn-Announcement.md` next to the source doc | Nothing |
 | `linked-in-post` cover image | `images/cover.png` (1920×1080) | image tool |
 | `linked-in-post` visuals | `images/` next to the article | image/diagram tool |
 | `ramp-up` markdown | `./output/ramp-up/{Topic}.md` | Workspace + (optional) bluebird MCP |
