@@ -434,7 +434,6 @@ Your detailed agent prompt here...
 {
   "mcpServers": {
     "server-name": {
-      "type": "stdio",
       "command": "npx",
       "args": ["-y", "@modelcontextprotocol/server-example"],
       "env": {

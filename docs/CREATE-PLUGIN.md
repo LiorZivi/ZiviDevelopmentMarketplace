@@ -195,7 +195,6 @@ If your plugin needs external tool servers (e.g. a database, API wrapper), defin
 {
   "mcpServers": {
     "example-server": {
-      "type": "stdio",
       "command": "npx",
       "args": ["-y", "@example/mcp-server"],
       "env": {}
@@ -204,7 +203,7 @@ If your plugin needs external tool servers (e.g. a database, API wrapper), defin
 }
 ```
 
-This file follows the standard MCP server configuration format. Each entry defines a server with its transport type, startup command, arguments, and environment variables.
+This file follows the standard MCP server configuration format. Local (stdio) servers omit `type` and are defined by their startup `command`, `args`, and `env` — Copilot CLI treats a `command`-based server as `local`, Claude Code as `stdio`. Remote servers instead set `type` to `http` or `sse` with a `url`.
 
 ---
 

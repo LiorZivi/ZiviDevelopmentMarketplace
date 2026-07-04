@@ -136,11 +136,12 @@ Common events: `SessionStart`, `PreToolUse`, `PostToolUse`, `PermissionRequest`,
 
 ## .mcp.json
 
+Local (stdio) servers are identified by `command` — omit `type`. Copilot CLI normalizes a `command`-based server to its `local` transport; Claude Code treats it as `stdio`. Keeping `type` off makes one file portable across both hosts.
+
 ```json
 {
   "mcpServers": {
     "server-name": {
-      "type": "stdio",
       "command": "npx",
       "args": ["-y", "@example/mcp-server"],
       "env": { "KEY": "${ENV_VAR}" }
@@ -149,7 +150,20 @@ Common events: `SessionStart`, `PreToolUse`, `PostToolUse`, `PermissionRequest`,
 }
 ```
 
-Server types: `stdio`, `http`, `sse`.
+Remote servers set `type` explicitly and use a `url`:
+
+```json
+{
+  "mcpServers": {
+    "remote-server": {
+      "type": "http",
+      "url": "https://example.com/mcp"
+    }
+  }
+}
+```
+
+Transports: local stdio (`command`, no `type`), or remote `http` / `sse` (with `url`).
 
 ## .lsp.json
 

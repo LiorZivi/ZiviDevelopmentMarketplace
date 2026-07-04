@@ -23,6 +23,13 @@
       "tags": ["teams", "teams-mcp", "remote-work", "copilot-cli", "bidirectional-chat", "infra", "ops"]
     },
     {
+      "name": "general-mcp",
+      "source": "./plugins/general-mcp",
+      "description": "Bundles ready-to-use MCP servers, registered user-wide across all repos on install: Playwright (browser automation), Azure DevOps/ADO (work items, repos, pipelines), and Azure (azmcp). Servers launch locally via npx; auth reuses your existing az login / Azure CLI session.",
+      "version": "1.0.0",
+      "tags": ["mcp", "playwright", "azure", "azure-devops", "ado", "browser-automation", "copilot-cli", "tools"]
+    },
+    {
       "name": "remote-plugin-blader",
       "source": "./plugins/remote-plugin-blader",
       "description": "Vendored skill from blader/humanizer: humanizer — removes signs of AI-generated writing to make text read as natural, human-written prose.",

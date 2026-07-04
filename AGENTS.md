@@ -21,13 +21,15 @@ plugins/<plugin-name>/
 ├── .claude-plugin/
 │   └── plugin.json        # Canonical manifest (name must match directory)
 ├── plugin.json            # Mirror of the canonical manifest — must stay in sync
-├── skills/
+├── skills/                # Optional (see note below)
 │   └── <skill-name>/
-│       └── SKILL.md       # At least one skill required
+│       └── SKILL.md
 └── README.md              # Required documentation
 ```
 
-Optional: `agents/`, `hooks/`, `scripts/`, `.mcp.json`, `.lsp.json`, `output-styles/`.
+Optional components: `agents/`, `hooks/`, `scripts/`, `.mcp.json`, `.lsp.json`, `output-styles/`.
+
+A plugin must provide **at least one capability component** — a skill, agent, hook, MCP server (`.mcp.json`), or LSP server — but it does **not** have to be a skill. For example, `general-mcp` is an MCP-only plugin (a `.mcp.json` with no skills).
 
 ## When Adding or Changing a Plugin
 

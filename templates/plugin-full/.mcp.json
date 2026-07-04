@@ -1,7 +1,6 @@
 {
   "mcpServers": {
     "example-server": {
-      "type": "stdio",
       "command": "npx",
       "args": ["-y", "@example/mcp-server"],
       "env": {}
