@@ -16,6 +16,12 @@ Workspace-grounded onboarding skill that produces a markdown explainer plus matc
 ### architect
 Planning skill that turns a task into two artifacts: a PM-level `spec.md` and a phased `plan.md`. Uses the `plan-architect` and `plan-reviewer` sub-agents to draft and score the plan.
 
+### memory-summary
+Records a finished or shipped change as one durable `Summary_<name>.md` entry in a team's memory under `Doc/memory/<team>/`, in a fixed spec+plan format. Works from an `/architect` design (`spec.md` + `plan.md`) or straight from a code change (working-tree edits, a PR, or a commit range vs `main`). Files single-team, cross-team, and org-wide (`global`) summaries, registers them in the team index, and leaves everything uncommitted for the same PR as the code.
+
+### memory-drift
+Re-validates one committed design summary against the current code and reports whether the code has drifted from the recorded design — classified as **architecture drift** (the design notes are stale) or **spec drift** (the code no longer meets the intent), with cited evidence. Human-gated: never commits, never opens a PR, and never edits the spec half on its own. Shares one compare engine with `memory-summary`.
+
 ## Prerequisites
 
 - **Required**: None — the markdown output works without any dependencies
@@ -62,6 +68,18 @@ If Python is not installed, the skill will create the markdown document and guid
 /zivi-development-marketplace:architect add a retry budget to the ingestion path
 ```
 
+### memory-summary — record a shipped change into memory
+
+```
+/zivi-development-marketplace:memory-summary summarize my current changes into the platform memory
+```
+
+### memory-drift — check a design summary against the code
+
+```
+/zivi-development-marketplace:memory-drift check Doc/memory/platform/Summary_RetryBudget.md for drift
+```
+
 ## What it produces
 
 | Output | Location | Requires |
@@ -77,6 +95,8 @@ If Python is not installed, the skill will create the markdown document and guid
 | `ramp-up` presentation | `./output/ramp-up/{Topic}.pptx` | Python 3 |
 | `architect` spec | `./output/architect/{PlanName}-spec.md` | Nothing |
 | `architect` plan | `./output/architect/{PlanName}-plan.md` | Nothing |
+| `memory-summary` record | `Doc/memory/<team>/Summary_<name>.md` (+ `index.md` row) | Nothing |
+| `memory-drift` report | Drift verdict in chat (+ optional staged architecture-section edit) | Nothing |
 
 ## Structure
 
@@ -96,6 +116,15 @@ content-ai/
 │   │   └── output-template.md
 │   ├── linked-in-post/
 │   │   └── SKILL.md
+│   ├── memory-drift/
+│   │   ├── SKILL.md
+│   │   └── references/
+│   │       ├── compare-summary-to-code.md
+│   │       └── verdict-report-template.md
+│   ├── memory-summary/
+│   │   ├── SKILL.md
+│   │   └── references/
+│   │       └── summary-format.md
 │   └── ramp-up/
 │       ├── SKILL.md
 │       └── output-template.md
