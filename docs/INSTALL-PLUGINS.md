@@ -65,17 +65,17 @@ To see available skills, run:
 
 ### How Skills Are Triggered
 
-Each skill defines trigger keywords in its `SKILL.md` file. When your message matches one of these keywords or phrases, the CLI automatically invokes the corresponding skill. For example, the `content-ai` plugin provides the `learn` and `architect` skills:
+Each skill defines trigger keywords in its `SKILL.md` file. When your message matches one of these keywords or phrases, the CLI automatically invokes the corresponding skill. For example, the `content-ai` plugin provides the `learn` skill and the `agentic-ai` plugin provides the `architect` skill:
 
 | Message | Skill triggered |
 |---------|----------------|
 | `learn about Kubernetes networking` | `content-ai:learn` |
-| `architect a REST API service` | `content-ai:architect` |
+| `architect a REST API service` | `agentic-ai:architect` |
 
 You can also directly invoke a skill using the `/<plugin-name>:<skill-name>` syntax:
 
 ```
-/content-ai:architect
+/agentic-ai:architect
 ```
 
 Each plugin's README describes the skills it offers and how to invoke them.

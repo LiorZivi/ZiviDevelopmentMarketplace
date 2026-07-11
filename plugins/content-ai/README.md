@@ -1,6 +1,6 @@
 # content-ai
 
-AI-powered content generation plugin with skills for research, presentations, LinkedIn publishing, and architecture planning.
+AI-powered content generation plugin with skills for deep-dive research, branded presentations, and LinkedIn publishing.
 
 ## Skills
 
@@ -9,18 +9,6 @@ Deep-dive research skill that investigates any technology topic and produces a c
 
 ### linked-in-post
 Repackages any source document you reference into ready-to-post LinkedIn content: a **paste-ready** newsletter article (an HTML file you open in a browser and copy — headings, subheadings, bold, italic, lists, quotes, code blocks, and links all survive the paste into LinkedIn), a ready-to-paste newsletter announcement, and an auto-generated cover image (1920×1080). Independent of `learn` — works on any document — but `learn` can trigger it automatically.
-
-### ramp-up
-Workspace-grounded onboarding skill that produces a markdown explainer plus matching PPTX deck about an internal subsystem, flow, or codebase area. Every claim is cited to a real file, wiki page, or commit in the user's workspace or Azure DevOps — never the open web or training data. Uses the `ramp-up-explorer` sub-agent to scan workspace + Azure DevOps (via the bluebird MCP server) and return ranked citations per section.
-
-### architect
-Planning skill that turns a task into two artifacts: a PM-level `spec.md` and a phased `plan.md`. Uses the `plan-architect` and `plan-reviewer` sub-agents to draft and score the plan.
-
-### memory-summary
-Records a finished or shipped change as one durable `Summary_<name>.md` entry in a team's memory under `Doc/memory/<team>/`, in a fixed spec+plan format. Works from an `/architect` design (`spec.md` + `plan.md`) or straight from a code change (working-tree edits, a PR, or a commit range vs `main`). Files single-team, cross-team, and org-wide (`global`) summaries, registers them in the team index, and leaves everything uncommitted for the same PR as the code.
-
-### memory-drift
-Re-validates one committed design summary against the current code and reports whether the code has drifted from the recorded design — classified as **architecture drift** (the design notes are stale) or **spec drift** (the code no longer meets the intent), with cited evidence. Human-gated: never commits, never opens a PR, and never edits the spec half on its own. Shares one compare engine with `memory-summary`.
 
 ## Prerequisites
 
@@ -50,36 +38,6 @@ If Python is not installed, the skill will create the markdown document and guid
 /zivi-development-marketplace:linked-in-post make a LinkedIn article and announcement from the Kubernetes topic
 ```
 
-### ramp-up — explain an internal subsystem
-
-```
-/zivi-development-marketplace:ramp-up monitoring flows in the auth service
-```
-
-### ramp-up — edit an existing explainer
-
-```
-/zivi-development-marketplace:ramp-up add a section about retries to the AuthMonitoringFlows explainer
-```
-
-### architect — plan a feature or change
-
-```
-/zivi-development-marketplace:architect add a retry budget to the ingestion path
-```
-
-### memory-summary — record a shipped change into memory
-
-```
-/zivi-development-marketplace:memory-summary summarize my current changes into the platform memory
-```
-
-### memory-drift — check a design summary against the code
-
-```
-/zivi-development-marketplace:memory-drift check Doc/memory/platform/Summary_RetryBudget.md for drift
-```
-
 ## What it produces
 
 | Output | Location | Requires |
@@ -91,12 +49,6 @@ If Python is not installed, the skill will create the markdown document and guid
 | `linked-in-post` announcement | `{DocName}-LinkedIn-Announcement.md` next to the source doc | Nothing |
 | `linked-in-post` cover image | `images/cover.png` (1920×1080) | image tool |
 | `linked-in-post` visuals | `images/` next to the article | image/diagram tool |
-| `ramp-up` markdown | `./output/ramp-up/{Topic}.md` | Workspace + (optional) bluebird MCP |
-| `ramp-up` presentation | `./output/ramp-up/{Topic}.pptx` | Python 3 |
-| `architect` spec | `./output/architect/{PlanName}-spec.md` | Nothing |
-| `architect` plan | `./output/architect/{PlanName}-plan.md` | Nothing |
-| `memory-summary` record | `Doc/memory/<team>/Summary_<name>.md` (+ `index.md` row) | Nothing |
-| `memory-drift` report | Drift verdict in chat (+ optional staged architecture-section edit) | Nothing |
 
 ## Structure
 
@@ -104,40 +56,14 @@ If Python is not installed, the skill will create the markdown document and guid
 content-ai/
 ├── .claude-plugin/
 │   └── plugin.json
-├── agents/
-│   ├── plan-architect.md
-│   ├── plan-reviewer.md
-│   └── ramp-up-explorer.md
 ├── skills/
-│   ├── architect/
-│   │   └── SKILL.md
 │   ├── learn/
 │   │   ├── SKILL.md
 │   │   └── output-template.md
-│   ├── linked-in-post/
-│   │   └── SKILL.md
-│   ├── memory-drift/
-│   │   ├── SKILL.md
-│   │   └── references/
-│   │       ├── compare-summary-to-code.md
-│   │       └── verdict-report-template.md
-│   ├── memory-summary/
-│   │   ├── SKILL.md
-│   │   └── references/
-│   │       └── summary-format.md
-│   └── ramp-up/
-│       ├── SKILL.md
-│       └── output-template.md
+│   └── linked-in-post/
+│       └── SKILL.md
 ├── scripts/
-│   ├── learn/
-│   │   ├── generate.sh
-│   │   ├── md_to_pptx.py
-│   │   ├── pptx_engine.py
-│   │   ├── requirements.txt
-│   │   └── themes/
-│   │       ├── __init__.py
-│   │       └── anthropic.py
-│   └── ramp-up/
+│   └── learn/
 │       ├── generate.sh
 │       ├── md_to_pptx.py
 │       ├── pptx_engine.py

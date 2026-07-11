@@ -7,10 +7,18 @@
     {
       "name": "content-ai",
       "source": "./plugins/content-ai",
-      "description": "AI-powered content generation plugin with skills for research, presentations, LinkedIn articles, architecture planning, and design memory.",
-      "version": "3.9.0",
+      "description": "AI-powered content generation plugin with skills for deep-dive research, branded presentations, and LinkedIn publishing.",
+      "version": "4.0.0",
       "author": { "name": "lizi@microsoft.com" },
-      "tags": ["research", "education", "presentations", "linkedin", "content", "memory"]
+      "tags": ["research", "education", "presentations", "linkedin", "content"]
+    },
+    {
+      "name": "agentic-ai",
+      "source": "./plugins/agentic-ai",
+      "description": "Agentic engineering plugin with skills for architecture planning, workspace-grounded onboarding (ramp-up), and design-memory summary and drift detection, backed by planning and exploration sub-agents.",
+      "version": "1.0.0",
+      "author": { "name": "lizi@microsoft.com" },
+      "tags": ["architecture", "planning", "onboarding", "ramp-up", "memory", "spec", "agents"]
     },
     {
       "name": "general-ops",

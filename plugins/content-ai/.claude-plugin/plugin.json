@@ -1,7 +1,7 @@
 {
   "name": "content-ai",
-  "version": "3.9.0",
-  "description": "AI-powered content generation plugin with skills for research, presentations, LinkedIn articles, architecture planning, and design memory.",
+  "version": "4.0.0",
+  "description": "AI-powered content generation plugin with skills for deep-dive research, branded presentations, and LinkedIn publishing.",
   "author": {
     "name": "lizi@microsoft.com"
   }
