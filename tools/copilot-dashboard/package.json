@@ -1,0 +1,30 @@
+{
+  "name": "copilot-dashboard",
+  "version": "0.1.0",
+  "description": "Live desktop dashboard for GitHub Copilot CLI sessions: watch active sessions, stream round-trips/turns live, and open the full LLM request as navigable HTML.",
+  "main": "src/main/main.js",
+  "scripts": {
+    "start": "electron .",
+    "dist": "electron-builder --win portable"
+  },
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "electron": "32.2.7",
+    "electron-builder": "24.13.3"
+  },
+  "build": {
+    "appId": "com.copilot.dashboard",
+    "productName": "Copilot Dashboard",
+    "files": [
+      "src/**/*",
+      "package.json"
+    ],
+    "win": {
+      "target": "portable"
+    },
+    "portable": {
+      "artifactName": "CopilotDashboard.exe"
+    }
+  }
+}
