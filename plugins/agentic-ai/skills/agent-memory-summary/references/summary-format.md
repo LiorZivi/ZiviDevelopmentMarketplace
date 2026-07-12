@@ -1,6 +1,6 @@
 # Memory summary format
 
-The single source of truth for what a `Summary_<name>.md` looks like — shared by **both** modes of the `memory-summary` skill. Mode A embeds a real spec and extracts a real plan into this shape; Mode B reverse-engineers the same shape from a code change. The output file is identical either way; only the source of the `## Spec` and `## Plan` content differs.
+The single source of truth for what a `Summary_<name>.md` looks like — shared by **both** modes of the `agent-memory-summary` skill. Mode A embeds a real spec and extracts a real plan into this shape; Mode B reverse-engineers the same shape from a code change. The output file is identical either way; only the source of the `## Spec` and `## Plan` content differs.
 
 ## The summary file
 

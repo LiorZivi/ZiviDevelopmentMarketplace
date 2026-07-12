@@ -1,6 +1,6 @@
 # agentic-ai
 
-Agentic engineering plugin with skills for architecture planning, workspace-grounded onboarding, and design memory. Each skill is backed by purpose-built planning and exploration sub-agents.
+Agentic engineering plugin: architecture planning, workspace-grounded onboarding, and a full **agent-memory** stack (skills + always-on instructions) — read the design memory, capture durable notes, summarize shipped designs, and drift-check them. The `architect` and `ramp-up` skills are backed by purpose-built planning and exploration sub-agents.
 
 ## Skills
 
@@ -10,11 +10,13 @@ Planning skill that turns a task into two artifacts: a PM-level `spec.md` and a 
 ### ramp-up
 Workspace-grounded onboarding skill that produces a markdown explainer plus matching PPTX deck about an internal subsystem, flow, or codebase area. Every claim is cited to a real file, wiki page, or commit in the user's workspace or Azure DevOps — never the open web or training data. Uses the `ramp-up-explorer` sub-agent to scan workspace + Azure DevOps (via the bluebird MCP server) and return ranked citations per section.
 
-### memory-summary
-Records a finished or shipped change as one durable `Summary_<name>.md` entry in a team's memory under `Doc/memory/<team>/`, in a fixed spec+plan format. Works from an `/architect` design (`spec.md` + `plan.md`) or straight from a code change (working-tree edits, a PR, or a commit range vs `main`). Files single-team, cross-team, and org-wide (`global`) summaries, registers them in the team index, and leaves everything uncommitted for the same PR as the code.
+### agent-memory-summary
+Records a finished or shipped change as one durable `Summary_<name>.md` entry in a team's memory under `agent-memory/<team>/`, in a fixed spec+plan format. Works from an `/architect` design (`spec.md` + `plan.md`) or straight from a code change (working-tree edits, a PR, or a commit range vs `main`). Files single-team, cross-team, and org-wide (`global`) summaries, registers them in the team index, and leaves everything uncommitted for the same PR as the code.
 
-### memory-drift
-Re-validates one committed design summary against the current code and reports whether the code has drifted from the recorded design — classified as **architecture drift** (the design notes are stale) or **spec drift** (the code no longer meets the intent), with cited evidence. Human-gated: never commits, never opens a PR, and never edits the spec half on its own. Shares one compare engine with `memory-summary`.
+### agent-memory-drift
+Re-validates one committed design summary against the current code and reports whether the code has drifted from the recorded design — classified as **architecture drift** (the design notes are stale) or **spec drift** (the code no longer meets the intent), with cited evidence. Human-gated: never commits, never opens a PR, and never edits the spec half on its own. Shares one compare engine with `agent-memory-summary`.
+
+> **Ambient companions (instructions, not skills):** `agent-memory-read` (read the memory before you work) and `agent-memory-store` (capture durable notes as you work) ship as always-on instruction files — see **Always-on agent-memory instructions** below.
 
 ## Prerequisites
 
@@ -44,16 +46,16 @@ If Python is not installed, the `ramp-up` skill will create the markdown documen
 /zivi-development-marketplace:ramp-up add a section about retries to the AuthMonitoringFlows explainer
 ```
 
-### memory-summary — record a shipped change into memory
+### agent-memory-summary — record a shipped change into memory
 
 ```
-/zivi-development-marketplace:memory-summary summarize my current changes into the platform memory
+/zivi-development-marketplace:agent-memory-summary summarize my current changes into the platform memory
 ```
 
-### memory-drift — check a design summary against the code
+### agent-memory-drift — check a design summary against the code
 
 ```
-/zivi-development-marketplace:memory-drift check Doc/memory/platform/Summary_RetryBudget.md for drift
+/zivi-development-marketplace:agent-memory-drift check agent-memory/platform/Summary_RetryBudget.md for drift
 ```
 
 ## What it produces
@@ -64,8 +66,18 @@ If Python is not installed, the `ramp-up` skill will create the markdown documen
 | `architect` plan | `./output/architect/{PlanName}-plan.md` | Nothing |
 | `ramp-up` markdown | `./output/ramp-up/{Topic}.md` | Workspace + (optional) bluebird MCP |
 | `ramp-up` presentation | `./output/ramp-up/{Topic}.pptx` | Python 3 |
-| `memory-summary` record | `Doc/memory/<team>/Summary_<name>.md` (+ `index.md` row) | Nothing |
-| `memory-drift` report | Drift verdict in chat (+ optional staged architecture-section edit) | Nothing |
+| `agent-memory-summary` record | `agent-memory/<team>/Summary_<name>.md` (+ `index.md` row) | Nothing |
+| `agent-memory-drift` report | Drift verdict in chat (+ optional staged architecture-section edit) | Nothing |
+
+## Always-on agent-memory instructions (optional)
+
+`agent-memory-read` and `agent-memory-store` ship as **instructions**, not skills — so they apply **automatically, repo-wide** rather than being invoked. To use them, copy these files into a target repo's `.github/instructions/`:
+
+- `agent-memory-read.instructions.md` — read the design memory before planning or changing code
+- `agent-memory-store.instructions.md` — grade signals and capture durable notes during work
+- `docs.instructions.md` — conventions for writing `agent-memory/` docs
+
+They live in this marketplace repo under `.github/instructions-to-copy-to-target-repos/plugin-agentic-ai/agent-memory/` and apply repo-wide (`applyTo: "**"`). Plugins can't ship auto-applying instructions, so a `/plugin install` delivers the **skills** (`architect`, `ramp-up`, `agent-memory-summary`, `agent-memory-drift`); copying these instruction files is the manual, opt-in step for the read/store behaviors.
 
 ## Structure
 
@@ -80,15 +92,15 @@ agentic-ai/
 ├── skills/
 │   ├── architect/
 │   │   └── SKILL.md
-│   ├── memory-drift/
+│   ├── agent-memory-summary/
+│   │   ├── SKILL.md
+│   │   └── references/
+│   │       └── summary-format.md
+│   ├── agent-memory-drift/
 │   │   ├── SKILL.md
 │   │   └── references/
 │   │       ├── compare-summary-to-code.md
 │   │       └── verdict-report-template.md
-│   ├── memory-summary/
-│   │   ├── SKILL.md
-│   │   └── references/
-│   │       └── summary-format.md
 │   └── ramp-up/
 │       ├── SKILL.md
 │       └── output-template.md

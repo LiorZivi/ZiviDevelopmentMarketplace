@@ -1,17 +1,17 @@
 ---
-name: memory-drift
-description: "Re-validate a single committed memory design summary (a Summary file under Doc/memory/) against the current code, and report whether the code has drifted from the recorded design. It classifies drift as architecture drift (the code still meets the spec, but the recorded architecture is stale) or spec drift (the code no longer does what the spec requires), and reports it with cited code evidence for a human to approve — never committing, never opening a PR, never editing the spec half on its own. Use this whenever someone wants to check a design summary against the implementation: 'check this summary for drift', 'has the auth service drifted from its memory summary', 'is the architecture in this summary still accurate', 'audit or validate this design summary against the code', 'reconcile the memory with reality', or a periodic freshness check of a committed summary. Assesses one summary per run; never auto-fixes code and never opens a pull request."
+name: agent-memory-drift
+description: "Re-validate a single committed memory design summary (a Summary file under agent-memory/) against the current code, and report whether the code has drifted from the recorded design. It classifies drift as architecture drift (the code still meets the spec, but the recorded architecture is stale) or spec drift (the code no longer does what the spec requires), and reports it with cited code evidence for a human to approve — never committing, never opening a PR, never editing the spec half on its own. Use this whenever someone wants to check a design summary against the implementation: 'check this summary for drift', 'has the auth service drifted from its memory summary', 'is the architecture in this summary still accurate', 'audit or validate this design summary against the code', 'reconcile the memory with reality', or a periodic freshness check of a committed summary. Assesses one summary per run; never auto-fixes code and never opens a pull request."
 ---
 
 # Memory Drift Check
 
 Take one committed design summary from a team's memory and ask: **does the current code still match what this record says?** Report the answer with evidence, tell apart a *stale design note* from a *broken intent*, and let a human approve any change — this skill alters nothing on its own.
 
-It is the **continuous** counterpart to the one-time drift check the `memory-summary` skill runs at authoring time (its step 3). Both share one engine — `references/compare-summary-to-code.md` — so the two checks can never drift apart. This skill adds the classification gate and the human-gated routing on top.
+It is the **continuous** counterpart to the one-time drift check the `agent-memory-summary` skill runs at authoring time (its step 3). Both share one engine — `references/compare-summary-to-code.md` — so the two checks can never drift apart. This skill adds the classification gate and the human-gated routing on top.
 
 ## Input
 
-- **summary** (required) — the path to one committed `Doc/memory/<team>/Summary_<name>.md`. One summary per run (sweeping a whole memory is out of scope). If the user names a team or feature instead of a path, locate the matching summary under `Doc/memory/<team>/` and confirm.
+- **summary** (required) — the path to one committed `agent-memory/<team>/Summary_<name>.md`. One summary per run (sweeping a whole memory is out of scope). If the user names a team or feature instead of a path, locate the matching summary under `agent-memory/<team>/` and confirm.
 
 ## Workflow
 

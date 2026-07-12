@@ -1,7 +1,7 @@
 {
   "name": "agentic-ai",
-  "version": "1.0.0",
-  "description": "Agentic engineering plugin with skills for architecture planning, workspace-grounded onboarding (ramp-up), and design-memory summary and drift detection, backed by planning and exploration sub-agents.",
+  "version": "1.1.0",
+  "description": "Agentic engineering plugin: architecture planning, workspace-grounded onboarding (ramp-up), and a full agent-memory stack — read the design memory, capture durable notes, summarize shipped designs, and drift-check them. Backed by planning and exploration sub-agents.",
   "author": {
     "name": "lizi@microsoft.com"
   }

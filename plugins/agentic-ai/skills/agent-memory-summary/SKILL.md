@@ -1,6 +1,6 @@
 ---
-name: memory-summary
-description: "Record a finished or shipped change as one durable Summary_<name>.md entry in a team's memory — committed in the code repo under `Doc/memory/<team>/` in a fixed spec+plan format. Works either from an /architect design (its `spec.md` + `plan.md`) or, when there are no design docs, straight from a code change: the current working-tree edits, a PR, or a commit range against main. Use whenever a design or shipped change should be recorded in a team's memory, e.g. 'summarize this design into the memory', 'create a memory summary', 'add this spec and plan to the platform memory', 'summarize this PR into memory', 'summarize my current changes into the platform memory', 'summarize this branch vs main into memory', or 'store this design summary'. Files a single-team summary into the team folder, a cross-team one into `Doc/memory/cross-team/`, and an org-wide one into `Doc/memory/global/`."
+name: agent-memory-summary
+description: "Record a finished or shipped change as one durable Summary_<name>.md entry in a team's memory — committed in the code repo under `agent-memory/<team>/` in a fixed spec+plan format. Works either from an /architect design (its `spec.md` + `plan.md`) or, when there are no design docs, straight from a code change: the current working-tree edits, a PR, or a commit range against main. Use whenever a design or shipped change should be recorded in a team's memory, e.g. 'summarize this design into the memory', 'create a memory summary', 'add this spec and plan to the platform memory', 'summarize this PR into memory', 'summarize my current changes into the platform memory', 'summarize this branch vs main into memory', or 'store this design summary'. Files a single-team summary into the team folder, a cross-team one into `agent-memory/cross-team/`, and an org-wide one into `agent-memory/global/`."
 ---
 
 # Memory Summary
@@ -25,9 +25,9 @@ Both modes converge on the **same compose step** (Step 3) and emit the same stru
 **Shared (both modes):**
 
 - **target(s)** (required) — one or more owning team folders, e.g. `platform`, `frontend`, `backend`, `infra`, **or** the special target `global` for an org-wide design. If the user hasn't named any, **suggest** likely target(s) — inferred from the spec/plan or the change content and the code areas it touches — and confirm before writing.
-  - **One team** → the summary is filed into that team's folder (`Doc/memory/<team>/`) and its `index.md`.
-  - **Multiple teams (cross-team design)** → the summary is filed **once** into `Doc/memory/cross-team/`, and **each** named team's `index.md` gets a row linking to it — so the content lives in one place and every relevant team can discover it.
-  - **Org-wide (`global`)** → for a design the whole org should know about, with no single owning team, the summary is filed into `Doc/memory/global/` and registered in `Doc/memory/global/index.md` (the skill creates this index on the first global summary). Agents reach it via a global instruction (e.g. in the repo's `AGENTS.md`) that points at `Doc/memory/global/index.md`.
+  - **One team** → the summary is filed into that team's folder (`agent-memory/<team>/`) and its `index.md`.
+  - **Multiple teams (cross-team design)** → the summary is filed **once** into `agent-memory/cross-team/`, and **each** named team's `index.md` gets a row linking to it — so the content lives in one place and every relevant team can discover it.
+  - **Org-wide (`global`)** → for a design the whole org should know about, with no single owning team, the summary is filed into `agent-memory/global/` and registered in `agent-memory/global/index.md` (the skill creates this index on the first global summary). Agents reach it via a global instruction (e.g. in the repo's `AGENTS.md`) that points at `agent-memory/global/index.md`.
 - **name** (optional) — the `<name>` in `Summary_<name>.md`. Default to the architect slug (Mode A), the PR title or branch name (Mode B), or a PascalCase form of the change's primary component / spec title.
 
 **Mode A (design) only:**
@@ -42,11 +42,11 @@ Both modes converge on the **same compose step** (Step 3) and emit the same stru
 
 ### Step 1 — Locate the memory (both modes)
 
-The memory is committed **in the code repo you're working in**, at `Doc/memory/<team>/` (`index.md`, `projectBrief.md`, `systemPatterns.md`, `Summary_<name>.md`). It lives with the code, so the summary you write lands in the **same PR** as the implementation — no separate repo, no sync step.
+The memory is committed **in the code repo you're working in**, at `agent-memory/<team>/` (`index.md`, `projectBrief.md`, `systemPatterns.md`, `Summary_<name>.md`). It lives with the code, so the summary you write lands in the **same PR** as the implementation — no separate repo, no sync step.
 
-- The target for a single-team design is `Doc/memory/<team>/`. If that folder doesn't exist, this team has no memory yet — stop and tell the user to seed it first (`Doc/memory/<team>/` with `index.md`, `projectBrief.md`, `systemPatterns.md`).
-- For a **cross-team** design, the summary's home is `Doc/memory/cross-team/` (create it if missing); each referencing team must still have its own seeded `<team>/` memory, because the discovery row lives in the team's `index.md`.
-- For an **org-wide** design, the summary's home is `Doc/memory/global/` (create it if missing); it has its own `index.md` — create it from the team index's table shape if it doesn't exist yet — read by a global instruction in the repo's agent instructions (e.g. `AGENTS.md`).
+- The target for a single-team design is `agent-memory/<team>/`. If that folder doesn't exist, this team has no memory yet — stop and tell the user to seed it first (`agent-memory/<team>/` with `index.md`, `projectBrief.md`, `systemPatterns.md`).
+- For a **cross-team** design, the summary's home is `agent-memory/cross-team/` (create it if missing); each referencing team must still have its own seeded `<team>/` memory, because the discovery row lives in the team's `index.md`.
+- For an **org-wide** design, the summary's home is `agent-memory/global/` (create it if missing); it has its own `index.md` — create it from the team index's table shape if it doesn't exist yet — read by a global instruction in the repo's agent instructions (e.g. `AGENTS.md`).
 
 ### Step 2 — Obtain the spec + plan design (mode-specific)
 
@@ -58,7 +58,7 @@ Run **either Step 2A or Step 2B**, per Mode detection. Both hand Step 3 the same
 
 **Reconcile the plan with the implementation (drift check) — before summarizing.** This summary becomes the durable record of the design, and it captures the plan's design — so the plan should match what was actually built. If the plan drifted from reality during implementation, summarizing it as-is would enshrine the original intent as though it were the outcome. Reconcile first.
 
-Run the shared compare engine — **`../memory-drift/references/compare-summary-to-code.md`** — to walk the plan against the real code: decompose the plan into atomic assertions (its `[V]` steps and named deliverables — files, symbols, config keys — plus the architecture paragraph's components, data flow, and integration points), verify each against the implementation **with a code citation**, and aggregate. The same load-bearing rules apply: a Broken/Diverged claim with no citation is downgraded to **Unverifiable**, and Unverifiable is not drift. This is the very same engine the `memory-drift` skill runs continuously — here it runs once, at authoring time, so the two checks can never diverge.
+Run the shared compare engine — **`../agent-memory-drift/references/compare-summary-to-code.md`** — to walk the plan against the real code: decompose the plan into atomic assertions (its `[V]` steps and named deliverables — files, symbols, config keys — plus the architecture paragraph's components, data flow, and integration points), verify each against the implementation **with a code citation**, and aggregate. The same load-bearing rules apply: a Broken/Diverged claim with no citation is downgraded to **Unverifiable**, and Unverifiable is not drift. This is the very same engine the `agent-memory-drift` skill runs continuously — here it runs once, at authoring time, so the two checks can never diverge.
 
 If you find drift, **do not silently summarize the stale plan**. Surface it concisely and propose concrete plan edits — to **both** the high-level **Architecture plan** paragraph **and** the affected **steps** — then let the user apply them (or explicitly confirm proceeding as-is) before you continue. A reconciled plan makes a truthful summary; an unreconciled one quietly bakes in a lie.
 
@@ -88,14 +88,14 @@ Mode B runs when there are no design docs. The **code is the source of truth** �
 
 ### Step 3 — Compose `Summary_<name>.md` (both modes)
 
-Write the summary to its home — `Doc/memory/<team>/Summary_<name>.md` for a single-team design, `Doc/memory/cross-team/Summary_<name>.md` for a cross-team design, or `Doc/memory/global/Summary_<name>.md` for an org-wide design — following the structure in **[`references/summary-format.md`](references/summary-format.md)**: the summary envelope, the spec / plan shapes it embeds, and the header / omit rules. Both modes emit the identical file; only the source of the `## Spec` and `## Plan` content differs (verbatim spec + extracted plan in Mode A; both reverse-engineered from the change in Mode B).
+Write the summary to its home — `agent-memory/<team>/Summary_<name>.md` for a single-team design, `agent-memory/cross-team/Summary_<name>.md` for a cross-team design, or `agent-memory/global/Summary_<name>.md` for an org-wide design — following the structure in **[`references/summary-format.md`](references/summary-format.md)**: the summary envelope, the spec / plan shapes it embeds, and the header / omit rules. Both modes emit the identical file; only the source of the `## Spec` and `## Plan` content differs (verbatim spec + extracted plan in Mode A; both reverse-engineered from the change in Mode B).
 
 ### Step 4 — Register it in the index (idempotent, both modes)
 
 Upsert a row matched on the `Summary_{name}` key (so re-running never duplicates): replace it in place if present, otherwise append it and drop any `_(none yet)_` placeholder. Which index depends on the target:
 
-- **team** or **cross-team** → for **each** owning team, open `Doc/memory/<team>/index.md`, find the **Design Summaries** table, and upsert the row.
-- **org-wide (`global`)** → open `Doc/memory/global/index.md` and upsert the row there. If that index doesn't exist yet, create it first with the same shape as a team index (a short heading plus a `| Entry | Title | Date | Summary | When to read |` table) — it comes into being with the first global summary.
+- **team** or **cross-team** → for **each** owning team, open `agent-memory/<team>/index.md`, find the **Design Summaries** table, and upsert the row.
+- **org-wide (`global`)** → open `agent-memory/global/index.md` and upsert the row there. If that index doesn't exist yet, create it first with the same shape as a team index (a short heading plus a `| Entry | Title | Date | Summary | When to read |` table) — it comes into being with the first global summary.
 
 The **Design Summaries** table carries five columns — `| Entry | Title | Date | Summary | When to read |`. The **When to read** cell is a short trigger that tells a future agent, scanning the index, whether *this* entry is relevant to the task in front of it — so it opens only the summaries that matter instead of all of them. Derive it from the spec's scope: name the task, feature area, and concrete code anchors (components, files, symbols, config keys, metric names) that touching *this* design would put someone near. Keep it to one scannable clause, and make it distinct from the **Summary** (which says *what* the design is, not *when* to open it). If the index's Design Summaries table predates this column (only four columns), add the `When to read` header and its separator cell too, so the table stays well-formed.
 
@@ -120,7 +120,7 @@ Leave everything **uncommitted** — the summary and index changes are now in th
 - **Same output, two inputs**: Mode A (spec + plan) and Mode B (a diff) converge on the identical `Summary_<name>.md` structure — a `## Spec` + `## Plan` combination. The only difference is provenance: Mode A embeds an existing spec and drift-checks the plan; Mode B reverse-engineers both from the change — writing them only inside the summary, never as separate `spec.md` / `plan.md` files — and skips the drift check (the code is the source).
 - **Idempotent**: re-running for the same `<name>` overwrites `Summary_<name>.md` and updates the matching index row (in each referencing team, or in `global/index.md` for an org-wide design), matched by the `Summary_<name>` key. No duplicates.
 - **The index is a discovery surface**: each Design Summaries row carries a **When to read** trigger, so an agent that reads `index.md` first opens only the summaries relevant to its current task rather than every entry.
-- **Committed with the code**: the memory lives in the repo (`Doc/memory/...`), not under the gitignored `.github/`, so summaries are greppable and ship in the same PR as the feature they document.
-- **Cross-team designs**: the summary is written once into `Doc/memory/cross-team/` and linked from each relevant team's `index.md` (content is never duplicated; the team indexes are the discovery path — `cross-team/` has no index of its own); a single-team design stays in its team folder.
-- **Org-wide designs**: a `global` summary is written once into `Doc/memory/global/` and registered in `global/index.md` (the skill creates this index on the first global summary); it has no team row — agents reach it via a global instruction (e.g. in the repo's `AGENTS.md`) that points at `global/index.md`.
+- **Committed with the code**: the memory lives in the repo (`agent-memory/...`), not under the gitignored `.github/`, so summaries are greppable and ship in the same PR as the feature they document.
+- **Cross-team designs**: the summary is written once into `agent-memory/cross-team/` and linked from each relevant team's `index.md` (content is never duplicated; the team indexes are the discovery path — `cross-team/` has no index of its own); a single-team design stays in its team folder.
+- **Org-wide designs**: a `global` summary is written once into `agent-memory/global/` and registered in `global/index.md` (the skill creates this index on the first global summary); it has no team row — agents reach it via a global instruction (e.g. in the repo's `AGENTS.md`) that points at `global/index.md`.
 - **Drift check (Mode A) is a reconciliation, not a rewrite**: it proposes plan edits for the user to approve; it doesn't silently rewrite the plan or block on perfection.
