@@ -32,7 +32,7 @@
       "name": "general-mcp",
       "source": "./plugins/general-mcp",
       "description": "Bundles ready-to-use MCP servers, registered user-wide across all repos on install: Playwright (browser automation), Azure DevOps/ADO (work items, repos, pipelines), and Azure (azmcp). Servers launch locally via npx; auth reuses your existing az login / Azure CLI session.",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "author": { "name": "lizi@microsoft.com" },
       "tags": ["mcp", "playwright", "azure", "azure-devops", "ado", "browser-automation", "copilot-cli", "tools"]
     },

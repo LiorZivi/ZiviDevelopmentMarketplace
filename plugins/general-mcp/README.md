@@ -6,11 +6,13 @@ Bundles ready-to-use **MCP servers** as a marketplace plugin. Installing the plu
 
 | Server | Command | Capabilities | Auth |
 |---|---|---|---|
-| `playwright` | `npx @playwright/mcp@latest` | Browser automation: navigate, click, type, snapshot, scrape, assert. | None (browsers download on first run). |
+| `playwright` | `npx @playwright/mcp@latest --allow-unrestricted-file-access` | Browser automation: navigate, click, type, snapshot, scrape, assert. Also renders local `file://` HTML (e.g. hand-authored SVG/HTML diagrams). | None (browsers download on first run). |
 | `ado` | `npx -y @azure-devops/mcp ZiviDevelopment-DD-Org1` | Azure DevOps: work items, boards, repos, pull requests, pipelines, wiki. | Azure CLI (`az login`). |
 | `azure` | `npx -y @azure/mcp@latest server start` | `azmcp`: query and manage Azure resources (storage, Key Vault, Cosmos DB, Monitor, and more). | Azure CLI (`az login`) / `DefaultAzureCredential`. |
 
 This is a pure MCP-only plugin — it ships no skills or agents, just the server definitions.
+
+> **Security note — Playwright file access.** The `playwright` server is launched with `--allow-unrestricted-file-access` so the automated browser can navigate to `file://` URLs and read files **outside** the workspace root (rendering a local HTML file, for example). By default `@playwright/mcp` blocks `file://` navigation and restricts file access to the workspace root; this flag lifts that safety rail, so a malicious page or prompt injection could read arbitrary local files. If you don't need local-file rendering, remove the flag from the `playwright` entry in `.mcp.json` (and bump the version across the four sync files); without it, serve the file over local HTTP and navigate to `http://127.0.0.1:PORT/…` instead.
 
 ## Why a plugin (vs. `~/.copilot/mcp-config.json`)
 
