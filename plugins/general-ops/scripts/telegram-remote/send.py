@@ -1,0 +1,75 @@
+"""Post an ad-hoc plain-text message to the telegram-remote DM.
+
+Used for acknowledgements, progress notes, answers, and status updates — any
+free-form post the agent composes by hand. The ``Copilot agent message:``
+prefix is added automatically (so the user can distinguish agent posts from
+their own messages, which matters when the bot is shared with other notifiers).
+"""
+
+from __future__ import annotations
+
+import argparse
+import json
+import sys
+from pathlib import Path
+
+HERE = Path(__file__).resolve().parent
+sys.path.insert(0, str(HERE.parent / "lib"))
+sys.path.insert(0, str(HERE))
+
+from state import load_state, resolve_session_id, save_state, set_subsystem  # noqa: E402
+
+set_subsystem("telegram-remote")
+
+from telegram_transport import TelegramError, load_credentials, send_message  # noqa: E402
+
+AGENT_PREFIX = "Copilot agent message:"
+
+
+def _emit(action: dict) -> None:
+    sys.stdout.write(json.dumps(action) + "\n")
+    sys.stdout.flush()
+
+
+def _prefixed(text: str) -> str:
+    text = text or ""
+    if text.lstrip().lower().startswith(AGENT_PREFIX.lower()):
+        return text
+    return f"{AGENT_PREFIX} {text}"
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser(description="telegram-remote ad-hoc send")
+    parser.add_argument("--text", required=True)
+    parser.add_argument("--session-id", required=False)
+    parser.add_argument("--no-prefix", action="store_true",
+                        help="Send text verbatim without the agent prefix.")
+    args = parser.parse_args()
+
+    session_id = resolve_session_id(args)
+    state = load_state(session_id)
+    if state is None:
+        _emit({"action": "error", "error": "no active telegram-remote session"})
+        return 1
+
+    token, _ = load_credentials()
+    chat_id = state.get("chat_id")
+    if not token or not chat_id:
+        _emit({"action": "error", "error": "missing bot token or chat id"})
+        return 1
+
+    body = args.text if args.no_prefix else _prefixed(args.text)
+    try:
+        posted = send_message(token, chat_id, body)
+    except TelegramError as exc:
+        _emit({"action": "error", "error": f"send failed: {exc}"})
+        return 1
+
+    state["message_count"] = int(state.get("message_count", 0)) + 1
+    save_state(session_id, state)
+    _emit({"action": "sent", "message_id": str(posted.get("message_id", ""))})
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

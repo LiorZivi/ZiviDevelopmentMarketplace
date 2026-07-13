@@ -23,10 +23,10 @@
     {
       "name": "general-ops",
       "source": "./plugins/general-ops",
-      "description": "Bidirectional Copilot CLI ↔ Microsoft Teams bridge via the Teams MCP. Step away from the terminal and keep the agent running by chatting with it through a Teams channel thread — progress posts flow out via MCP, replies auto-inject back in.",
-      "version": "1.9.0",
+      "description": "Bidirectional Copilot CLI remote-control bridges — step away from the terminal and keep the agent running by chatting with it from a Microsoft Teams channel (Teams MCP) or a Telegram bot DM. Progress and questions post outbound; your replies auto-inject back into the session.",
+      "version": "1.10.0",
       "author": { "name": "lizi@microsoft.com" },
-      "tags": ["teams", "teams-mcp", "remote-work", "copilot-cli", "bidirectional-chat", "infra", "ops"]
+      "tags": ["teams", "teams-mcp", "telegram", "telegram-bot", "remote-work", "copilot-cli", "bidirectional-chat", "infra", "ops"]
     },
     {
       "name": "general-mcp",

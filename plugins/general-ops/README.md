@@ -1,13 +1,25 @@
 # general-ops
 
-Bidirectional Copilot CLI ↔ Microsoft Teams bridge. Step away from the terminal and keep the agent running by chatting with it through a Teams channel.
+Bidirectional Copilot CLI **remote-control bridges**. Step away from the terminal and keep the agent running by chatting with it — over a **Microsoft Teams channel** (Teams MCP) or a **Telegram bot DM**.
 
 ## What it is
 
-`general-ops` hosts a single skill:
+`general-ops` hosts two remote-control skills that share the same control loop (`lib/state.py`, per-session state, a `Stop` hook that keeps the agent polling while `away_mode=true`). Each has its own transport and its own isolated state subsystem, so they never collide and can even be registered side by side:
+
+- **`teams-remote`** — bridges to a Microsoft Teams channel thread via the Teams MCP. Best when your team lives in Teams and your Copilot session is signed into M365. Needs the `teams-*` MCP tools.
+- **`telegram-remote`** — bridges to a Telegram bot DM via the Bot API (stdlib HTTPS, no MCP/OAuth). Best when you want a phone-friendly bridge that **works from any repository — including Azure DevOps repos — and needs no GitHub Copilot remote-session policy**. Needs only a bot token + chat id.
+
+### teams-remote
 
 - **`/teams-remote [team] [channel]`** — activator. Resolves the channel via the Teams MCP, posts a root message, flips the session into `away_mode`, polls the thread for replies via `teams-ListChannelMessageReplies`, and auto-injects them back into the CLI conversation. Proactively refreshes the Teams MCP OAuth token and falls back to direct HTTP against the MCP server when the CLI's cached bearer goes stale (solves `-32001` timeouts on long-running sessions). Posts progress updates, questions, and heartbeats as threaded replies.
 - **`/teams-remote end`** — terminator. Same skill, invoked with the argument `end`. Posts a session-summary reply under the root thread, deletes state.
+
+### telegram-remote
+
+- **`telegram-remote`** — activator. Reads a bot token + chat id (env or config file), drains the DM backlog to set a dedup baseline, posts a root announcement, flips the session into `away_mode`, long-polls the DM via `getUpdates`, and auto-injects your replies back into the CLI conversation. Post acks/progress/questions with `send.py` / `ask.py`.
+- **`telegram-remote end`** — terminator. Posts a summary to the DM, flips `away_mode` off, deletes state. You can also reply `end` (or `/telegram-remote end`) in the DM.
+
+The sections below document **teams-remote**; **telegram-remote** is documented under [telegram-remote — details](#telegram-remote--details).
 
 ## Architecture at a glance
 
@@ -82,6 +94,60 @@ Or, from inside the Teams thread, reply with `end` or `/teams-remote end` (legac
 - **Timestamp boundary** uses the Graph `createdDateTime` returned with each post (authoritative), never the local clock.
 - **Stop hook** at `hooks/hooks.json` keeps the agent awake while `away_mode=true`. It cannot call MCP itself (no tool context in a hook subprocess) but it blocks the turn with `{"decision":"block","reason":"..."}`, which forces another assistant turn in which the agent *can* call MCP to tick the idle-poll. Once `/teams-remote end` flips `away_mode=false`, the hook stops blocking.
 - **No SessionEnd hook.** Session teardown has no subsequent turn, so MCP is unreachable from that lifecycle event. If the CLI exits without `/teams-remote end`, the final summary is skipped and stale state is reaped on next activation.
+
+## telegram-remote — details
+
+A phone-friendly bridge that needs **no MCP, no OAuth, and no GitHub Copilot remote-session policy** — just a Telegram bot. Because it's independent of the git host and your Copilot seat, it works from **any** repository, including Azure DevOps checkouts where the native `/remote` command is unavailable.
+
+### Prerequisites
+
+- **A Telegram bot token + your DM chat id.** Reuse an existing bot (one that only *sends* is fine) or create a dedicated one via `@BotFather`. Resolve them from, in order:
+  1. env `TELEGRAM_BOT_TOKEN` / `TELEGRAM_CHAT_ID`
+  2. `~/.copilot/telegram-remote.json` (user-global)
+  3. `.github/telegram-remote.json` (repo-local)
+
+  ```jsonc
+  { "botToken": "123456:ABC-DEF...", "chatId": "987654321" }
+  ```
+
+  The chat id is your **1:1 DM with the bot** (a bot cannot read Telegram "Saved Messages"). To find it, message the bot once, then:
+
+  ```
+  python "<plugin>/scripts/telegram-remote/telegram_transport.py" discover
+  ```
+
+- **Python 3.9+** on `PATH` as `python`. Standard library only — no `pip install`.
+
+### Usage
+
+```
+telegram-remote          # activate: posts a root message, enters away_mode, long-polls the DM
+telegram-remote end      # end: posts a summary, deletes state
+```
+
+From your phone, just message the bot: each message is injected as a new prompt. Reply `end` / `/end` / `/telegram-remote end` to stop.
+
+### How it works (brief)
+
+- **State**: one JSON file per CLI session at `~/.copilot/session-state/<session-id>/plugins/general-ops/telegram-remote/state.json`, isolated from `teams-remote` by the `telegram-remote` subsystem sub-directory (`set_subsystem`). Schema gated by `schema_version: 3`; atomic writes.
+- **Single-step scripts**: unlike teams-remote's two-step MCP handshakes, the Telegram scripts call the Bot API directly (`telegram_transport.py`, stdlib `urllib`), so `activate` / `send` / `ask` / `end` post-and-persist in one shot.
+- **No self-filtering.** `getUpdates` only returns *incoming* messages — the bot never receives its own posts — so de-dup is a monotonic `update_id` offset, not an `own_message_ids` set.
+- **Efficient idle loop.** `poll.py --step tick --mode idle` long-polls internally (blocks up to ~8 min via back-to-back `getUpdates` calls), so one forced agent turn covers a long idle window. Tune with the `long_poll_budget` / `long_poll_timeout` state fields (or `TELEGRAM_REMOTE_POLL_BUDGET` / `TELEGRAM_REMOTE_POLL_SEGMENT` for tests).
+- **Stop hook** `telegram_remote_stop.py` blocks the turn while `away_mode=true` and nudges the agent to re-tick. It coexists with the teams Stop hook — the CLI runs every registered Stop hook and each no-ops unless its own subsystem is away.
+
+### Caveats
+
+- **Single-consumer per bot.** `getUpdates` is single-consumer: two `telegram-remote` sessions on the same token conflict (HTTP 409). Reusing a send-only notifier bot is fine; running two remote sessions at once needs two bots.
+- **409 Conflict** also occurs if the bot has a webhook set. Remove it or use a dedicated bot.
+- **No summary on hard exit.** If the CLI exits without `telegram-remote end`, the summary is skipped and stale state is reaped on next activation.
+
+### Tests
+
+Offline integration tests (network mocked, no token needed):
+
+```
+python -m unittest discover -s plugins/general-ops/scripts/telegram-remote/tests
+```
 
 ## Trust model
 
