@@ -58,7 +58,10 @@ def _block_reason(session_id: str) -> str:
         "Branch on the action:\n"
         "  - inject: treat each item in `replies` as a new user prompt. Post a "
         "short ack via send.py IN PARALLEL with starting the work (see the "
-        "ack_hint in the envelope), then tick again.\n"
+        "ack_hint in the envelope), post progress at meaningful execution "
+        "stages, and finish successful work with send.py --completed so the "
+        "message begins `TASK COMPLETED, Waiting for your next prompt`; then "
+        "tick again.\n"
         "  - terminate: the user replied `end` — run the end_hint command "
         f'(python "{_END}" --reason remote-triggered --session-id {session_id}).\n'
         "  - continue: nothing new in the budget window — tick again.\n"

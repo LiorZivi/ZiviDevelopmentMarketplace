@@ -1,0 +1,36 @@
+{
+  "skill_name": "telegram-remote",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "The user sends a Telegram prompt asking you to investigate a failing build, implement the fix, run tests, push a branch, and open a pull request.",
+      "expected_output": "Acknowledge while starting work, post meaningful investigation/implementation/validation updates, then send a successful completion message with the fixed completion prefix before returning to idle polling.",
+      "files": [],
+      "assertions": [
+        "The workflow requires at least one intermediate progress update for the multi-phase task.",
+        "The final successful Telegram message begins with TASK COMPLETED, Waiting for your next prompt.",
+        "The idle poll resumes only after the completion message is sent."
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "The user sends a short Telegram prompt asking for the current branch name and no tools beyond one quick command are needed.",
+      "expected_output": "Acknowledge and answer promptly. Intermediate stage updates may be skipped because completion is immediate, but the successful result still uses the fixed completion prefix.",
+      "files": [],
+      "assertions": [
+        "The skill permits skipping intermediate progress for an immediate single-action task.",
+        "The successful result still uses send.py --completed."
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "The user asks through Telegram to deploy but the target environment is ambiguous and the agent must ask which environment to use.",
+      "expected_output": "Send a normal blocked/waiting status and route the question through ask.py. Do not claim task completion while waiting for the answer.",
+      "files": [],
+      "assertions": [
+        "The workflow uses ask.py for the blocking question.",
+        "The workflow explicitly avoids send.py --completed while blocked or waiting for input."
+      ]
+    }
+  ]
+}

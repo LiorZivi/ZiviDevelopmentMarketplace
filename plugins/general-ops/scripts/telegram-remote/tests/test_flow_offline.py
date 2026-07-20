@@ -113,6 +113,8 @@ class TelegramRemoteFlowTest(unittest.TestCase):
         self.assertEqual(env["action"], "inject")
         self.assertEqual(env["replies"][0]["text"], "add logging to main")
         self.assertEqual(load_state(SID)["last_update_id"], 5001)
+        self.assertIn("progress updates", env["ack_hint"])
+        self.assertIn("--completed", env["ack_hint"])
 
         # 4) foreign-chat message consumed but not injected
         self.update_queue.append([self._msg(5002, 8, "not for us", chat_id=777)])
@@ -129,7 +131,32 @@ class TelegramRemoteFlowTest(unittest.TestCase):
         self.assertEqual(env["action"], "sent")
         self.assertTrue(self.sent[-1].startswith("Copilot agent message: on it"))
 
-        # 6) ask.py + input poll -> answer
+        # 6) send.py successful completion gets the fixed marker
+        old = sys.argv
+        sys.argv = ["send.py", "--completed", "--text", "All tests passed."]
+        rc, env, _ = self._run(send.main)
+        sys.argv = old
+        self.assertEqual(env["action"], "sent")
+        self.assertTrue(env["completed"])
+        self.assertTrue(self.sent[-1].startswith(
+            "TASK COMPLETED, Waiting for your next prompt"))
+        self.assertIn("All tests passed.", self.sent[-1])
+        self.assertEqual(
+            send._completed("task completed, waiting for your next prompt"),
+            "TASK COMPLETED, Waiting for your next prompt",
+        )
+        self.assertEqual(
+            send._completed(
+                "task completed, waiting for your next prompt\nAlready summarized."
+            ),
+            "TASK COMPLETED, Waiting for your next prompt\nAlready summarized.",
+        )
+        self.assertEqual(
+            send._completed(""),
+            "TASK COMPLETED, Waiting for your next prompt",
+        )
+
+        # 7) ask.py + input poll -> answer
         old = sys.argv
         sys.argv = ["ask.py", "--question", "Deploy?"]
         rc, env, _ = self._run(ask.main)
@@ -140,13 +167,13 @@ class TelegramRemoteFlowTest(unittest.TestCase):
             step="tick", mode="input", session_id=None, long_poll=True, with_sleep=False))
         self.assertEqual((env["action"], env["text"]), ("answer", "yes go"))
 
-        # 7) idle terminate keyword
+        # 8) idle terminate keyword
         self.update_queue.append([self._msg(5004, 10, "end")])
         rc, env, _ = self._run(poll.cmd_tick, SimpleNamespace(
             step="tick", mode="idle", session_id=None, long_poll=True, with_sleep=False))
         self.assertEqual(env["action"], "terminate")
 
-        # 8) end.py deletes state
+        # 9) end.py deletes state
         old = sys.argv
         sys.argv = ["end.py", "--reason", "remote-triggered"]
         rc, env, _ = self._run(end.main)
@@ -154,7 +181,7 @@ class TelegramRemoteFlowTest(unittest.TestCase):
         self.assertEqual(env["action"], "ended")
         self.assertIsNone(load_state(SID))
 
-        # 9) stop-hook silent after end
+        # 10) stop-hook silent after end
         sys.stdin = io.StringIO(json.dumps({"session_id": SID}))
         _, _, hout = self._run(hook.main)
         sys.stdin = _stdin
