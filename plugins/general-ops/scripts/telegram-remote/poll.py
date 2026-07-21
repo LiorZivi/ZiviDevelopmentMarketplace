@@ -201,7 +201,11 @@ def _handle_idle(session_id: str, state: dict, msgs: list) -> int:
             "Post a short acknowledgement IN PARALLEL with starting the work "
             "(one sentence, paraphrase what you understood), then do the task:\n"
             f'  python "{_SEND_SCRIPT}" --text "<ack>" --session-id {session_id}\n'
-            "After finishing, tick the idle poll again."
+            "Post concise progress updates at meaningful execution stages. "
+            "After successful completion, send the fixed completion marker:\n"
+            f'  python "{_SEND_SCRIPT}" --completed --text "<outcome>" '
+            f"--session-id {session_id}\n"
+            "Then tick the idle poll again."
         ),
         "send_script": _SEND_SCRIPT,
         "next_step": "tick",

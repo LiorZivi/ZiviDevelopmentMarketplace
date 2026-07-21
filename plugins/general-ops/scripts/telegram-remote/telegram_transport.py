@@ -7,6 +7,8 @@ token refresh, and no SSE. Two primitives cover the whole skill:
 
 * :func:`send_message` — ``POST /sendMessage`` (outbound: root post, acks,
   questions, progress, summary). Plain text, chunked at Telegram's 4096 limit.
+* :func:`send_document` — multipart ``POST /sendDocument`` for requested local
+  files up to Telegram's 50 MB bot limit.
 * :func:`get_updates` — ``GET /getUpdates?offset&timeout`` long-poll (inbound:
   the user's replies in the bot DM).
 
@@ -39,11 +41,13 @@ CLI helpers (for setup / smoke tests):
 from __future__ import annotations
 
 import json
+import mimetypes
 import os
 import sys
 import urllib.error
 import urllib.parse
 import urllib.request
+import uuid
 from pathlib import Path
 from typing import Optional
 
@@ -161,6 +165,76 @@ def send_message(token: str, chat_id: str, text: str, *, timeout: float = 15.0) 
             timeout,
         )
     return result or {}
+
+
+def send_document(
+    token: str,
+    chat_id: str,
+    file_path: str,
+    *,
+    caption: str = "",
+    timeout: float = 60.0,
+) -> dict:
+    """Upload one local file to ``chat_id`` through Telegram ``sendDocument``."""
+    path = Path(file_path).expanduser().resolve()
+    if not path.is_file():
+        raise TelegramError(f"document not found: {path}")
+    if path.stat().st_size > 50 * 1024 * 1024:
+        raise TelegramError("document exceeds Telegram's 50 MB bot upload limit")
+
+    boundary = f"----telegram-remote-{uuid.uuid4().hex}"
+    chunks: list[bytes] = []
+
+    def add_field(name: str, value: str) -> None:
+        chunks.extend([
+            f"--{boundary}\r\n".encode("ascii"),
+            f'Content-Disposition: form-data; name="{name}"\r\n\r\n'.encode("utf-8"),
+            str(value).encode("utf-8"),
+            b"\r\n",
+        ])
+
+    add_field("chat_id", chat_id)
+    if caption:
+        add_field("caption", caption[:1024])
+
+    content_type = mimetypes.guess_type(path.name)[0] or "application/octet-stream"
+    chunks.extend([
+        f"--{boundary}\r\n".encode("ascii"),
+        (
+            f'Content-Disposition: form-data; name="document"; '
+            f'filename="{path.name}"\r\n'
+        ).encode("utf-8"),
+        f"Content-Type: {content_type}\r\n\r\n".encode("ascii"),
+        path.read_bytes(),
+        b"\r\n",
+        f"--{boundary}--\r\n".encode("ascii"),
+    ])
+
+    url = f"{API_BASE}/bot{token}/sendDocument"
+    request = urllib.request.Request(
+        url,
+        data=b"".join(chunks),
+        headers={"Content-Type": f"multipart/form-data; boundary={boundary}"},
+    )
+    try:
+        with urllib.request.urlopen(request, timeout=timeout) as response:
+            body = json.loads(response.read().decode("utf-8"))
+    except urllib.error.HTTPError as exc:
+        try:
+            body = json.loads(exc.read().decode("utf-8"))
+        except Exception:
+            raise TelegramError(f"HTTP {exc.code}", code=exc.code) from exc
+        raise TelegramError(
+            body.get("description", f"HTTP {exc.code}"), code=exc.code
+        )
+    except (urllib.error.URLError, TimeoutError, ValueError, OSError) as exc:
+        raise TelegramError(str(exc)) from exc
+
+    if not isinstance(body, dict) or not body.get("ok"):
+        description = body.get("description") if isinstance(body, dict) else "malformed response"
+        raise TelegramError(description or "unknown Bot API error")
+    result = body.get("result")
+    return result if isinstance(result, dict) else {}
 
 
 def get_updates(

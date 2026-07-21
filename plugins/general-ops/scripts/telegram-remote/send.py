@@ -24,6 +24,7 @@ set_subsystem("telegram-remote")
 from telegram_transport import TelegramError, load_credentials, send_message  # noqa: E402
 
 AGENT_PREFIX = "Copilot agent message:"
+COMPLETION_PREFIX = "TASK COMPLETE:"
 
 
 def _emit(action: dict) -> None:
@@ -38,12 +39,30 @@ def _prefixed(text: str) -> str:
     return f"{AGENT_PREFIX} {text}"
 
 
+def _normalize_newlines(text: str) -> str:
+    return (text or "").replace("\\r\\n", "\n").replace("\\n", "\n")
+
+
+def _completed(text: str) -> str:
+    text = _normalize_newlines(text).strip()
+    if text.lower().startswith(COMPLETION_PREFIX.lower()):
+        remainder = text[len(COMPLETION_PREFIX):].strip()
+        text = remainder
+    outcome = _prefixed(text)
+    return f"{COMPLETION_PREFIX} {outcome}"
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description="telegram-remote ad-hoc send")
     parser.add_argument("--text", required=True)
     parser.add_argument("--session-id", required=False)
     parser.add_argument("--no-prefix", action="store_true",
                         help="Send text verbatim without the agent prefix.")
+    parser.add_argument(
+        "--completed",
+        action="store_true",
+        help="Prefix a successful task result with the fixed completion marker.",
+    )
     args = parser.parse_args()
 
     session_id = resolve_session_id(args)
@@ -58,7 +77,13 @@ def main() -> int:
         _emit({"action": "error", "error": "missing bot token or chat id"})
         return 1
 
-    body = args.text if args.no_prefix else _prefixed(args.text)
+    normalized_text = _normalize_newlines(args.text)
+    if args.completed:
+        body = _completed(normalized_text)
+    elif args.no_prefix:
+        body = normalized_text
+    else:
+        body = _prefixed(normalized_text)
     try:
         posted = send_message(token, chat_id, body)
     except TelegramError as exc:
@@ -67,7 +92,11 @@ def main() -> int:
 
     state["message_count"] = int(state.get("message_count", 0)) + 1
     save_state(session_id, state)
-    _emit({"action": "sent", "message_id": str(posted.get("message_id", ""))})
+    _emit({
+        "action": "sent",
+        "message_id": str(posted.get("message_id", "")),
+        "completed": args.completed,
+    })
     return 0
 
 
