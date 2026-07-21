@@ -1,6 +1,6 @@
 ---
 name: telegram-remote
-description: "Activate, operate, and tear down a bidirectional bridge between this Copilot CLI session and a Telegram bot DM so the user can step away from the terminal. Works from any repository (including Azure DevOps repos) and needs no GitHub Copilot remote-session policy — it only needs a Telegram bot token + chat id. The agent must post meaningful progress at major execution stages, route questions to the DM, and finish every completed injected task with the fixed prefix 'TASK COMPLETED, Waiting for your next prompt'; the user's replies auto-inject back into the session as prompts. Invoke with no args to activate; invoke with the literal argument 'end' to close an active session (posts a summary, flips away_mode off, deletes state). Activation triggers: 'telegram-remote', 'i'm stepping away', 'ping me on telegram', 'post progress to telegram', 'afk mode', 'continue on telegram', 'headed into a meeting'. End triggers: 'telegram-remote end', 'end-telegram-remote', 'stop-telegram-remote', 'i'm back at the terminal', 'back from afk', 'stop posting to telegram', 'disable remote mode'."
+description: "Activate, operate, and tear down a bidirectional bridge between this Copilot CLI session and a Telegram bot DM so the user can step away from the terminal. Works from any repository (including Azure DevOps repos) and needs no GitHub Copilot remote-session policy — it only needs a Telegram bot token + chat id. The agent must post meaningful progress at major execution stages, route questions to the DM, attach requested local files, prefix normal posts with 'Copilot agent message:', and finish every completed injected task with 'TASK COMPLETE:' before the agent prefix; the user's replies auto-inject back into the session as prompts. Invoke with no args to activate; invoke with the literal argument 'end' to close an active session (posts a summary, flips away_mode off, deletes state). Activation triggers: 'telegram-remote', 'i'm stepping away', 'ping me on telegram', 'post progress to telegram', 'afk mode', 'continue on telegram', 'headed into a meeting'. End triggers: 'telegram-remote end', 'end-telegram-remote', 'stop-telegram-remote', 'i'm back at the terminal', 'back from afk', 'stop posting to telegram', 'disable remote mode'."
 argument-hint: "end | [chat-id]"
 user-invocable: true
 ---
@@ -49,7 +49,7 @@ loop.
 ## Plugin Paths
 
 - **Plugin root**: `${CLAUDE_PLUGIN_ROOT}`
-- **Scripts**: `${CLAUDE_PLUGIN_ROOT}/scripts/telegram-remote/{activate,poll,send,ask,end}.py`
+- **Scripts**: `${CLAUDE_PLUGIN_ROOT}/scripts/telegram-remote/{activate,poll,send,send_file,ask,end}.py`
 - **Transport**: `${CLAUDE_PLUGIN_ROOT}/scripts/telegram-remote/telegram_transport.py`
 - **State**: `~/.copilot/session-state/<session-id>/plugins/general-ops/telegram-remote/state.json`
 
@@ -73,6 +73,7 @@ before ending your turn. Only `ended` is terminal.
 | `terminate` | User replied `end`. Run the [End Flow](#end-flow) (reason `remote-triggered`). |
 | `timeout` | The question window elapsed. Decide how to proceed without the answer. |
 | `sent` | An ad-hoc `send.py` post succeeded. |
+| `sent_file` | A `send_file.py` document upload succeeded. |
 | `ended` | Session closed (terminal). |
 
 ## Activation Flow
@@ -169,10 +170,11 @@ python "${CLAUDE_PLUGIN_ROOT}/scripts/telegram-remote/send.py" \
   --text "<short outcome, links, and any required next action>"
 ```
 
-`send.py` adds this exact fixed prefix:
+`send.py` keeps the agent identity prefix on every task result and places this
+exact completion prefix before it:
 
 ```text
-TASK COMPLETED, Waiting for your next prompt
+TASK COMPLETE: Copilot agent message: <outcome>
 ```
 
 Do not use `--completed` when work is blocked, failed, paused, or waiting for an
@@ -180,8 +182,26 @@ answer. Send a normal status update or use `ask.py` instead.
 
 ### Rule 6 — Every post is plain text
 
-All posts are plain text (no Markdown/HTML). Use `\n` for line breaks and `- `
-for bullets. Do not author Telegram markup.
+Message bodies and captions are plain text (no Markdown/HTML). Pass actual
+multiline text when possible. For shells or tool calls that pass the two
+characters `\n`, `send.py` and `send_file.py` expand them into real newline
+characters before posting. Use `- ` for bullets and do not author Telegram
+markup.
+
+### Rule 7 — Attach requested local files
+
+When the user asks for a local report, HTML, PDF, image, archive, or other
+artifact in Telegram, upload it with `send_file.py` instead of only posting its
+filesystem path:
+
+```text
+python "${CLAUDE_PLUGIN_ROOT}/scripts/telegram-remote/send_file.py" \
+  --file "<absolute path>" \
+  --caption "<short description>"
+```
+
+Captions receive the normal `Copilot agent message:` prefix and support real or
+escaped newlines. Telegram bot document uploads are limited to 50 MB.
 
 ## End Flow
 

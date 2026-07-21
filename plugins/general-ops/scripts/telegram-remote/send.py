@@ -24,7 +24,7 @@ set_subsystem("telegram-remote")
 from telegram_transport import TelegramError, load_credentials, send_message  # noqa: E402
 
 AGENT_PREFIX = "Copilot agent message:"
-COMPLETION_PREFIX = "TASK COMPLETED, Waiting for your next prompt"
+COMPLETION_PREFIX = "TASK COMPLETE:"
 
 
 def _emit(action: dict) -> None:
@@ -39,16 +39,17 @@ def _prefixed(text: str) -> str:
     return f"{AGENT_PREFIX} {text}"
 
 
+def _normalize_newlines(text: str) -> str:
+    return (text or "").replace("\\r\\n", "\n").replace("\\n", "\n")
+
+
 def _completed(text: str) -> str:
-    text = (text or "").strip()
+    text = _normalize_newlines(text).strip()
     if text.lower().startswith(COMPLETION_PREFIX.lower()):
         remainder = text[len(COMPLETION_PREFIX):].strip()
-        if not remainder:
-            return COMPLETION_PREFIX
-        return f"{COMPLETION_PREFIX}\n{remainder}"
-    if not text:
-        return COMPLETION_PREFIX
-    return f"{COMPLETION_PREFIX}\n{text}"
+        text = remainder
+    outcome = _prefixed(text)
+    return f"{COMPLETION_PREFIX} {outcome}"
 
 
 def main() -> int:
@@ -76,8 +77,13 @@ def main() -> int:
         _emit({"action": "error", "error": "missing bot token or chat id"})
         return 1
 
-    text = _completed(args.text) if args.completed else args.text
-    body = text if args.no_prefix or args.completed else _prefixed(text)
+    normalized_text = _normalize_newlines(args.text)
+    if args.completed:
+        body = _completed(normalized_text)
+    elif args.no_prefix:
+        body = normalized_text
+    else:
+        body = _prefixed(normalized_text)
     try:
         posted = send_message(token, chat_id, body)
     except TelegramError as exc:

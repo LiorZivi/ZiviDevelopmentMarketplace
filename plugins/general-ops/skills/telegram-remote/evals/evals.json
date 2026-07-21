@@ -8,7 +8,7 @@
       "files": [],
       "assertions": [
         "The workflow requires at least one intermediate progress update for the multi-phase task.",
-        "The final successful Telegram message begins with TASK COMPLETED, Waiting for your next prompt.",
+        "The final successful Telegram message begins with TASK COMPLETE: Copilot agent message:.",
         "The idle poll resumes only after the completion message is sent."
       ]
     },
@@ -30,6 +30,17 @@
       "assertions": [
         "The workflow uses ask.py for the blocking question.",
         "The workflow explicitly avoids send.py --completed while blocked or waiting for input."
+      ]
+    },
+    {
+      "id": 4,
+      "prompt": "The user asks through Telegram for the generated HTML comparison report to be sent in the chat, and the caption contains two lines written with a literal \\n escape.",
+      "expected_output": "Upload the file with send_file.py, prefix the caption with Copilot agent message:, and render the escaped newline as an actual line break.",
+      "files": [],
+      "assertions": [
+        "The workflow uses send_file.py instead of only posting a local filesystem path.",
+        "The caption begins with Copilot agent message:.",
+        "The literal newline escape is converted to a real newline."
       ]
     }
   ]

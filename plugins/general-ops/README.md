@@ -16,7 +16,7 @@ Bidirectional Copilot CLI **remote-control bridges**. Step away from the termina
 
 ### telegram-remote
 
-- **`telegram-remote`** — activator. Reads a bot token + chat id (env or config file), drains the DM backlog to set a dedup baseline, posts a root announcement, flips the session into `away_mode`, long-polls the DM via `getUpdates`, and auto-injects your replies back into the CLI conversation. The skill requires progress updates at meaningful execution stages. Successful tasks end with `send.py --completed`, which adds `TASK COMPLETED, Waiting for your next prompt`; questions use `ask.py`.
+- **`telegram-remote`** — activator. Reads a bot token + chat id (env or config file), drains the DM backlog to set a dedup baseline, posts a root announcement, flips the session into `away_mode`, long-polls the DM via `getUpdates`, and auto-injects your replies back into the CLI conversation. The skill requires progress updates at meaningful execution stages. Normal posts begin `Copilot agent message:`; successful tasks begin `TASK COMPLETE: Copilot agent message:` via `send.py --completed`; requested local files use `send_file.py`; questions use `ask.py`.
 - **`telegram-remote end`** — terminator. Posts a summary to the DM, flips `away_mode` off, deletes state. You can also reply `end` (or `/telegram-remote end`) in the DM.
 
 The sections below document **teams-remote**; **telegram-remote** is documented under [telegram-remote — details](#telegram-remote--details).
@@ -133,7 +133,8 @@ From your phone, just message the bot: each message is injected as a new prompt.
 - **Single-step scripts**: unlike teams-remote's two-step MCP handshakes, the Telegram scripts call the Bot API directly (`telegram_transport.py`, stdlib `urllib`), so `activate` / `send` / `ask` / `end` post-and-persist in one shot.
 - **No self-filtering.** `getUpdates` only returns *incoming* messages — the bot never receives its own posts — so de-dup is a monotonic `update_id` offset, not an `own_message_ids` set.
 - **Efficient idle loop.** `poll.py --step tick --mode idle` long-polls internally (blocks up to ~8 min via back-to-back `getUpdates` calls), so one forced agent turn covers a long idle window. Tune with the `long_poll_budget` / `long_poll_timeout` state fields (or `TELEGRAM_REMOTE_POLL_BUDGET` / `TELEGRAM_REMOTE_POLL_SEGMENT` for tests).
-- **Visible task lifecycle.** The agent acknowledges each injected request, posts concise updates as investigation, implementation, validation, or publishing phases complete, and sends successful results with `send.py --completed --text "<outcome>"`. The final Telegram post begins `TASK COMPLETED, Waiting for your next prompt`.
+- **Visible task lifecycle.** The agent acknowledges each injected request, posts concise updates as investigation, implementation, validation, or publishing phases complete, and sends successful results with `send.py --completed --text "<outcome>"`. The final Telegram post begins `TASK COMPLETE: Copilot agent message:`.
+- **Multiline text and file delivery.** `send.py` expands literal `\n` sequences into real line breaks. `send_file.py --file "<absolute path>" --caption "<text>"` uploads requested local artifacts directly to the DM.
 - **Stop hook** `telegram_remote_stop.py` blocks the turn while `away_mode=true` and nudges the agent to re-tick. It coexists with the teams Stop hook — the CLI runs every registered Stop hook and each no-ops unless its own subsystem is away.
 
 ### Caveats

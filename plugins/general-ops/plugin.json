@@ -1,7 +1,7 @@
 {
   "name": "general-ops",
-  "version": "1.10.1",
-  "description": "Bidirectional Copilot CLI remote-control bridges — step away from the terminal and keep the agent running by chatting with it from a Microsoft Teams channel (Teams MCP) or a Telegram bot DM. Progress and questions post outbound; your replies auto-inject back into the session.",
+  "version": "1.10.2",
+  "description": "Bidirectional Copilot CLI remote-control bridges — step away from the terminal and keep the agent running by chatting with it from Microsoft Teams or Telegram. Progress, questions, completion markers, and requested file attachments post outbound; your replies auto-inject back into the session.",
   "author": {
     "name": "lizi@microsoft.com"
   },
