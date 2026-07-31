@@ -1,11 +1,14 @@
 # agentic-ai
 
-Agentic engineering plugin: architecture planning, workspace-grounded onboarding, and a full **agent-memory** stack (skills + always-on instructions) — read the design memory, capture durable notes, summarize shipped designs, and drift-check them. The `architect` and `ramp-up` skills are backed by purpose-built planning and exploration sub-agents.
+Agentic engineering plugin: complex and simplified architecture planning, workspace-grounded onboarding, and a full **agent-memory** stack.
 
 ## Skills
 
 ### architect
-Planning skill that turns a task into two artifacts: a PM-level `spec.md` and a phased `plan.md`. Uses the `plan-architect` and `plan-reviewer` sub-agents to draft and score the plan.
+Complex planning skill that turns a task into a PM-level `spec.md` and phased `plan.md` through parallel plan alternatives and review. Trigger it explicitly with `complex architect`.
+
+### simplified-architect
+Direct planning skill that uses thorough questioning, drafts the same spec and plan formats, then asks a second round of draft-informed questions and revises both. It defaults to the simplest clean path and flags omitted edge cases for an explicit scope decision. Trigger it explicitly with `simple architect`.
 
 ### ramp-up
 Workspace-grounded onboarding skill that produces a markdown explainer plus matching PPTX deck about an internal subsystem, flow, or codebase area. Every claim is cited to a real file, wiki page, or commit in the user's workspace or Azure DevOps — never the open web or training data. Uses the `ramp-up-explorer` sub-agent to scan workspace + Azure DevOps (via the bluebird MCP server) and return ranked citations per section.
@@ -28,10 +31,16 @@ If Python is not installed, the `ramp-up` skill will create the markdown documen
 
 ## Usage
 
-### architect — plan a feature or change
+### architect — plan a complex feature or change
 
 ```
-/zivi-development-marketplace:architect add a retry budget to the ingestion path
+/zivi-development-marketplace:architect complex architect add a retry budget to the ingestion path
+```
+
+### simplified-architect — plan with a simplicity-first workflow
+
+```
+/zivi-development-marketplace:simplified-architect simple architect add a retry budget to the ingestion path
 ```
 
 ### ramp-up — explain an internal subsystem
@@ -64,6 +73,8 @@ If Python is not installed, the `ramp-up` skill will create the markdown documen
 |--------|----------|----------|
 | `architect` spec | `./output/architect/{PlanName}-spec.md` | Nothing |
 | `architect` plan | `./output/architect/{PlanName}-plan.md` | Nothing |
+| `simplified-architect` spec | `./output/architect/{PlanName}-spec.md` | Nothing |
+| `simplified-architect` plan | `./output/architect/{PlanName}-plan.md` | Nothing |
 | `ramp-up` markdown | `./output/ramp-up/{Topic}.md` | Workspace + (optional) bluebird MCP |
 | `ramp-up` presentation | `./output/ramp-up/{Topic}.pptx` | Python 3 |
 | `agent-memory-summary` record | `agent-memory/<team>/Summary_<name>.md` (+ `index.md` row) | Nothing |
@@ -92,6 +103,10 @@ agentic-ai/
 ├── skills/
 │   ├── architect/
 │   │   └── SKILL.md
+│   ├── simplified-architect/
+│   │   ├── SKILL.md
+│   │   └── evals/
+│   │       └── evals.json
 │   ├── agent-memory-summary/
 │   │   ├── SKILL.md
 │   │   └── references/
@@ -104,6 +119,9 @@ agentic-ai/
 │   └── ramp-up/
 │       ├── SKILL.md
 │       └── output-template.md
+├── references/
+│   ├── plan-guidance.md
+│   └── spec-guidance.md
 ├── scripts/
 │   └── ramp-up/
 │       ├── generate.sh
