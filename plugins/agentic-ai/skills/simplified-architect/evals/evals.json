@@ -1,0 +1,40 @@
+{
+  "skill_name": "simplified-architect",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "simple architect a retry policy for outbound webhook delivery in this repository",
+      "expected_output": "The workflow scans the repository, conducts a thorough first interview one question at a time, drafts a shared-format spec and plan, conducts a second draft-informed interview, and revises both artifacts without delegating planning or review.",
+      "files": [],
+      "assertions": [
+        "The response starts with workspace investigation or a grounded clarification question rather than immediately finalizing a plan.",
+        "Questions are asked one at a time and cover purpose, scope, success, constraints, and behavioral defaults before drafting.",
+        "The workflow creates both a spec and plan using the shared architect formats.",
+        "A second questioning round occurs after both drafts exist and may revise both artifacts.",
+        "The workflow does not invoke or describe planning or review agents."
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "simple architect add optional audit history to a small internal settings page; supporting every old record shape would add substantial migration complexity",
+      "expected_output": "The workflow favors a clean current-shape design, clearly flags legacy-record coverage as an intentional gap, and asks whether the user wants to expand scope before adding migration complexity.",
+      "files": [],
+      "assertions": [
+        "The default recommendation is the simpler clean path.",
+        "The legacy-record edge case is explicitly surfaced rather than silently covered or ignored.",
+        "The user is asked whether to promote the edge case into scope.",
+        "Complexity is added only if required for correctness or selected by the user."
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "architect a caching layer for the catalog API",
+      "expected_output": "The simplified-architect skill does not trigger because the exact phrase simple architect is absent.",
+      "files": [],
+      "assertions": [
+        "The simplified-architect skill is not selected for a generic architect request.",
+        "The skill description requires the exact phrase simple architect."
+      ]
+    }
+  ]
+}
