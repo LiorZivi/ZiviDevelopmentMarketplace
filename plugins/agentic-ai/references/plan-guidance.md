@@ -1,90 +1,93 @@
-# Shared Plan Guidance
+# Plan Guidance
 
-Use this guidance whenever an architect workflow creates or revises a plan.
+## Hard Rules — what the plan you write MUST NOT include
 
-The plan is a phased implementation document grounded in the actual codebase. It translates the spec into system boundaries, dependencies, deliverables, risks, and testable phase outcomes.
+You are writing a planning document for a stakeholder, not implementing code. The plan you save to disk MUST NOT include any of the following:
 
-Read the spec first. When revising an existing plan, edit it in place, preserve good content and progress markers, and address the user's latest decisions.
+- **Code snippets** — no inline code in any language (C#, Rust, Go, Python, YAML, JSON, HCL, KQL, SQL, PowerShell, bash, Helm). If a step needs to point at a pattern, name the pattern and the file it lives in (e.g. *"mirror the `--metrics-dir` convention already used in this chart"*); do not paste it.
+- **Code fences (` ``` `)** — no fenced blocks anywhere in the plan you write. The template below uses a fenced block to delimit its shape; that is template-shape syntax, not license to use fences in your output.
+- **Line numbers** — never cite specific lines (`line 760`, `lines 1120–1136`, `:474`, `~554`). Files and symbol / method / section names only. Line numbers go stale the moment any unrelated PR touches the file.
+- **Shell commands** — no `grep`, `kubectl`, `helm`, `dotnet build`, `Select-String`, `curl`, or other invocations. State the intent (*"build the affected project"*, *"render the helm template and confirm the new arg appears"*); the implementer chooses the command.
+- **Exact test method names** — describe the test's purpose (*"a UT asserting the CLI arg flows into the manifest field"*), not its identifier.
+- **Embedded queries** — no full KQL, SQL, or PromQL bodies. State the query's intent and the table / source it runs against; the implementer writes the query.
+- **Implementation-cosmetics advice** — no *"preserve alphabetical ordering"*, *"keep the diff reviewer-friendly"*, *"place between X and Y for diff aesthetics"*. That detail belongs in code review.
 
-## Hard rules
+If you genuinely need to show an existing pattern the implementer must follow, link to the file (path + symbol name) and let them read it — do not transcribe it into the plan.
 
-Do not include:
+## Length Budget (hard rules)
 
-- Code snippets or code fences.
-- Line-number citations.
-- Shell commands.
-- Full KQL, SQL, or PromQL query bodies.
-- Exact test method names.
-- Implementation-cosmetics advice.
+A plan a stakeholder won't scroll is a plan a stakeholder won't read.
 
-Reference an existing pattern by file path and symbol name rather than transcribing it.
+- **Step `What`** — 1–3 sentences. If you need more, split into multiple steps.
+- **Step `Deliverables`** — short bullet list of file paths / API or symbol names / config keys. Names only, never contents. No explanatory paragraphs.
+- **Step `Dependencies`** — `None` or comma-separated step IDs. No prose.
+- **Phase `Milestone`** and **Phase `Acceptance`** — 1 sentence each, plus up to 3 supporting bullets.
+- **Architecture plan** section — 2–6 sentences as the template says, not paragraphs.
+- **Whole plan** — aim for ≤ 200 lines for a small/medium task, ≤ 400 lines for a large one. If you cross either ceiling, you are writing implementation, not a plan.
 
-## Length budget
+## Pre-Save Checklist (self-verification gate)
 
-- Step `What`: 1-3 sentences.
-- Step `Deliverables`: short names-only list of paths, APIs, symbols, or config keys.
-- Step `Dependencies`: `None` or comma-separated step IDs.
-- Phase `Milestone` and `Acceptance`: 1 sentence each, with at most 3 supporting bullets.
-- Architecture plan: 2-6 sentences.
-- Whole plan: aim for at most 200 lines for small or medium work and 400 lines for large work.
+Before writing the plan to disk, you MUST run through this checklist explicitly and fix anything that fails. Do not save a plan that has any unchecked item.
 
-## Plan format
+- [ ] No code fences (` ``` `) anywhere in the plan.
+- [ ] No line-number citations anywhere.
+- [ ] No shell commands anywhere.
+- [ ] No KQL / SQL / PromQL query bodies anywhere.
+- [ ] No test method names.
+- [ ] No cosmetics advice (alphabetical ordering, diff readability, etc.).
+- [ ] Each step `What` is 1–3 sentences.
+- [ ] Plan total is ≤ 200 lines (small/medium) or ≤ 400 lines (large).
+- [ ] Every phase and step heading **starts** with `[ ]` as a prefix (before the phase/step number), not as a suffix.
+- [ ] All required sections present per the Plan Format below.
 
+If any check fails, edit the plan in memory and re-check — do not save until every box is checked.
+
+## Plan Format
+
+```
 # {Title} — Plan
 
-> {One-line implementation summary}
+> {One-line summary of the implementation approach}
 
 **Created**: {YYYY-MM-DD}
 **Approach**: {Pragmatic | WideScope-RefactorImprovements | Custom}
-**Spec**: {relative path to spec}
+**Spec**: {relative path to spec.md}
 
 ## Architecture plan
-
-{2-6 sentences}
+{2-6 sentences.}
 
 ## [ ] Phase 1: {Name}
-
 > {Phase goal}
 
 **Milestone**: {What is true when done}
-**Acceptance**: {Testable phase-level criteria}
+**Acceptance**: {Testable criteria for the phase as a whole}
 
 ### [ ] Step 1.1: {Name}
-
 - **What**: {Description}
-- **Deliverables**: {Names only}
-- **Dependencies**: {None or step IDs}
+- **Deliverables**: {File paths / API or symbol names / config keys — names only, never contents}
+- **Dependencies**: {None, or step IDs}
+
+### [ ] Step 1.2: ...
+
+## [ ] Phase 2: ...
 
 ## Risks & Mitigations
-
 | Risk | Impact | Likelihood | Mitigation |
 |------|--------|------------|------------|
 
 ## Open Questions
-
 - {Implementation-level unknowns}
+```
 
-## Planning rules
+> The fenced block above shows the template *shape*. Do NOT use code fences (` ``` `) in the plan you write.
 
-- Use 2-5 phases for small or medium work and 3-7 for large work.
-- Use 2-6 steps per phase.
-- End every phase in a working state.
-- Keep dependencies explicit.
-- Name concrete files, APIs, tests, and existing patterns.
-- Put acceptance criteria on phases, not steps.
-- Start every phase and step heading with `[ ]`.
-- During implementation, replace `[ ]` with `🚧` while active and `✅` when complete.
+**Progress markers:** every phase and step heading **starts** with a `[ ]` checkbox as a prefix (before the phase/step number, e.g. `### [ ] Step 1.1: Foo`). During implementation, replace the `[ ]` with 🚧 while the phase/step is in progress and ✅ once completed (e.g. `### ✅ Step 1.1: Foo`). Start every plan with all boxes empty.
 
-## Pre-write checklist
+## Rules
 
-Before saving, verify:
-
-- No prohibited content appears.
-- Each step `What` is 1-3 sentences.
-- The plan stays within its length budget.
-- Every phase and step heading starts with a progress marker.
-- All required sections are present.
-- The plan covers the spec and reflects the user's latest answers.
-- Every phase has a verifiable working outcome.
-
-Fix every failed check before saving.
+- 2-5 phases (small/medium), 3-7 (large); 2-6 steps per phase.
+- Each phase ends in a working state. No big bang.
+- Dependencies between steps are explicit.
+- Name concrete files/APIs/tests; reference existing patterns from the scan.
+- Plan reflects the chosen approach.
+- Acceptance criteria live on **phases**, not steps. Steps describe work; phases describe verifiable outcomes.
