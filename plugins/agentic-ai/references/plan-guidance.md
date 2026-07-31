@@ -30,7 +30,7 @@ Reference an existing pattern by file path and symbol name rather than transcrib
 
 ## Plan format
 
-# {Title} - Plan
+# {Title} — Plan
 
 > {One-line implementation summary}
 

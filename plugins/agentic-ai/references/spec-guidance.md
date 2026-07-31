@@ -8,10 +8,10 @@ The spec is a product-level requirements document. It describes why the work mat
 
 Use these sections in this order:
 
-1. `# {Title} - Spec`
+1. `# {Title} — Spec`
 2. A one-line blockquote summary in product terms
 3. `**Created**: {YYYY-MM-DD}`
-4. Optional `**Issue**: [link] - "{title}"` when an issue exists
+4. Optional `**Issue**: [link] — "{title}"` when an issue exists
 5. `## Goal`
 6. `## Background & Context`
 7. `## Users & Audience`
