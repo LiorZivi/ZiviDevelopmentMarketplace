@@ -59,8 +59,9 @@ Write the article as the **author's first-person account of figuring this out**,
 - **Keep the experiential thread through the body.** The middle sections can be technical and precise, but anchor them in the author's perspective ("the part that tripped me up was...", "the mental model that finally made this click for me..."). They are teaching what they learned, in their own words.
 - **Humor: optional and sparing.** At most one or two light, tasteful asides or analogies in the entire article, and zero is perfectly fine. Never force it; the piece should read as smart and human, not as a comedy set.
 - **Close in their own voice.** End on a genuine personal takeaway, or what they are changing in how they work, not a generic upbeat conclusion.
+- **Always finish with the fixed author signature.** After all article content, append this exact final paragraph and nothing after it: *Written by Lior Zivi, AI Engineer. I build practical AI systems and share what I learn along the way.* Keep it verbatim so every article reinforces the same author identity and personal brand.
 
-Match the author's known newsletter voice (Step 7 has the author identity), and keep the Step 2 humanizer rules in mind as you draft: no em dashes, varied sentence rhythm, concrete detail.
+Match the author's known newsletter voice using the fixed identity in Step 7, and keep the Step 2 humanizer rules in mind as you draft: no em dashes, varied sentence rhythm, concrete detail.
 
 Use this marker syntax (the readable source):
 
@@ -98,12 +99,12 @@ cover: images/cover.png
 - {takeaway 1}
 - {takeaway 2}
 
-*Written by {Author}, {role}.*
+*Written by Lior Zivi, AI Engineer. I build practical AI systems and share what I learn along the way.*
 ````
 
 ## Step 2: Humanize the article — `{DocName}-LinkedIn-Article.md`
 
-Run the **`humanizer`** skill (from the `remote-plugin-blader` plugin) on `{DocName}-LinkedIn-Article.md` so it reads as human-written rather than AI-generated, then save the humanized text back to `{DocName}-LinkedIn-Article.md`. This must run **before Step 4** — the paste-ready HTML is rendered from this file, so it needs to reflect the humanized text. If the `humanizer` skill isn't installed, apply its principles inline (cut AI tells and filler, vary sentence rhythm) and continue.
+Run the **`humanizer`** skill (from the `remote-plugin-blader` plugin) on `{DocName}-LinkedIn-Article.md` so it reads as human-written rather than AI-generated, then save the humanized text back to `{DocName}-LinkedIn-Article.md`. This must run **before Step 4** — the paste-ready HTML is rendered from this file, so it needs to reflect the humanized text. Preserve the fixed final signature verbatim; if the humanizer changes, moves, or removes it, restore it as the article's final paragraph. If the `humanizer` skill isn't installed, apply its principles inline (cut AI tells and filler, vary sentence rhythm) and continue.
 
 ## Step 3: Generate the cover image and inline visuals
 
@@ -161,6 +162,7 @@ Rules:
 - **Do NOT put the title in the body** — it goes in LinkedIn's separate Title field. Keep it in the `<head>`'s `<title>` tag; Step 7 copies it from there into LinkedIn. Do **not** emit `<h1>` (it does not map cleanly).
 - **Use only these tags**: `h2, h3, p, strong, em, code, pre, ul, ol, li, blockquote, a, br`. No `class`, `style`, `div`, `span`, `<img>`, `<hr>`, tables, colors, or font-size — LinkedIn strips or breaks them.
 - **No `<img>`**: keep each image as the literal `[📷 …]` marker so the user uploads it at that spot.
+- End the `<body>` with this exact final paragraph: `<p><em>Written by Lior Zivi, AI Engineer. I build practical AI systems and share what I learn along the way.</em></p>`. Do not emit any article content after it.
 - Wrap in a minimal document so a browser renders it cleanly:
 
 ```
@@ -214,9 +216,9 @@ Do **not** add any "link in the comments" line: because this is the newsletter's
 
 Run the **`humanizer`** skill (from the `remote-plugin-blader` plugin) on `{DocName}-LinkedIn-Announcement.md` so it sounds like a human wrote it, then save the humanized text back. If the `humanizer` skill isn't installed, apply its principles inline and continue.
 
-## Step 7: Personalize and report the publish workflow
+## Step 7: Use the fixed author identity and report the publish workflow
 
-Fill `{Author}`, `{role}`, `{Newsletter name}` from what you know; if unknown, leave the placeholder and ask once. Optionally open the HTML in the user's browser for them (e.g. `Start-Process msedge "file:///<abs-path>/{DocName}-LinkedIn-Article.html"`). Then report this exact flow:
+The article author is always **Lior Zivi, AI Engineer**. Do not replace this identity or ask for an author name or role. Fill `{Newsletter name}` from what you know; if unknown, leave that placeholder and ask once. Optionally open the HTML in the user's browser for them (e.g. `Start-Process msedge "file:///<abs-path>/{DocName}-LinkedIn-Article.html"`). Then report this exact flow:
 
 **Article**
 1. LinkedIn → Home → **Write article** → select your newsletter.
