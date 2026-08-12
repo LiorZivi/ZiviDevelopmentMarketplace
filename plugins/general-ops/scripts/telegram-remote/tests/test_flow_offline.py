@@ -196,12 +196,20 @@ class TelegramRemoteFlowTest(unittest.TestCase):
             "Copilot agent message: Comparison report\nOpen locally if needed.",
         )
 
-        # 9) ask.py + input poll -> answer
+        # 9) ask.py expands literal newline escapes + input poll -> answer
         old = sys.argv
-        sys.argv = ["ask.py", "--question", "Deploy?"]
+        sys.argv = [
+            "ask.py",
+            "--question",
+            r"Deploy to production?\nA: Yes\nB: No",
+        ]
         rc, env, _ = self._run(ask.main)
         sys.argv = old
         self.assertEqual(env["next_step"], "poll_input")
+        self.assertEqual(
+            self.sent[-1],
+            "\u2753 Copilot agent message: Deploy to production?\nA: Yes\nB: No",
+        )
         self.update_queue.append([self._msg(5003, 9, "yes go")])
         rc, env, _ = self._run(poll.cmd_tick, SimpleNamespace(
             step="tick", mode="input", session_id=None, long_poll=True, with_sleep=False))

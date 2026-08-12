@@ -184,9 +184,9 @@ answer. Send a normal status update or use `ask.py` instead.
 
 Message bodies and captions are plain text (no Markdown/HTML). Pass actual
 multiline text when possible. For shells or tool calls that pass the two
-characters `\n`, `send.py` and `send_file.py` expand them into real newline
-characters before posting. Use `- ` for bullets and do not author Telegram
-markup.
+characters `\n`, `send.py`, `ask.py`, and `send_file.py` expand them into real
+newline characters before posting. Use `- ` for bullets and do not author
+Telegram markup.
 
 ### Rule 7 — Attach requested local files
 

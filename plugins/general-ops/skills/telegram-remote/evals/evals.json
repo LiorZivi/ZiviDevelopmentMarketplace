@@ -42,6 +42,17 @@
         "The caption begins with Copilot agent message:.",
         "The literal newline escape is converted to a real newline."
       ]
+    },
+    {
+      "id": 5,
+      "prompt": "The agent must ask a multi-line Telegram question whose choices are separated by literal \\n escapes.",
+      "expected_output": "Route the question through ask.py and render every escaped newline as an actual line break in Telegram.",
+      "files": [],
+      "assertions": [
+        "The workflow uses ask.py for the question.",
+        "The question begins with the question and Copilot agent prefixes.",
+        "Literal newline escapes are converted to real line breaks."
+      ]
     }
   ]
 }

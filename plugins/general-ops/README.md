@@ -134,7 +134,7 @@ From your phone, just message the bot: each message is injected as a new prompt.
 - **No self-filtering.** `getUpdates` only returns *incoming* messages — the bot never receives its own posts — so de-dup is a monotonic `update_id` offset, not an `own_message_ids` set.
 - **Efficient idle loop.** `poll.py --step tick --mode idle` long-polls internally (blocks up to ~8 min via back-to-back `getUpdates` calls), so one forced agent turn covers a long idle window. Tune with the `long_poll_budget` / `long_poll_timeout` state fields (or `TELEGRAM_REMOTE_POLL_BUDGET` / `TELEGRAM_REMOTE_POLL_SEGMENT` for tests).
 - **Visible task lifecycle.** The agent acknowledges each injected request, posts concise updates as investigation, implementation, validation, or publishing phases complete, and sends successful results with `send.py --completed --text "<outcome>"`. The final Telegram post begins `TASK COMPLETE: Copilot agent message:`.
-- **Multiline text and file delivery.** `send.py` expands literal `\n` sequences into real line breaks. `send_file.py --file "<absolute path>" --caption "<text>"` uploads requested local artifacts directly to the DM.
+- **Multiline text and file delivery.** `send.py`, `ask.py`, and `send_file.py` captions expand literal `\n` sequences into real line breaks. `send_file.py --file "<absolute path>" --caption "<text>"` uploads requested local artifacts directly to the DM.
 - **Stop hook** `telegram_remote_stop.py` blocks the turn while `away_mode=true` and nudges the agent to re-tick. It coexists with the teams Stop hook — the CLI runs every registered Stop hook and each no-ops unless its own subsystem is away.
 
 ### Caveats

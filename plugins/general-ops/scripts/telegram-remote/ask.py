@@ -23,6 +23,7 @@ from state import load_state, resolve_session_id, save_state, set_subsystem  # n
 set_subsystem("telegram-remote")
 
 from telegram_transport import TelegramError, load_credentials, send_message  # noqa: E402
+from send import _normalize_newlines  # noqa: E402
 
 AGENT_PREFIX = "Copilot agent message:"
 
@@ -54,7 +55,7 @@ def main() -> int:
         _emit({"action": "error", "error": "missing bot token or chat id"})
         return 1
 
-    body = f"\u2753 {AGENT_PREFIX} {args.question}"
+    body = f"\u2753 {AGENT_PREFIX} {_normalize_newlines(args.question)}"
     try:
         send_message(token, chat_id, body)
     except TelegramError as exc:
