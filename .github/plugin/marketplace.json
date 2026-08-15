@@ -11,9 +11,9 @@
     {
       "name": "content-ai",
       "source": "./plugins/content-ai",
-      "description": "AI-powered content generation plugin with skills for deep-dive research, branded presentations, and LinkedIn publishing.",
-      "version": "4.0.1",
-      "tags": ["research", "education", "presentations", "linkedin", "content"]
+      "description": "AI-powered content generation plugin with skills for technology research, branded presentations, LinkedIn publishing, and visual HTML explainers for PRs and local code changes.",
+      "version": "4.1.0",
+      "tags": ["research", "education", "presentations", "linkedin", "content", "pull-requests", "code-review", "html"]
     },
     {
       "name": "agentic-ai",

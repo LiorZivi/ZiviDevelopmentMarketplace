@@ -1,0 +1,424 @@
+{
+  "title": "Starter credits were correct",
+  "explanation_title": "The screen read them too early.",
+  "subtitle": "A new account received its starter credits, but the page asked for the balance before registration wrote the ledger event.",
+  "issue_summary": "Old flow: credits raced registration. New flow: configuration and registration run in parallel, while credits wait for the registered profile.",
+  "scope_boundary": "This change fixes frontend request ordering. It does not change the starter-credit amount or ledger model.",
+  "reference": {
+    "label": "PR 41",
+    "url": "https://example.test/pullrequest/41"
+  },
+  "meta": [
+    {
+      "label": "Branch: fix/registration-credit-readiness"
+    },
+    {
+      "label": "Validated",
+      "tone": "success"
+    }
+  ],
+  "evidence": [
+    {
+      "label": "17:55:13 UTC",
+      "title": "Premature read",
+      "detail": "The balance endpoint returned zero before registration.",
+      "tone": "problem",
+      "source": "Application telemetry"
+    },
+    {
+      "label": "17:55:16 UTC",
+      "title": "Starter grant persisted",
+      "detail": "Registration inserted the immutable +300 credit event.",
+      "tone": "success",
+      "source": "Credit ledger"
+    }
+  ],
+  "old_flow": {
+    "title": "The balance request crossed the line first.",
+    "summary": "Red highlights show delayed profile loading, the premature balance read, and stale page state.",
+    "overview": {
+      "label": "Before PR 41 - simplified",
+      "steps": [
+        {
+          "actor": "Authentication",
+          "title": "User enters New Video",
+          "detail": "The browser reaches the protected route.",
+          "tone": "normal"
+        },
+        {
+          "actor": "ProtectedRoute",
+          "title": "Profile waits",
+          "detail": "Profile loading is delayed by a timeout.",
+          "tone": "problem",
+          "tag": "Problem"
+        },
+        {
+          "actor": "Page",
+          "title": "Credits load now",
+          "detail": "The balance is requested before registration.",
+          "tone": "problem",
+          "tag": "Too early"
+        },
+        {
+          "actor": "Credits API",
+          "title": "Balance is zero",
+          "detail": "No starter event exists at that moment.",
+          "tone": "problem",
+          "tag": "Wrong moment"
+        },
+        {
+          "actor": "Registration",
+          "title": "Starter credits persist",
+          "detail": "Registration correctly creates the +300 event.",
+          "tone": "normal"
+        },
+        {
+          "actor": "Mounted UI",
+          "title": "Stale zero remains",
+          "detail": "The page does not refetch the balance.",
+          "tone": "problem",
+          "tag": "Visible bug"
+        }
+      ],
+      "callout": "The read occurred before the write, and the mounted page never refreshed afterward."
+    },
+    "sequence": {
+      "label": "Before PR 41",
+      "participants": [
+        {
+          "id": "browser",
+          "label": "Browser"
+        },
+        {
+          "id": "route",
+          "label": "ProtectedRoute"
+        },
+        {
+          "id": "page",
+          "label": "New Video + Header"
+        },
+        {
+          "id": "profile",
+          "label": "ContentCreator API"
+        },
+        {
+          "id": "credits",
+          "label": "Credits API"
+        },
+        {
+          "id": "db",
+          "label": "MongoDB"
+        }
+      ],
+      "messages": [
+        {
+          "from": "browser",
+          "to": "route",
+          "label": "Open /new-video",
+          "kind": "call",
+          "tone": "normal"
+        },
+        {
+          "from": "route",
+          "to": "page",
+          "label": "Render protected page",
+          "kind": "call",
+          "tone": "normal"
+        },
+        {
+          "from": "page",
+          "to": "credits",
+          "label": "GET credits before registration",
+          "kind": "call",
+          "tone": "problem"
+        },
+        {
+          "from": "credits",
+          "to": "db",
+          "label": "Sum credit ledger",
+          "kind": "call",
+          "tone": "problem"
+        },
+        {
+          "from": "db",
+          "to": "credits",
+          "label": "Balance = 0",
+          "kind": "return",
+          "tone": "problem"
+        },
+        {
+          "from": "credits",
+          "to": "page",
+          "label": "availableCredits = 0",
+          "kind": "return",
+          "tone": "problem"
+        },
+        {
+          "from": "route",
+          "to": "profile",
+          "label": "After timeout: GET profile",
+          "kind": "call",
+          "tone": "problem"
+        },
+        {
+          "from": "route",
+          "to": "profile",
+          "label": "POST register",
+          "kind": "call",
+          "tone": "normal"
+        },
+        {
+          "from": "profile",
+          "to": "db",
+          "label": "Create profile and TrialCredits +300",
+          "kind": "call",
+          "tone": "normal"
+        },
+        {
+          "from": "profile",
+          "to": "route",
+          "label": "Profile ready",
+          "kind": "return",
+          "tone": "normal"
+        }
+      ],
+      "zones": [
+        {
+          "label": "Error: premature credit read",
+          "start_message": 3,
+          "end_message": 6,
+          "from": "page",
+          "to": "db",
+          "tone": "problem"
+        },
+        {
+          "label": "Error: delayed profile load",
+          "start_message": 7,
+          "end_message": 7,
+          "from": "route",
+          "to": "profile",
+          "tone": "problem"
+        }
+      ],
+      "note": {
+        "tone": "problem",
+        "text": "No balance refetch follows registration, so the page keeps the stale zero."
+      }
+    }
+  },
+  "new_flow": {
+    "title": "Configuration starts now. Credits wait for registration.",
+    "summary": "Green highlights show immediate parallel startup and the profile-readiness boundary.",
+    "overview": {
+      "label": "After PR 41 - simplified",
+      "steps": [
+        {
+          "actor": "Authentication",
+          "title": "User enters New Video",
+          "detail": "The browser reaches the protected route.",
+          "tone": "normal"
+        },
+        {
+          "actor": "ProtectedRoute",
+          "title": "Profile starts now",
+          "detail": "The old timeout is removed.",
+          "tone": "success",
+          "tag": "Fixed"
+        },
+        {
+          "actor": "Parallel startup",
+          "title": "Config and profile run together",
+          "detail": "Independent configuration work is not delayed.",
+          "tone": "success",
+          "tag": "No delay"
+        },
+        {
+          "actor": "Registration",
+          "title": "Starter credits persist",
+          "detail": "The durable +300 event is created.",
+          "tone": "normal"
+        },
+        {
+          "actor": "Readiness boundary",
+          "title": "Profile unlocks credits",
+          "detail": "Credit queries wait for profile readiness.",
+          "tone": "success",
+          "tag": "Ordered"
+        },
+        {
+          "actor": "Working UI",
+          "title": "Balance returns 300+",
+          "detail": "The page reads the durable balance.",
+          "tone": "success",
+          "tag": "Race removed"
+        }
+      ],
+      "callout": "Independent work remains parallel; only credit-dependent work waits for registration."
+    },
+    "sequence": {
+      "label": "After PR 41",
+      "participants": [
+        {
+          "id": "browser",
+          "label": "Browser"
+        },
+        {
+          "id": "route",
+          "label": "ProtectedRoute"
+        },
+        {
+          "id": "page",
+          "label": "New Video + Header"
+        },
+        {
+          "id": "profile",
+          "label": "ContentCreator API"
+        },
+        {
+          "id": "credits",
+          "label": "Credits API"
+        },
+        {
+          "id": "db",
+          "label": "MongoDB"
+        }
+      ],
+      "messages": [
+        {
+          "from": "browser",
+          "to": "route",
+          "label": "Open /new-video",
+          "kind": "call",
+          "tone": "normal"
+        },
+        {
+          "from": "route",
+          "to": "page",
+          "label": "Render protected page immediately",
+          "kind": "call",
+          "tone": "success"
+        },
+        {
+          "from": "page",
+          "to": "page",
+          "label": "Start configuration request",
+          "kind": "call",
+          "tone": "config"
+        },
+        {
+          "from": "route",
+          "to": "profile",
+          "label": "GET profile immediately",
+          "kind": "call",
+          "tone": "success"
+        },
+        {
+          "from": "route",
+          "to": "profile",
+          "label": "POST register",
+          "kind": "call",
+          "tone": "normal"
+        },
+        {
+          "from": "profile",
+          "to": "db",
+          "label": "Create profile and TrialCredits +300",
+          "kind": "call",
+          "tone": "normal"
+        },
+        {
+          "from": "profile",
+          "to": "route",
+          "label": "Profile ready after durable grant",
+          "kind": "return",
+          "tone": "success"
+        },
+        {
+          "from": "page",
+          "to": "credits",
+          "label": "GET credits after profile ready",
+          "kind": "call",
+          "tone": "success"
+        },
+        {
+          "from": "credits",
+          "to": "db",
+          "label": "Sum durable ledger",
+          "kind": "call",
+          "tone": "success"
+        },
+        {
+          "from": "db",
+          "to": "credits",
+          "label": "Balance = 300",
+          "kind": "return",
+          "tone": "success"
+        },
+        {
+          "from": "credits",
+          "to": "page",
+          "label": "Shared balance = 300",
+          "kind": "return",
+          "tone": "success"
+        }
+      ],
+      "zones": [
+        {
+          "label": "Fix: parallel startup",
+          "start_message": 2,
+          "end_message": 4,
+          "from": "route",
+          "to": "profile",
+          "tone": "success"
+        },
+        {
+          "label": "Fix: credits after profile",
+          "start_message": 8,
+          "end_message": 11,
+          "from": "page",
+          "to": "db",
+          "tone": "success"
+        }
+      ],
+      "note": {
+        "tone": "success",
+        "text": "The header and page share one balance request and cache entry."
+      }
+    }
+  },
+  "explanations": [
+    {
+      "component": "ProtectedRoute",
+      "title": "Start profile loading immediately",
+      "detail": "Remove the artificial delay while allowing independent page requests to continue."
+    },
+    {
+      "component": "NewVideoPage",
+      "title": "Gate only the balance query",
+      "detail": "Configuration remains independent while credits wait for profile readiness."
+    },
+    {
+      "component": "CreditBalance",
+      "title": "Use the same readiness rule",
+      "detail": "The header cannot recreate the premature balance read."
+    }
+  ],
+  "fix_evidence": [
+    {
+      "concern": "Configuration request",
+      "before": "Started immediately.",
+      "after": "Still starts immediately.",
+      "result": "No added delay",
+      "tone": "success"
+    },
+    {
+      "concern": "Credit request",
+      "before": "Could run before registration.",
+      "after": "Starts only after profile readiness.",
+      "result": "Correct ordering",
+      "tone": "success"
+    }
+  ],
+  "footer_title": "Fix the ordering, preserve the parallelism.",
+  "footer_text": "The ledger remains immutable; the frontend now reads it only after its dependency is ready."
+}

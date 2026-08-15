@@ -1,0 +1,44 @@
+{
+  "skill_name": "pr-explainer",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Use /pr-explainer on Azure DevOps PR 41 in the current repository. Create an HTML walkthrough that explains the starter-credit registration race, includes production timing evidence when available, and compares before/after request ordering.",
+      "expected_output": "A standalone HTML file under ./output/ with the exact PR-explainer section order, red before-flow problem highlights, green after-flow fix highlights, and both simplified and UML sequence diagrams.",
+      "files": [],
+      "expectations": [
+        "The final HTML is written under ./output/.",
+        "The HTML contains two simplified sequence diagrams and two detailed UML sequence diagrams.",
+        "The old flow has red problem highlights and the fixed flow has green highlights.",
+        "The document includes a scope boundary and changed-file explanation cards.",
+        "Production evidence is included only when retrieved from a real source."
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "Explain my current staged and unstaged changes with /pr-explainer. There is no PR yet. Compare HEAD to the working tree and create the HTML in output.",
+      "expected_output": "A local-change explainer under ./output/ based on the actual working-tree diff, with previous/current flows and no invented PR metadata.",
+      "files": [],
+      "expectations": [
+        "The skill uses local-change mode and does not require a PR.",
+        "The filename identifies the artifact as a local-change explainer.",
+        "The previous state is derived from HEAD and the fixed state from the working tree.",
+        "The HTML contains red and green flow highlights plus changed-file cards.",
+        "No runtime evidence section is fabricated when none exists."
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "Create a PR explainer for an additive feature that introduces audit-log export. There was no bug or incident, just a missing capability. Show the previous manual workflow and the new automated flow, but do not pretend there was production failure evidence.",
+      "expected_output": "An HTML explainer that treats the old state as a capability gap, marks only the gap red, marks only implemented automation green, and omits unsupported evidence.",
+      "files": [],
+      "expectations": [
+        "The old flow is framed as a missing capability rather than an invented defect.",
+        "The scope boundary distinguishes the feature from adjacent work.",
+        "The evidence section is omitted or explicitly states that no runtime evidence exists.",
+        "Both simplified and detailed sequence diagrams are present.",
+        "Only changed solution steps are highlighted green."
+      ]
+    }
+  ]
+}
