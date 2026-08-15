@@ -169,4 +169,3 @@ Use 2-9 participants. Keep IDs unique and stable between before/after diagrams.
 ```
 
 Use `tone: "problem"` only when the result intentionally calls out a remaining risk.
-
