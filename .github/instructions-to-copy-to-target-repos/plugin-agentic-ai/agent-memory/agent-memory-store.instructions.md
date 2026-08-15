@@ -4,47 +4,63 @@ applyTo: "**"
 
 # Capture durable notes into the design memory
 
-While working, watch for durable knowledge worth remembering across sessions, and — with the user's approval — record it, either in the team **memory notes** (`agent-memory/<team>/memory-notes.md`) or in the user's **personal Copilot memory**.
+While working, watch for durable context that a future agent **cannot recover by reading the repository**, and — with the user's approval — record it, either in the team **memory notes** (`agent-memory/<team>/memory-notes.md`) or in the user's **personal Copilot memory**.
 
-This captures **atomic notes** — a single lesson, decision, constraint, or gotcha (not a full feature design; those go through the `agent-memory-summary` skill). Do not register them in `index.md`; record them as described below.
+This captures **atomic notes** — a single piece of non-obvious rationale, decision context, constraint, non-goal, rejected alternative, or personal preference (not a full feature design; those go through the `agent-memory-summary` skill). Do not register them in `index.md`; record them as described below.
+
+## Hard eligibility gate — memory is for why, not what
+
+Before grading any signal, ask:
+
+> Could a fresh agent learn this by reading the current source code, tests, configuration, comments, or repository documentation?
+
+If the answer is **yes**, do not propose or store it. Memory must not duplicate the repository.
+
+A candidate is eligible only when it:
+
+- was explicitly stated or confirmed by the user — never infer rationale from code or behavior;
+- is durable enough to affect future work; and
+- adds context the repository does not reveal, such as reasoning, intent, a trade-off, a rejected alternative, an external constraint, or a non-goal.
+
+Eligible examples include "we chose polling over webhooks because the customer network blocks inbound traffic" and "do not merge these services even though they share code; separate ownership is an intentional boundary."
+
+Do **not** store architecture facts, file or symbol locations, current behavior, API contracts, commands, conventions visible in code, edge cases captured by tests, or observations discovered while investigating the repository. A file or symbol may still appear in **When to read** as an anchor, but the **Note** itself must add non-inferable context.
 
 ## What is worth remembering — grade every signal
 
-Only some moments are worth persisting. As you work, grade the signals you see against this table — see **When to check** below for the two moments to act on them:
+Only signals that pass the hard eligibility gate may be graded. See **When to check** below for the two moments to act on them:
 
 | Confidence | Trigger | Examples |
 |-----------|---------|----------|
-| **HIGH** | A user correction, an explicit decision + its reasoning, a design insight, or a constraint / non-goal | "no", "not like that", "never do X"; "we don't retry on 4xx — the caller already handles it"; "don't write to the production database from dev tooling" |
-| **MED** | A confirmed approach / tool preference, or an edge case discovered | "use X instead of Y"; "what if the cache is cold?"; "that worked — keep doing it that way" |
-| **LOW** | A repeated pattern noticed over the session | the same command / check reached for several times |
+| **HIGH** | An explicit decision with its reasoning, a rejected alternative, or a stated constraint / non-goal whose purpose is not represented in the repository | "we don't retry on 4xx because the caller owns recovery"; "keep the services separate because different teams deploy them independently" |
+| **MED** | An explicitly confirmed personal preference or external context that is durable, affects future work, and is not represented in the repository | "I prefer reversible migrations because our rollback window is short"; "the partner only accepts weekly schema changes" |
 
 ## When to propose a note
 
 Propose only when the evidence is strong enough — otherwise stay silent and keep working:
 
 - **≥ 1 HIGH** signal, **or**
-- **≥ 2 MED** signals, **or**
-- **≥ 3 LOW** signals — and only when they are the **same** pattern *repeated*, never three unrelated one-offs.
+- **≥ 2 MED** signals that confirm the same durable context.
 
-**Bias toward HIGH.** A correction, an explicit decision, or a stated constraint is almost always worth keeping — propose HIGH signals readily. Be more selective with MED — propose one only when the preference or edge case is clearly durable. Propose LOW only when the same pattern has genuinely repeated across the session; one or two LOW signals alone → skip. Never interrupt the task below the threshold.
+The hard eligibility gate is mandatory and cannot be overridden by confidence or repetition. **Bias toward HIGH**, but remember that a correction or implementation choice without non-obvious reasoning is not memory-worthy: preserve the reason, not the code-visible outcome. Never interrupt the task below the threshold.
 
 ## When to check
 
 Grade at two moments and propose as soon as the threshold above is met:
 
-- **On each user message** — as a new message arrives, grade it against the table: a correction, decision + reasoning, or constraint / non-goal (HIGH); a confirmed approach, preference, or edge case (MED); or a pattern that repeats one from earlier in the session (LOW). Keep a running tally across the session so MED and LOW signals can accumulate toward the threshold.
-- **Before you finish** — wrapping up your response, handing back, or opening a PR — sweep the whole session for anything that cleared the threshold and wasn't already proposed. Run this sweep every time, but keep it silent when nothing qualifies — no note, no interruption.
+- **On each user message** — look only for explicit or user-confirmed non-code context, apply the hard eligibility gate, then grade eligible signals against the table. Keep a running tally so MED signals can accumulate toward the threshold.
+- **Before you finish** — wrapping up your response, handing back, or opening a PR — sweep the user's statements and confirmations for anything that passed the gate, cleared the threshold, and was not already proposed. Do not turn code findings or inferred patterns into candidates. Run this sweep every time, but keep it silent when nothing qualifies — no note, no interruption.
 
-Propose every candidate that clears the bar (**≥ 1 HIGH / ≥ 2 MED / ≥ 3 LOW**), following **Always ask before saving** below. Proposing a strong HIGH signal the moment it lands is always welcome.
+Propose every candidate that passes the gate and clears the bar (**≥ 1 HIGH / ≥ 2 MED**), following **Always ask before saving** below. Proposing a strong HIGH signal the moment it lands is always welcome.
 
 ## Always ask before saving
 
 **Never write a note silently.** When the threshold is met, present the exact row you propose to add and ask the user to **approve / edit / skip** — using an interactive ask-user / question tool if one is available, otherwise ask in plain text and wait for the answer. Show all four fields:
 
 - **Date** — today, `YYYY-MM-DD`.
-- **Note** — one self-contained sentence: the lesson / decision / constraint / gotcha. For a decision, include the *reasoning* ("… because …").
+- **Note** — one self-contained sentence stating the non-inferable rationale, decision context, constraint, non-goal, rejected alternative, or preference. Do not merely restate what the code does. For a decision, include the *reasoning* ("… because …").
 - **When to read** — a short trigger naming the task or code area where this note matters (feature area + concrete anchors: components, files, symbols, config keys). This is how a future agent scanning the notes decides whether to open this row — mirror the `index.md` **When to read** column.
-- **Confidence** — HIGH / MED / LOW.
+- **Confidence** — HIGH / MED.
 
 Only after the user approves (or edits) the content do you move on to **where** it should be stored.
 
@@ -52,7 +68,7 @@ Only after the user approves (or edits) the content do you move on to **where** 
 
 Once the content is approved, ask the user **where** this memory should live. Two destinations:
 
-1. **Team memory** — `agent-memory/<team>/memory-notes.md` in this repo. Best for **team / domain / codebase knowledge**: how the system works, decisions + reasoning, constraints, and gotchas tied to the code. It is committed, greppable, reviewed in the same PR, and read by every teammate's agent (via the `agent-memory-read` instruction).
+1. **Team memory** — `agent-memory/<team>/memory-notes.md` in this repo. Best for shared context the repository does not explain: reasoning behind decisions, rejected alternatives, constraints / non-goals, and externally imposed gotchas tied to the code. It is committed, greppable, reviewed in the same PR, and read by every teammate's agent (via the `agent-memory-read` instruction).
 2. **Personal Copilot memory** — the user's own GitHub Copilot memory, managed at <https://github.com/settings/copilot/memory>. Best for **personal, cross-repo preferences** — how *you* like to work — that should not live in a shared team file. Store it as a **user-scoped** memory using your memory tool if one is available; otherwise show the exact text and point the user to <https://github.com/settings/copilot/memory> to add it there. You can also suggest the user simply **prompt Copilot to remember it** — e.g. "remember that I prefer …" — and Copilot's own memory will capture it as a user preference.
 
 Suggest a default from the note's nature — team / domain knowledge → team memory; a personal habit or cross-repo preference → personal Copilot memory — but the user decides.
@@ -66,7 +82,7 @@ When the user chooses **team memory**, write to **`agent-memory/<team>/memory-no
    ```markdown
    # Memory Notes
 
-   Short, durable notes — lessons, decisions, constraints, and gotchas — captured during work and scoped by **When to read** so an agent opens only what is relevant. Companion to `index.md`, which lists the larger design summaries.
+   Short, durable notes preserving rationale, constraints, non-goals, and other context that cannot be recovered from the repository. Each note is scoped by **When to read** so an agent opens only what is relevant. Companion to `index.md`, which lists the larger design summaries.
 
    | Date | Note | When to read | Confidence |
    |------|------|--------------|------------|
@@ -78,6 +94,9 @@ When the user chooses **team memory**, write to **`agent-memory/<team>/memory-no
 
 ## Boundaries
 
-- Record only **durable** knowledge that helps future work: lessons, decisions + reasoning, constraints / non-goals, gotchas, stable conventions.
+- Record only **durable, non-inferable** context that helps future work: decision reasoning, rejected alternatives, constraints / non-goals, external context, and explicit personal preferences.
+- Never record facts that can be recovered from source code, tests, configuration, comments, or repository documentation, including architecture, current behavior, file locations, commands, conventions, and tested edge cases.
+- Never invent or infer a reason. If the rationale matters but was not stated, ask the user to explain or confirm it instead of proposing a memory.
+- Memory should explain **why**; the repository should explain **what** and **how**.
 - Never store secrets, credentials, raw logs, or transient status (CI / PR / build state).
-- If a note is really a broad, recurring rule, suggest promoting it into `agent-memory/<team>/systemPatterns.md` — the notes file is for the lighter, faster-moving items.
+- If an eligible note is really a broad, recurring rule, suggest promoting it into `agent-memory/<team>/systemPatterns.md` — the notes file is for the lighter, faster-moving items.
