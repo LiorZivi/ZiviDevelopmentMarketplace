@@ -45,6 +45,8 @@ If Python is not installed, the `ramp-up` skill will create the markdown documen
 
 ### ramp-up — explain an internal subsystem
 
+Automatic triggering is intentionally strict: the current request must explicitly say `ramp up` or `rampup`. Generic requests to explain, teach, walk through, or onboard do not invoke this skill.
+
 ```
 /zivi-development-marketplace:ramp-up monitoring flows in the auth service
 ```

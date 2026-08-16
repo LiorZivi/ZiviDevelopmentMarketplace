@@ -1,6 +1,6 @@
 ---
 name: ramp-up
-description: "Use when an engineer wants to ramp up on an internal subsystem, flow, or codebase area in this repository. Triggers on: 'ramp me up on X', 'walk me through X', 'teach me about X', 'explain how X works', 'help me understand X', 'I'm new to X — teach me'. Also triggers on edits to an existing ramp-up document: 'add a section about X to the auth ramp-up', 'restructure the deployment explainer', 'update the bullets on Y'. Strictly grounded in the user's workspace + Azure DevOps (code, wiki, commits) — never falls back to the open web or training data; declines topics with no internal coverage. For any ramp-up request, invoke this skill — never invoke the `ramp-up-explorer` agent directly (the agent is an internal subagent this skill spawns at Step 2)."
+description: "Use exclusively when the current user message literally contains the standalone phrase 'ramp up' or token 'rampup' (case-insensitive), or directly invokes the `ramp-up` skill by name. Do not infer an equivalent intent from other wording or reuse a trigger from an earlier turn. When explicitly triggered, produce a workspace-grounded markdown explainer and matching PPTX deck from the user's repository and Azure DevOps, with citations and no open-web or training-data fallback. Never invoke the `ramp-up-explorer` agent directly."
 argument-hint: "[topic]"
 user-invocable: true
 ---
@@ -8,6 +8,10 @@ user-invocable: true
 # Ramp-Up: Workspace-Grounded Onboarding
 
 A procedure for producing a grounded markdown explainer and matching PPTX deck about an internal subsystem, flow, or codebase area. The skill handles user interaction, scoping, outline review, markdown drafting, and PPTX generation; the `ramp-up-explorer` agent handles workspace + Azure DevOps discovery and per-section citation ranking.
+
+## Invocation Gate
+
+Proceed only when the current user message explicitly requests `ramp up` or `rampup` (case-insensitive). A direct invocation of the `ramp-up` skill by name also qualifies. Do not inherit the trigger from an earlier turn, and do not infer it from requests to explain, teach, walk through, onboard, or edit an explainer.
 
 ## Plugin Paths
 
@@ -87,7 +91,7 @@ Before starting, determine the mode using this explicit algorithm:
    - **Exactly one candidate** → **Edit Mode** on that file. Tell the user which file you matched in one line ("Editing `./output/ramp-up/AuthMonitoringFlows.md`") before proceeding to Step E1.
    - **Multiple candidates** → ask via `ask_user` with one choice per candidate filename plus a final "Create a new file at `./output/ramp-up/{computed slug}.md`" choice. Route based on the answer.
 5. **No match** AND the user's wording is editorial (verbs like "add", "remove", "restructure", "update", "fix"): there is no existing file to edit. Tell the user that no existing ramp-up document matched and confirm via `ask_user` whether to create a new file at the computed path or abandon. Route based on the answer.
-6. **No match** AND the user's wording is exploratory ("ramp me up on", "teach me about", "explain", "walk me through"): enter **Create Mode** directly. Announce the planned filename (`./output/ramp-up/{computed slug}.md`) in one line before doing any work.
+6. **No match** AND the user's wording explicitly requests `ramp up` or `rampup`: enter **Create Mode** directly. Announce the planned filename (`./output/ramp-up/{computed slug}.md`) in one line before doing any work.
 
 ---
 
