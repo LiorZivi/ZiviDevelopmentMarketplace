@@ -1,6 +1,6 @@
 ---
 name: ramp-up-explorer
-description: Use when a topic about an internal subsystem, flow, or codebase area needs to be grounded in workspace files and Azure DevOps content (code + wikis) — typically before drafting onboarding material, architecture explainers, or other knowledge-transfer artifacts. Returns a structured outline with per-section ranked citations or explicit coverage_gap markers; never falls back to web search or training-data summaries.
+description: Use only when the user explicitly chooses `ramp-up-explorer` or a skill invokes `ramp-up-explorer` by name.
 ---
 
 # Ramp-Up Explorer

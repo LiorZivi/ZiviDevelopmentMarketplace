@@ -1,6 +1,6 @@
 ---
 name: plan-reviewer
-description: Use when an existing implementation plan needs review, scoring, or actionable feedback against its intent — typically after a plan has been drafted or revised, before it is acted on.
+description: Use only when the user explicitly chooses `plan-reviewer` or a skill invokes `plan-reviewer` by name.
 ---
 
 # Plan Reviewer

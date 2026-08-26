@@ -1,6 +1,6 @@
 ---
 name: plan-architect
-description: Use when the user wants to plan, architect, design, decompose, or break down a feature, task, or project into a phased implementation plan — or wants to revise an existing plan.
+description: Use only when the user explicitly chooses `plan-architect` or a skill invokes `plan-architect` by name.
 ---
 
 # Plan Architect
