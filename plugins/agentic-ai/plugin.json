@@ -1,7 +1,7 @@
 {
   "name": "agentic-ai",
-  "version": "1.2.2",
-  "description": "Agentic engineering plugin with complex and simplified architecture planning, workspace-grounded onboarding, and agent-memory workflows.",
+  "version": "1.3.0",
+  "description": "Agentic engineering plugin with complex and simplified architecture planning, workspace-grounded onboarding, agent-memory workflows, and visual HTML explainers for PRs and local code changes.",
   "author": {
     "name": "lizi@microsoft.com"
   }

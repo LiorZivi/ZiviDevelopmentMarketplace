@@ -11,7 +11,7 @@ Copilot plugin marketplace for ZiviDevelopment team. A curated collection of ski
 | Plugin | Source | Description |
 |--------|--------|-------------|
 | [content-ai](plugins/content-ai/) | Local | AI-powered content generation — deep-dive research, branded presentations, and LinkedIn publishing |
-| [agentic-ai](plugins/agentic-ai/) | Local | Architecture planning, workspace-grounded onboarding (ramp-up), and design-memory summary + drift |
+| [agentic-ai](plugins/agentic-ai/) | Local | Architecture planning, workspace-grounded onboarding, design-memory workflows, and visual PR/change explainers |
 | [general-ops](plugins/general-ops/) | Local | Bidirectional Copilot CLI remote-control bridges for Microsoft Teams and Telegram |
 | [remote-plugin-blader](plugins/remote-plugin-blader/) | Local | humanizer — removes signs of AI-generated writing (from blader/humanizer) |
 | [remote-plugin-obra](plugins/remote-plugin-obra/) | Local | brainstorming — explore intent & design before implementation (from obra/superpowers) |
@@ -31,7 +31,7 @@ ZiviDevelopmentMarketplace/
 │       └── marketplace.json              # Plugin registry
 ├── plugins/
 │   ├── content-ai/                   # Research, presentations & LinkedIn publishing
-│   └── agentic-ai/                   # Architecture planning, onboarding & design memory
+│   └── agentic-ai/                   # Architecture, onboarding, design memory & PR explainers
 ├── templates/
 │   ├── plugin-basic/                 # Minimal plugin scaffold
 │   └── plugin-full/                  # Full-featured plugin scaffold

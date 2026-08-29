@@ -842,7 +842,7 @@ def render_document(spec: dict[str, Any]) -> str:
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="generator" content="content-ai/pr-explainer">
+    <meta name="generator" content="agentic-ai/pr-explainer">
     <title>{escape(spec["title"])}</title>
     <style>{CSS}</style>
 </head>

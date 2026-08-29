@@ -1,6 +1,6 @@
 # agentic-ai
 
-Agentic engineering plugin: complex and simplified architecture planning, workspace-grounded onboarding, and a full **agent-memory** stack.
+Agentic engineering plugin: complex and simplified architecture planning, workspace-grounded onboarding, a full **agent-memory** stack, and visual PR/change explainers.
 
 ## Skills
 
@@ -13,6 +13,9 @@ Direct planning skill that uses thorough questioning, drafts the same spec and p
 ### ramp-up
 Workspace-grounded onboarding skill that produces a markdown explainer plus matching PPTX deck about an internal subsystem, flow, or codebase area. Every claim is cited to a real file, wiki page, or commit in the user's workspace or Azure DevOps — never the open web or training data. Uses the `ramp-up-explorer` sub-agent to scan workspace + Azure DevOps (via the bluebird MCP server) and return ranked citations per section.
 
+### pr-explainer
+Analyzes an Azure DevOps/GitHub pull request, branch diff, commit range, or local staged/unstaged change and creates a standalone HTML walkthrough. Every explainer uses the same reviewer-friendly structure: evidence when available, simplified before/after flows, detailed UML sequence diagrams, red problem highlights, green fix highlights, changed-file explanations, and proof of the fix.
+
 ### agent-memory-summary
 Records a finished or shipped change as one durable `Summary_<name>.md` entry in a team's memory under `agent-memory/<team>/`, in a fixed spec+plan format. Works from an `/architect` design (`spec.md` + `plan.md`) or straight from a code change (working-tree edits, a PR, or a commit range vs `main`). Files single-team, cross-team, and org-wide (`global`) summaries, registers them in the team index, and leaves everything uncommitted for the same PR as the code.
 
@@ -23,11 +26,11 @@ Re-validates one committed design summary against the current code and reports w
 
 ## Prerequisites
 
-- **Required**: None — the markdown output works without any dependencies
-- **Optional**: Python 3.9+ — needed for `ramp-up` PPTX (PowerPoint) generation
+- **Required**: None — markdown and manually rendered HTML can be produced without dependencies
+- **Recommended**: Python 3.9+ — used by `ramp-up` for PPTX generation and by `pr-explainer` for deterministic standalone HTML
 - **Optional (`ramp-up` grounding)**: the bluebird MCP server — lets `ramp-up-explorer` cite Azure DevOps code and wiki pages in addition to the local workspace
 
-If Python is not installed, the `ramp-up` skill will create the markdown document and guide you through installing Python for PPTX support.
+If Python is unavailable, `ramp-up` still creates the markdown document and `pr-explainer` falls back to manually writing the same HTML structure.
 
 ## Usage
 
@@ -57,6 +60,13 @@ Automatic triggering is intentionally strict: the current request must explicitl
 /zivi-development-marketplace:ramp-up add a section about retries to the AuthMonitoringFlows explainer
 ```
 
+### pr-explainer — explain a PR or local change
+
+```
+/zivi-development-marketplace:pr-explainer https://dev.azure.com/org/project/_git/repo/pullrequest/41
+/zivi-development-marketplace:pr-explainer explain my current staged and unstaged changes
+```
+
 ### agent-memory-summary — record a shipped change into memory
 
 ```
@@ -79,6 +89,7 @@ Automatic triggering is intentionally strict: the current request must explicitl
 | `simplified-architect` plan | `./output/architect/{PlanName}-plan.md` | Nothing |
 | `ramp-up` markdown | `./output/ramp-up/{Topic}.md` | Workspace + (optional) bluebird MCP |
 | `ramp-up` presentation | `./output/ramp-up/{Topic}.pptx` | Python 3 |
+| `pr-explainer` standalone HTML | `./output/{ChangeName}-PR-Explainer.html` | Python 3 recommended |
 | `agent-memory-summary` record | `agent-memory/<team>/Summary_<name>.md` (+ `index.md` row) | Nothing |
 | `agent-memory-drift` report | Drift verdict in chat (+ optional staged architecture-section edit) | Nothing |
 
@@ -90,7 +101,7 @@ Automatic triggering is intentionally strict: the current request must explicitl
 - `agent-memory-store.instructions.md` — grade signals and capture durable notes during work
 - `docs.instructions.md` — conventions for writing `agent-memory/` docs
 
-They live in this marketplace repo under `.github/instructions-to-copy-to-target-repos/plugin-agentic-ai/agent-memory/` and apply repo-wide (`applyTo: "**"`). Plugins can't ship auto-applying instructions, so a `/plugin install` delivers the **skills** (`architect`, `ramp-up`, `agent-memory-summary`, `agent-memory-drift`); copying these instruction files is the manual, opt-in step for the read/store behaviors.
+They live in this marketplace repo under `.github/instructions-to-copy-to-target-repos/plugin-agentic-ai/agent-memory/` and apply repo-wide (`applyTo: "**"`). Plugins can't ship auto-applying instructions, so a `/plugin install` delivers the **skills** (`architect`, `simplified-architect`, `ramp-up`, `pr-explainer`, `agent-memory-summary`, `agent-memory-drift`); copying these instruction files is the manual, opt-in step for the read/store behaviors.
 
 ## Structure
 
@@ -118,6 +129,16 @@ agentic-ai/
 │   │   └── references/
 │   │       ├── compare-summary-to-code.md
 │   │       └── verdict-report-template.md
+│   ├── pr-explainer/
+│   │   ├── SKILL.md
+│   │   ├── assets/
+│   │   │   └── example-spec.json
+│   │   ├── references/
+│   │   │   └── spec-schema.md
+│   │   ├── scripts/
+│   │   │   └── render_explainer.py
+│   │   └── evals/
+│   │       └── evals.json
 │   └── ramp-up/
 │       ├── SKILL.md
 │       └── output-template.md
@@ -136,9 +157,9 @@ agentic-ai/
 └── README.md
 ```
 
-## Installing Python (optional)
+## Installing Python (recommended)
 
-If you want `ramp-up` PPTX generation, install Python 3:
+Install Python 3 for `ramp-up` PPTX generation and deterministic `pr-explainer` rendering:
 
 - **Windows**: `winget install Python.Python.3` or download from [python.org](https://www.python.org/downloads/)
 - **macOS**: `brew install python` or download from [python.org](https://www.python.org/downloads/)

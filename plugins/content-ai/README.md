@@ -1,6 +1,6 @@
 # content-ai
 
-AI-powered content generation plugin with skills for deep-dive research, branded presentations, LinkedIn publishing, and visual PR/change explainers.
+AI-powered content generation plugin with skills for deep-dive research, branded presentations, and LinkedIn publishing.
 
 ## Skills
 
@@ -10,16 +10,13 @@ Deep-dive research skill that investigates any technology topic and produces a c
 ### linked-in-post
 Repackages any source document you reference into ready-to-post LinkedIn content: a **paste-ready** newsletter article (an HTML file you open in a browser and copy — headings, subheadings, bold, italic, lists, quotes, code blocks, and links all survive the paste into LinkedIn), a ready-to-paste newsletter announcement, and an auto-generated cover image (1920×1080). Every article ends with Lior Zivi's fixed author signature. Independent of `learn` — works on any document — but `learn` can trigger it automatically.
 
-### pr-explainer
-Analyzes an Azure DevOps/GitHub pull request, branch diff, commit range, or local staged/unstaged change and creates a standalone HTML walkthrough. Every explainer uses the same reviewer-friendly structure: evidence when available, simplified before/after flows, detailed UML sequence diagrams, red problem highlights, green fix highlights, changed-file explanations, and proof of the fix.
-
 ## Prerequisites
 
-- **Required**: None — markdown and manually rendered HTML can be produced without dependencies
-- **Recommended**: Python 3.9+ — used by `pr-explainer` for deterministic standalone HTML and by `learn` for PPTX generation
+- **Required**: None — markdown output works without dependencies
+- **Recommended**: Python 3.9+ — used by `learn` for PPTX generation
 - **Optional (LinkedIn visuals)**: an image- or diagram-generation tool/skill — `linked-in-post` uses it to generate the article's visuals from the content. Without one, the article is written with labeled image placeholders you can fill in later.
 
-If Python is unavailable, `learn` still creates markdown and `pr-explainer` falls back to manually writing the same HTML structure.
+If Python is unavailable, `learn` still creates the markdown document.
 
 ## Usage
 
@@ -41,13 +38,6 @@ If Python is unavailable, `learn` still creates markdown and `pr-explainer` fall
 /zivi-development-marketplace:linked-in-post make a LinkedIn article and announcement from the Kubernetes topic
 ```
 
-### pr-explainer — explain a PR or local change
-
-```
-/zivi-development-marketplace:pr-explainer https://dev.azure.com/org/project/_git/repo/pullrequest/41
-/zivi-development-marketplace:pr-explainer explain my current staged and unstaged changes
-```
-
 ## What it produces
 
 | Output | Location | Requires |
@@ -59,7 +49,6 @@ If Python is unavailable, `learn` still creates markdown and `pr-explainer` fall
 | `linked-in-post` announcement | `{DocName}-LinkedIn-Announcement.md` next to the source doc | Nothing |
 | `linked-in-post` cover image | `images/cover.png` (1920×1080) | image tool |
 | `linked-in-post` visuals | `images/` next to the article | image/diagram tool |
-| `pr-explainer` standalone HTML | `./output/{ChangeName}-PR-Explainer.html` | Python 3 recommended |
 
 ## Structure
 
@@ -71,18 +60,8 @@ content-ai/
 │   ├── learn/
 │   │   ├── SKILL.md
 │   │   └── output-template.md
-│   ├── linked-in-post/
-│   │   └── SKILL.md
-│   └── pr-explainer/
-│       ├── SKILL.md
-│       ├── assets/
-│       │   └── example-spec.json
-│       ├── references/
-│       │   └── spec-schema.md
-│       ├── scripts/
-│       │   └── render_explainer.py
-│       └── evals/
-│           └── evals.json
+│   └── linked-in-post/
+│       └── SKILL.md
 ├── scripts/
 │   └── learn/
 │       ├── generate.sh
@@ -97,7 +76,7 @@ content-ai/
 
 ## Installing Python (recommended)
 
-Install Python 3 for PPTX generation and deterministic PR-explainer rendering:
+Install Python 3 for PPTX generation:
 
 - **Windows**: `winget install Python.Python.3` or download from [python.org](https://www.python.org/downloads/)
 - **macOS**: `brew install python` or download from [python.org](https://www.python.org/downloads/)
