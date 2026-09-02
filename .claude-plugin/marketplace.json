@@ -16,7 +16,7 @@
       "name": "agentic-ai",
       "source": "./plugins/agentic-ai",
       "description": "Agentic engineering plugin with complex and simplified architecture planning, workspace-grounded onboarding, agent-memory workflows, and visual HTML explainers for PRs and local code changes.",
-      "version": "1.3.0",
+      "version": "1.3.2",
       "author": { "name": "lizi@microsoft.com" },
       "tags": ["architecture", "planning", "onboarding", "ramp-up", "memory", "agent-memory", "spec", "agents", "pull-requests", "code-review", "html"]
     },
@@ -43,14 +43,6 @@
       "version": "1.0.0",
       "author": { "name": "lizi@microsoft.com" },
       "tags": ["humanizer", "writing", "humanize", "ai-writing", "content"]
-    },
-    {
-      "name": "remote-plugin-obra",
-      "source": "./plugins/remote-plugin-obra",
-      "description": "Vendored skill from obra/superpowers: brainstorming — explores intent, requirements, and design before implementation.",
-      "version": "1.0.0",
-      "author": { "name": "lizi@microsoft.com" },
-      "tags": ["brainstorming", "design", "ideation", "planning"]
     },
     {
       "name": "remote-plugin-199-biotechnologies",

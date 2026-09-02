@@ -24,12 +24,16 @@ The `superpowers` repo *is* referenceable as a whole plugin (its root has a `.cl
 
 Explores user intent, requirements, and design **before** implementation — for any creative work such as creating features, building components, or modifying behavior. Includes an optional visual brainstorming companion (`visual-companion.md` + `scripts/` local server).
 
-## Updating this vendored copy
+## Archive status
+
+This snapshot is deprecated and intentionally excluded from the active marketplace registries. Do not publish or install it from the archive path.
+
+## Refreshing before reactivation
 
 Because this is a copy, upstream changes are **not** pulled automatically. To refresh it:
 
 ```powershell
-$skill = "plugins/remote-plugin-obra/skills/brainstorming"
+$skill = "deprecated/remote-plugin-obra/skills/brainstorming"
 $tmp = Join-Path $env:TEMP "sp-refresh"
 git clone --depth 1 https://github.com/obra/superpowers.git $tmp
 Remove-Item "$skill/*" -Recurse -Force -Exclude "SOURCE.md"
@@ -42,4 +46,5 @@ Remove-Item $tmp -Recurse -Force
 Then:
 
 1. Update the **Commit copied** / **Commit date** / **Copied on** rows in the table above.
-2. Bump the `remote-plugin-obra` version in all four manifest/registry files per the repository `AGENTS.md` version-sync rule (`plugins/remote-plugin-obra/plugin.json`, `plugins/remote-plugin-obra/.claude-plugin/plugin.json`, `.claude-plugin/marketplace.json`, `.github/plugin/marketplace.json`).
+2. Move the plugin back to `plugins/remote-plugin-obra`.
+3. Bump the version in both plugin manifests and add synchronized entries to `.claude-plugin/marketplace.json` and `.github/plugin/marketplace.json`.

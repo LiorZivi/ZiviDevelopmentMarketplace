@@ -19,7 +19,7 @@
       "name": "agentic-ai",
       "source": "./plugins/agentic-ai",
       "description": "Agentic engineering plugin with complex and simplified architecture planning, workspace-grounded onboarding, agent-memory workflows, and visual HTML explainers for PRs and local code changes.",
-      "version": "1.3.0",
+      "version": "1.3.2",
       "tags": ["architecture", "planning", "onboarding", "ramp-up", "memory", "agent-memory", "spec", "agents", "pull-requests", "code-review", "html"]
     },
     {
@@ -42,13 +42,6 @@
       "description": "Vendored skill from blader/humanizer: humanizer — removes signs of AI-generated writing to make text read as natural, human-written prose.",
       "version": "1.0.0",
       "tags": ["humanizer", "writing", "humanize", "ai-writing", "content"]
-    },
-    {
-      "name": "remote-plugin-obra",
-      "source": "./plugins/remote-plugin-obra",
-      "description": "Vendored skill from obra/superpowers: brainstorming — explores intent, requirements, and design before implementation.",
-      "version": "1.0.0",
-      "tags": ["brainstorming", "design", "ideation", "planning"]
     },
     {
       "name": "remote-plugin-199-biotechnologies",

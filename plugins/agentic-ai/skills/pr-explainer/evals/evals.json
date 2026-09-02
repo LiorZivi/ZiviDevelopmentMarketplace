@@ -29,7 +29,7 @@
     },
     {
       "id": 3,
-      "prompt": "Create a PR explainer for an additive feature that introduces audit-log export. There was no bug or incident, just a missing capability. Show the previous manual workflow and the new automated flow, but do not pretend there was production failure evidence.",
+      "prompt": "Explicitly trigger pr-explainer for an additive feature that introduces audit-log export. There was no bug or incident, just a missing capability. Show the previous manual workflow and the new automated flow, but do not pretend there was production failure evidence.",
       "expected_output": "An HTML explainer that treats the old state as a capability gap, marks only the gap red, marks only implemented automation green, and omits unsupported evidence.",
       "files": [],
       "expectations": [

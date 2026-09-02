@@ -1,5 +1,7 @@
 # remote-plugin-obra
 
+> **Deprecated:** This plugin is archived for provenance and license compliance. It is no longer listed in the active marketplace registries and should be uninstalled from existing user environments.
+
 A vendored copy of the **brainstorming** skill from [obra/superpowers](https://github.com/obra/superpowers).
 
 This is a standalone plugin that packages a single third-party skill for this marketplace. The skill under `skills/` is a **snapshot copy** of the upstream — it does **not** auto-update. See [`skills/brainstorming/SOURCE.md`](./skills/brainstorming/SOURCE.md) for provenance (repository, author, license, commit, copy date) and how to refresh it.

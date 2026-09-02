@@ -62,9 +62,12 @@ Automatic triggering is intentionally strict: the current request must explicitl
 
 ### pr-explainer — explain a PR or local change
 
+Automatic semantic triggering is intentionally disabled. Invoke the skill with its slash command or explicitly say `trigger pr-explainer`. Generic requests to explain, review, summarize, or walk through a PR do not invoke it.
+
 ```
 /zivi-development-marketplace:pr-explainer https://dev.azure.com/org/project/_git/repo/pullrequest/41
 /zivi-development-marketplace:pr-explainer explain my current staged and unstaged changes
+trigger pr-explainer for PR 41
 ```
 
 ### agent-memory-summary — record a shipped change into memory

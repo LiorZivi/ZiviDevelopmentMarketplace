@@ -9,6 +9,7 @@ This is a Copilot CLI / Claude Code plugin marketplace repository for ZiviDevelo
 - `.claude-plugin/marketplace.json` — Central plugin registry (canonical — consumed by Claude Code and Copilot CLI `/plugin` commands)
 - `.github/plugin/marketplace.json` — Mirror registry used by some GitHub-side tooling — must stay in sync with `.claude-plugin/marketplace.json`
 - `plugins/<name>/` — Individual plugin directories (each is a standalone plugin)
+- `deprecated/<name>/` — Archived plugin snapshots retained for provenance; these must not appear in active marketplace registries
 - `templates/` — Starter scaffolds for new plugins (`plugin-basic/`, `plugin-full/`)
 - `docs/` — Contribution, installation, and spec guides
 

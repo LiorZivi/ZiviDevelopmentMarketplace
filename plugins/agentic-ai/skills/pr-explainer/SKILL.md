@@ -1,6 +1,6 @@
 ---
 name: pr-explainer
-description: "Create a polished standalone HTML explainer for a pull request, branch diff, commit range, or local staged/unstaged change. Use this skill whenever the user asks to explain, visualize, document, walk through, or create an HTML guide for a PR or code change, even if they only say 'explain this PR', 'show the before and after flow', 'make a review walkthrough', or 'turn my local changes into an explainer'. The output includes evidence, simplified before/after flows, detailed UML sequence diagrams, red problem highlights, green fix highlights, changed-file explanations, and validation evidence."
+description: "Use only when the current user message explicitly invokes `/pr-explainer`, invokes a namespaced slash command ending in `:pr-explainer`, or affirmatively says `trigger pr-explainer` (case-insensitive). Do not trigger otherwise."
 argument-hint: "[PR URL/number, branch, commit range, or local changes]"
 user-invocable: true
 compatibility: "Python 3.9+ recommended for deterministic HTML rendering; Git plus the repository provider's PR tools for PR inputs."
