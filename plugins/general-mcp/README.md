@@ -7,8 +7,9 @@ Bundles ready-to-use **MCP servers** as a marketplace plugin. Installing the plu
 | Server | Command | Capabilities | Auth |
 |---|---|---|---|
 | `playwright` | `npx @playwright/mcp@latest --allow-unrestricted-file-access` | Browser automation: navigate, click, type, snapshot, scrape, assert. Also renders local `file://` HTML (e.g. hand-authored SVG/HTML diagrams). | None (browsers download on first run). |
-| `ado` | `npx -y @azure-devops/mcp ZiviDevelopment-DD-Org1` | Azure DevOps: work items, boards, repos, pull requests, pipelines, wiki. | Azure CLI (`az login`). |
+| `ado` | `npx -y @azure-devops/mcp ZiviDevelopment-DD-Org1 --authentication azcli` | Azure DevOps: work items, boards, repos, pull requests, pipelines, wiki. | Azure CLI (`az login`). |
 | `azure` | `npx -y @azure/mcp@latest server start` | `azmcp`: query and manage Azure resources (storage, Key Vault, Cosmos DB, Monitor, and more). | Azure CLI (`az login`) / `DefaultAzureCredential`. |
+| `excalidraw` | `https://mcp.excalidraw.com/mcp` (HTTP) | Create, view, and export Excalidraw diagrams. | Remote-service authorization, if requested. |
 
 This is a pure MCP-only plugin — it ships no skills or agents, just the server definitions.
 
@@ -31,16 +32,17 @@ A local `mcp-config.json` only lives on your machine. Publishing the same server
 /plugin install general-mcp@zivi-development-marketplace
 ```
 
-Then run `/mcp` to confirm `playwright`, `ado`, and `azure` are listed with source `plugin`.
+Then run `/mcp` to confirm `playwright`, `ado`, `azure`, and `excalidraw` are listed with source `plugin`.
 
 ## Configuration format
 
-Servers use the **canonical stdio form** — `command` + `args`, with no `type` field:
+Local servers use the **canonical stdio form** — `command` + `args`, with no `type` field:
 
 - **Copilot CLI** normalizes a `command`-based server to its `local` transport automatically.
 - **Claude Code** treats a `command`-based server as `stdio`.
 
-This keeps a single `.mcp.json` portable across both hosts. Remote servers instead use `{ "type": "http", "url": "…" }`.
+This keeps a single `.mcp.json` portable across both hosts. Excalidraw uses the
+remote form `{ "type": "http", "url": "https://mcp.excalidraw.com/mcp" }`.
 
 ## Customization
 

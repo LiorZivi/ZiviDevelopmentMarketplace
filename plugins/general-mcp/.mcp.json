@@ -6,11 +6,15 @@
     },
     "ado": {
       "command": "npx",
-      "args": ["-y", "@azure-devops/mcp", "ZiviDevelopment-DD-Org1"]
+      "args": ["-y", "@azure-devops/mcp", "ZiviDevelopment-DD-Org1", "--authentication", "azcli"]
     },
     "azure": {
       "command": "npx",
       "args": ["-y", "@azure/mcp@latest", "server", "start"]
+    },
+    "excalidraw": {
+      "type": "http",
+      "url": "https://mcp.excalidraw.com/mcp"
     }
   }
 }
