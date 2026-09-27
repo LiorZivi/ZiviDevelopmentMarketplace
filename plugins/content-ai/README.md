@@ -8,7 +8,7 @@ AI-powered content generation plugin with skills for deep-dive research, branded
 Deep-dive research skill that investigates any technology topic and produces a comprehensive markdown document plus a branded PowerPoint presentation. Once the document and deck exist, it hands off to the `linked-in-post` skill to generate LinkedIn content.
 
 ### linked-in-post
-Repackages any source document you reference into ready-to-post LinkedIn content: a **paste-ready**, beginner-friendly newsletter article (a 2–4-minute read focused on one question and one example; open its HTML in a browser and copy it to preserve formatting), a ready-to-paste newsletter announcement, and an auto-generated cover image (1920×1080). Every article ends with Lior Zivi's fixed author signature. Independent of `learn` — works on any document — but `learn` can trigger it automatically.
+Repackages any source document you reference into ready-to-post LinkedIn content: a **paste-ready**, beginner-friendly newsletter article (a 3–5-minute read that defines essential technical terms in plain language and uses examples only when helpful), a ready-to-paste newsletter announcement, and an auto-generated cover image (1920×1080). The article's structure follows the topic rather than a fixed outline; useful inline visuals sit beside the concepts they clarify, with matching PNG files and upload markers in the article and paste-ready HTML. Open the HTML in a browser and copy it to preserve formatting; upload inline images at their markers in LinkedIn. Every article ends with Lior Zivi's fixed author signature. Independent of `learn` — works on any document — but `learn` can trigger it automatically.
 
 ## Prerequisites
 

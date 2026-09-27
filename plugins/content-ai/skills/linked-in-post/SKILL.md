@@ -1,6 +1,6 @@
 ---
 name: linked-in-post
-description: "Repackage a source document into ready-to-post LinkedIn content: a beginner-friendly, 2–4-minute newsletter article (paste-ready HTML you open in a browser and copy → LinkedIn keeps the formatting), a ready-to-paste newsletter announcement, and an auto-generated cover image. Works on any document you reference; independent of the learn skill, though learn can trigger it. Triggers on: 'make a LinkedIn article', 'turn this into a LinkedIn post', 'create a summary post for X', 'publish X to LinkedIn'."
+description: "Repackage a source document into ready-to-post LinkedIn content: a beginner-friendly, 3–5-minute newsletter article that explains essential technical terms in plain language and includes inline diagrams when useful (paste-ready HTML you open in a browser and copy → LinkedIn keeps the formatting), a ready-to-paste newsletter announcement, and an auto-generated cover image. Works on any document you reference; independent of the learn skill, though learn can trigger it. Triggers on: 'make a LinkedIn article', 'turn this into a LinkedIn post', 'create a summary post for X', 'publish X to LinkedIn'."
 argument-hint: "[topic or path to source content]"
 user-invocable: true
 ---
@@ -48,13 +48,16 @@ If content was given inline (no source path), derive `{DocName}` from the title 
 
 ## Step 1: Write the article source — `{DocName}-LinkedIn-Article.md`
 
-Reframe the source for someone with **no prior knowledge**: a **2–4-minute read (~300–450 words of readable text, including headings and the signature but excluding front matter and image markers)** in **2–3 short sections**. Answer **one beginner-sized question**, rather than compressing every section of the source. Lead with a relatable question or payoff, not an unexplained term. If the source covers several mechanisms, choose one and save the others for separate articles; do not sacrifice an essential explanation just to hit the word budget. No hashtags in articles. Include at most one `[📷 images/{name}.png — {what the visual shows}]` marker, only if it makes the explanation clearer, and reference the cover as `images/cover.png` — **Step 3 generates the actual image files to match these names.**
+Reframe the source for someone with **no prior knowledge and no technical background**: a **3–5-minute read (~550–750 words of readable text, including headings and the signature but excluding front matter and image markers)**. Let the material determine the article's shape: use headings where they help, not a prescribed number of sections or a fixed introduction, comparison, and takeaway. Focus on a clear thread instead of compressing every section of the source. Lead with a relatable question or payoff, not an unexplained term. Use a concrete example only when it genuinely makes the topic easier to grasp; do not invent one to fill space. Keep the technical terms a reader needs to understand that thread, including closely related terms the source distinguishes. No hashtags in articles.
+
+Place `[📷 images/{name}.png — {what the visual shows}]` markers beside the passages a visual would genuinely clarify, not in predetermined slots or only at the end. Technical articles often benefit from one or two simple inline visuals, but a process or comparison diagram is not required unless it suits the topic. Step 3 must produce a real, readable PNG for each marker. Reference the cover as `images/cover.png`.
 
 ### Teach the idea from the beginning
 
 - Establish the starting point in everyday language. The article must stand on its own even if the reader has never heard of the topic or read the source's earlier chapters.
-- Pick one concrete example and follow it in order: the initial situation, what changes, and the result a reader can understand. Explain why it matters instead of listing features or related mechanisms.
-- Introduce only one or two essential technical terms, define each immediately in plain language, and return to the same example. Avoid unexplained acronyms, equations, internal implementation details, and code unless one is needed to answer the question.
+- Build understanding in an order the reader can follow. If a process matters, explain what happens; if an example helps, use it consistently; if neither fits, explain the concept directly. Say why it matters instead of listing features or related mechanisms.
+- Name the technical concepts the topic actually requires. Define each at first use in ordinary words and explain its job directly. Distinguish similar-sounding terms when that distinction matters, but do not add a comparison just for structure. Three related terms are fine when the reader needs all three; for example, a prompt-steering article should explain conditioning, attention, and guidance as different jobs rather than covering only attention. Avoid extra acronyms, equations, implementation details, and code that do not help the explanation.
+- Explain the meaning in prose before using an analogy or diagram. A reader should be able to identify each term and what it does even if they skip the visuals.
 - Use plain-language headings and short paragraphs. Keep the explanation accurate; if an analogy simplifies the mechanics, make clear it is a mental model rather than a literal description.
 
 ### Voice: write it as your own story, from your own experience
@@ -63,14 +66,14 @@ Write the article as the **author's first-person account of figuring this out**,
 
 - **Open from genuine curiosity.** Use real first person ("I", "my") to share a question or realization grounded in the source. Do not invent experiences, experiments, or timelines to make the hook sound personal.
 - **Make the prologue welcoming.** The standfirst and opening should hook a newcomer with a relatable question, then give the minimum context needed to follow the answer. No textbook openers like "In this article we will..." or unexplained jargon.
-- **Keep the experiential thread through the body.** Stay precise but approachable, returning to the same example and what finally made the idea click for the author.
+- **Keep the experiential thread through the body.** Stay precise but approachable, returning to the author's question or realization; use an example only if it belongs naturally in the explanation.
 - **Humor: optional and sparing.** At most one or two light, tasteful asides or analogies in the entire article, and zero is perfectly fine. Never force it; the piece should read as smart and human, not as a comedy set.
 - **Close in their own voice.** End on one genuine personal takeaway or practical implication, not a glossary recap or generic upbeat conclusion.
 - **Always finish with the fixed author signature.** After all article content, append this exact final paragraph and nothing after it: *Written by Lior Zivi, AI Engineer. I build practical AI systems and share what I learn along the way.* Keep it verbatim so every article reinforces the same author identity and personal brand.
 
 Match the author's known newsletter voice using the fixed identity in Step 7, and keep the Step 2 humanizer rules in mind as you draft: no em dashes, varied sentence rhythm, concrete detail.
 
-Use this marker syntax (the readable source):
+Use this source format; the order of paragraphs, headings, and optional image markers follows the article, not this example:
 
 ````
 ---
@@ -80,30 +83,24 @@ cover: images/cover.png
 
 *{one-sentence standfirst: a personal hook a newcomer can understand}*
 
-{1–2 sentences establishing the question and the minimum starting context}
+{an opening a newcomer can follow}
 
-# {The starting point, in plain words}            (becomes LinkedIn "Heading")
+# {a heading only where it helps the reader}            (becomes LinkedIn "Heading")
 
-{Introduce one concrete example and the one idea the reader needs first.}
+{body prose in a natural order, defining essential terms when introduced}
 
-# {What changes and why}
+[📷 images/{name}.png — {a useful visual placed beside the passage it clarifies, if applicable}]
 
-{Follow the same example step by step; define an essential term only when it helps.}
-
-[📷 images/{name}.png — {one simple diagram, only if it clarifies the example}]
-
-# {Why it matters}
-
-{A practical implication and one genuine first-person takeaway.}
+{continue the explanation and close with a genuine personal takeaway}
 
 *Written by Lior Zivi, AI Engineer. I build practical AI systems and share what I learn along the way.*
 ````
 
-Omit the optional image marker if the article is clearer without it. Count the readable words and reread the result as a newcomer before moving on: if it runs long, narrow the question; if a term is undefined, explain it or remove it.
+Use as many headings and image markers as the explanation needs; the sample above is syntax, not an outline to fill. Do not drop a useful inline visual just to avoid an extra upload, and do not invent one just to meet a count. Count the readable words and reread the result as a newcomer before moving on: if it runs long, narrow the thread; if it is short, clarify a useful point rather than adding filler; if an essential term is undefined, explain it rather than removing it.
 
 ## Step 2: Humanize the article — `{DocName}-LinkedIn-Article.md`
 
-Run the **`humanizer`** skill (from the `remote-plugin-blader` plugin) on `{DocName}-LinkedIn-Article.md` so it reads as human-written rather than AI-generated, then save the humanized text back to `{DocName}-LinkedIn-Article.md`. This must run **before Step 4** — the paste-ready HTML is rendered from this file, so it needs to reflect the humanized text. Preserve the fixed final signature verbatim; if the humanizer changes, moves, or removes it, restore it as the article's final paragraph. If the `humanizer` skill isn't installed, apply its principles inline (cut AI tells and filler, vary sentence rhythm) and continue. Recheck the word count and beginner-friendly explanations after humanizing; do not let the edit reintroduce jargon or length.
+Run the **`humanizer`** skill (from the `remote-plugin-blader` plugin) on `{DocName}-LinkedIn-Article.md` so it reads as human-written rather than AI-generated, then save the humanized text back to `{DocName}-LinkedIn-Article.md`. This must run **before Step 4** — the paste-ready HTML is rendered from this file, so it needs to reflect the humanized text. Preserve the fixed final signature verbatim; if the humanizer changes, moves, or removes it, restore it as the article's final paragraph. If the `humanizer` skill isn't installed, apply its principles inline (cut AI tells and filler, vary sentence rhythm) and continue. Recheck the word count, plain-language definitions, and image markers after humanizing; keep the necessary technical names while removing unexplained jargon and filler. Preserve `[📷 …]` markers and their filenames verbatim even if the humanizer would otherwise change their punctuation.
 
 ## Step 3: Generate the cover image and inline visuals
 
@@ -132,11 +129,11 @@ Targeting: a direction with **no target** → the **cover** (plus conceptual inl
 ### Files to produce
 
 - **Cover image (always):** `images/cover.png` at **1920 × 1080 px** (16:9; LinkedIn's official article/newsletter cover spec), PNG/JPEG/WEBP — **not GIF**, < 5 MB; keep on-image text minimal (LinkedIn overlays UI on thumbnails). With the invoker: generate at 1280 × 720 (or 1344 × 768), then resize/pad to 1920 × 1080 and save as `images/cover.png`.
-- **Inline visuals:** for each `[📷 images/{name}.png — …]` marker in the article (0–1 by default; never add visuals just to fill a quota):
-  - **Accurate, labeled diagrams** (architecture, flow, comparison, before/after) need legible text that diffusion can't produce — emit **Mermaid/SVG** and render these, whether or not the invoker is available.
+- **Inline visuals:** create each `[📷 images/{name}.png — …]` marker's image at the point the article needs it; short technical articles often use one or two, but there is no fixed number or required diagram type:
+  - **Accurate, labeled diagrams** (architecture, flow, comparison, before/after) need legible text that diffusion can't produce — emit **Mermaid/SVG** and render these as PNGs, whether or not the invoker is available. Keep labels short and large enough to read in a LinkedIn article; if the prose uses an example, keep the diagram consistent with it, otherwise illustrate the idea directly.
   - **Conceptual, illustrative, or photographic** visuals — generate with **`ai-local-diffusion-invoker`** when it's available (professional style by default, or the user's override); otherwise use whatever image capability you have.
-  Keep the generated filenames matching the markers.
-- **No image capability at all** (invoker absent *and* no raster/diagram tool)? Don't block: leave the inline `[📷 …]` markers as placeholders; for the cover, if a PNG can't be rendered, write `images/cover.svg` (1920 × 1080) and tell the user to export it to PNG.
+  Verify that every generated PNG exists at the exact path in its marker and that the labels are readable, not clipped.
+- **No image capability at all** (invoker absent *and* no raster/diagram tool)? Don't block: leave the inline `[📷 …]` markers as placeholders and report which visuals are missing; for the cover, if a PNG can't be rendered, write `images/cover.svg` (1920 × 1080) and tell the user to export it to PNG. Do not present placeholders as finished images.
 
 ## Step 4: Render the paste-ready HTML — `{DocName}-LinkedIn-Article.html`
 
@@ -160,7 +157,7 @@ Convert the source to an HTML **body** using EXACTLY this mapping (all verified 
 Rules:
 - **Do NOT put the title in the body** — it goes in LinkedIn's separate Title field. Keep it in the `<head>`'s `<title>` tag; Step 7 copies it from there into LinkedIn. Do **not** emit `<h1>` (it does not map cleanly).
 - **Use only these tags**: `h2, h3, p, strong, em, code, pre, ul, ol, li, blockquote, a, br`. No `class`, `style`, `div`, `span`, `<img>`, `<hr>`, tables, colors, or font-size — LinkedIn strips or breaks them.
-- **No `<img>`**: keep each image as the literal `[📷 …]` marker so the user uploads it at that spot.
+- **No `<img>`**: keep each image as the literal `[📷 …]` marker at the same point in the HTML as in the Markdown, so the user uploads it there. Before reporting completion, verify every marker in both versions matches a real PNG, or explicitly report a missing-image placeholder. The cover alone does not replace inline visuals.
 - End the `<body>` with this exact final paragraph: `<p><em>Written by Lior Zivi, AI Engineer. I build practical AI systems and share what I learn along the way.</em></p>`. Do not emit any article content after it.
 - Wrap in a minimal document so a browser renders it cleanly:
 
@@ -189,7 +186,7 @@ Write it to feel **personal**, not corporate: use **first person**, lead with yo
 
 This announcement is the **most personal of the three assets**: it is *you* telling your network what you just learned and why it grabbed you. Lead from your own experience (what you noticed, what surprised you, what you went and dug into), and make the **first two lines fascinating and inviting** so people stop scrolling and want the full article. A single light, tasteful joke is welcome if it fits naturally.
 
-Keep the announcement accessible to the same newcomer as the article: tease its one core question without introducing new jargon or promising a broader technical survey.
+Keep the announcement accessible to the same newcomer as the article: tease its one core question, and if you name a technical concept, immediately describe it in everyday words. Do not promise a broader technical survey than the article delivers.
 
 Do **not** add any "link in the comments" line: because this is the newsletter's own publish-flow post, LinkedIn attaches the full article to it automatically, so the click is already there.
 
