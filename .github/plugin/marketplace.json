@@ -58,6 +58,13 @@
       "tags": ["image-generation", "text-to-image", "local-ai", "diffusion", "flux", "gpu", "invoker"]
     },
     {
+      "name": "evals-ai",
+      "source": "./plugins/evals-ai",
+      "description": "Evaluate AI skills with static-quality scoring, real trigger checks, isolated with/without comparisons, blind judging, and self-contained local reports.",
+      "version": "1.0.0",
+      "tags": ["skills", "evaluation", "benchmarking", "quality", "triggering", "copilot-cli"]
+    },
+    {
       "name": "code-simplifier",
       "source": {
         "source": "github",
