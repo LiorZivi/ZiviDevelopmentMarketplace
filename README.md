@@ -13,6 +13,7 @@ Copilot plugin marketplace for ZiviDevelopment team. A curated collection of ski
 | [content-ai](plugins/content-ai/) | Local | AI-powered content generation — deep-dive research, branded presentations, and LinkedIn publishing |
 | [agentic-ai](plugins/agentic-ai/) | Local | Architecture planning, workspace-grounded onboarding, design-memory workflows, and visual PR/change explainers |
 | [general-ops](plugins/general-ops/) | Local | Bidirectional Copilot CLI remote-control bridges for Microsoft Teams and Telegram |
+| [evals-ai](plugins/evals-ai/) | Local | Repeatable skill evaluation with static scoring, real trigger checks, isolated with/without comparisons, and local HTML reports |
 | [remote-plugin-blader](plugins/remote-plugin-blader/) | Local | humanizer — removes signs of AI-generated writing (from blader/humanizer) |
 | [remote-plugin-199-biotechnologies](plugins/remote-plugin-199-biotechnologies/) | Local | deep-research — multi-source research with citations (from 199-biotechnologies) |
 | [code-simplifier](https://github.com/anthropics/claude-plugins-official/tree/main/plugins/code-simplifier) | Referenced → Anthropic | Simplifies and refines code for clarity, consistency, and maintainability |
