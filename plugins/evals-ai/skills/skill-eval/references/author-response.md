@@ -75,11 +75,11 @@ empty list means "no override here", and the `result.json` value stands):
 | `static_average` | `static_quality.average_score` | a number 1–5 |
 | `dimension_overrides[]` | a static dimension's `score` | `{name, score (1–5 or "N/A"), note}` |
 | `trigger_overrides[]` | a trigger prompt's Expected Result | `{prompt_id, expected_result: should_trigger\|should_not_trigger, note}` |
-| `finding_overrides[]` | a finding's disposition | `{finding_id, action: keep\|dismiss\|reseverity, severity?, note}` |
+| `finding_overrides[]` | a finding's disposition | `{finding_id, action: keep\|dismiss\|reseverity, severity?, note}`; `severity` is required only for `reseverity` and forbidden otherwise |
 | `value_note` / `static_note` / `overall_note` | — (the author's reasoning) | free text |
 
-`action = reseverity` requires a `severity`; `dismiss` drops the finding from the effective fix list;
-`keep` records an explicit "I looked — leave it".
+`action = reseverity` requires a `severity`; other actions must omit it. `dismiss` drops the finding
+from the effective fix list; `keep` records an explicit "I looked — leave it".
 
 ```json
 {

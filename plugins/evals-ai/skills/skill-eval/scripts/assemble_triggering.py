@@ -7,7 +7,20 @@ import os
 import sys
 
 
+def _under(root, *parts):
+    root = os.path.realpath(os.path.abspath(root))
+    candidate = os.path.realpath(os.path.join(root, *parts))
+    try:
+        contained = os.path.commonpath((root, candidate)) == root
+    except ValueError:
+        contained = False
+    if not contained:
+        raise ValueError("constructed trigger path escapes runs root: {}".format(candidate))
+    return candidate
+
+
 def assemble(evals, runs_root, repeats):
+    runs_root = os.path.realpath(os.path.abspath(runs_root))
     prompts = []
     false_positive = 0
     false_negative = 0
@@ -17,8 +30,8 @@ def assemble(evals, runs_root, repeats):
         runs = []
         triggered_count = 0
         for index in range(1, repeats + 1):
-            run_dir = os.path.join(runs_root, "{}-{}".format(prompt_id, index))
-            observation_path = os.path.join(run_dir, "observation.json")
+            run_dir = _under(runs_root, "{}-{}".format(prompt_id, index))
+            observation_path = _under(run_dir, "observation.json")
             with open(observation_path, "r", encoding="utf-8") as fh:
                 observation = json.load(fh)
             if not observation.get("success"):

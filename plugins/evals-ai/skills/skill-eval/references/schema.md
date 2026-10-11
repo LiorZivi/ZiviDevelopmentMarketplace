@@ -27,10 +27,11 @@ history on this machine; there is no separate trend file or committed run output
 
 ## Cross-skill comparability
 
-`structural_signature(result)` returns a key skeleton with all values and list
-lengths erased, so **two conformant results for any two skills produce the same
-signature**. The report layout is keyed to `schema_version`. Together these
-guarantee every skill's outputs are directly comparable. `metadata.feedback_enabled`,
+`structural_signature(result)` first validates the result, then returns a key skeleton with all
+values erased and every list represented by one schema marker. Empty/populated lists and optional
+element fields therefore cannot change it, so **two conformant results for any two skills produce
+the same signature**. The report layout is keyed to `schema_version`. Together these guarantee every
+skill's outputs are directly comparable. `metadata.feedback_enabled`,
 `metadata.judge_guidance` (fixed keys), and `metadata.scenarios_reviewed` are always
 present, so the signature is identical whether or not feedback, guidance, or a scenario
 review happened.
@@ -67,6 +68,7 @@ steer), `scenarios_reviewed` (bool — author approved the test set at Step 3), 
 **triggering** (Mode 2, actual isolated runs): `trigger_repeats`; `prompts[]` (`id`,
 `prompt_text`, `expected_result` = `should_trigger`|`should_not_trigger`,
 `actual_result` = `triggered`|`not_triggered`, `trigger_rate`, `runs[]`).
+Prompt IDs retain the unique path-safe slug contract from `evals.json`.
 Each run records `run_index`, `triggered`, `events_ref`, `response_ref`,
 `duration_s`, and `errors`. `summary` contains `matches`, `mismatches`, `total`,
 `accuracy`, `false_positive`, and `false_negative`.
@@ -75,6 +77,7 @@ Each run records `run_index`, `triggered`, `events_ref`, `response_ref`,
 `id`, `prompt`, `expectations[]`, `runs[]`, `with_skill_summary`,
 `without_skill_summary`, `delta`, `verdict`; plus a top-level `summary`
 (`delta`, `verdict`, `confidence`).
+Task IDs retain the unique path-safe slug contract from `evals.json`.
 - each `runs[]` item → `run_index`, `configuration` (`with_skill`|`without_skill`),
   `score` (`pass_rate` 0–1, `passed`, `total`, optional `quality_score`),
   `output_ref`, `transcript_ref`.
@@ -99,6 +102,8 @@ high|medium|low, `source_modes[]`, `recommendation`, `rationale`,
 grader scores each run against), `trigger_prompts[]` (`id`, `prompt_text`,
 `intent` = `should_trigger`|`should_not_trigger`). The intent is the skill author's
 Expected Result; the user may override it during scenario review before scoring.
+IDs are unique within their list and use 1–64 character lowercase kebab-case slugs because they are
+embedded in run-directory names.
 
 Generated once, then **reused** on every later run so scores stay comparable;
 regenerated only when missing or on explicit request (see
@@ -129,7 +134,8 @@ verdicts), `value_note`, `static_average` (1–5), `static_note`, `dimension_ove
 (`name`, `score` 1–5 or `"N/A"`, `note`), `trigger_overrides[]` (`prompt_id`,
 `expected_result` = `should_trigger`|`should_not_trigger`, `note`),
 `finding_overrides[]` (`finding_id`, `action`
-= keep|dismiss|reseverity, `severity?`, `note`), `overall_note`.
+= keep|dismiss|reseverity, `severity?`, `note`; `severity` is required only for `reseverity`),
+`overall_note`.
 
 Where it provides a value, that value wins; otherwise `result.json` stands.
 

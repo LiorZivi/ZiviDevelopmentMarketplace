@@ -55,6 +55,8 @@ Usage
 Prints the env path and what was discoverable; writes the arm's response to --out.
 Any files the arm produced live in the env dir (the orchestrator copies both the
 response and those files into the local runs/ folder, then may delete the env).
+When `--cleanup` is set, the synthetic root or detached worktree is removed on
+every exit path, including staging, discovery, startup, and output-write failures.
 """
 
 import argparse
@@ -368,59 +370,64 @@ def main(argv):
     p.add_argument("--cleanup", action="store_true", help="delete the env after (default: keep for the orchestrator)")
     a = p.parse_args(argv)
 
-    task = a.task
-    if task.startswith("@"):
-        with open(task[1:], "r", encoding="utf-8") as fh:
-            task = fh.read()
-
     env_root = a.env_root or os.environ.get("TEMP") or os.environ.get("TMPDIR") or "/tmp"
     env = os.path.join(env_root, "skill-eval-env-{}-{}".format(a.arm, uuid.uuid4().hex[:8]))
     repo = a.repo
-    if a.mode == "in-context":
-        if not repo:
-            rr = subprocess.run(["git", "-C", os.getcwd(), "rev-parse", "--show-toplevel"],
-                                capture_output=True, encoding="utf-8", errors="replace")
-            repo = (rr.stdout or "").strip() or None
-        build_env_incontext(a.arm, env, a.skill_dir, repo, include_wip=not a.head_only)
-    else:
-        os.makedirs(env, exist_ok=True)
-        build_env(a.arm, env, a.skill_dir)
+    force_cleaned = False
+    try:
+        task = a.task
+        if task.startswith("@"):
+            with open(task[1:], "r", encoding="utf-8") as fh:
+                task = fh.read()
 
-    discoverable = sorted(os.listdir(os.path.join(env, ".github", "skills")))
-    plugin_dir = None
-    if a.arm == "with":
-        name = os.path.basename(os.path.normpath(a.skill_dir))
-        blocked = undispatchable_agents(env, name)
-        if blocked:
+        if a.mode == "in-context":
+            if not repo:
+                rr = subprocess.run(["git", "-C", os.getcwd(), "rev-parse", "--show-toplevel"],
+                                    capture_output=True, encoding="utf-8", errors="replace")
+                repo = (rr.stdout or "").strip() or None
+            build_env_incontext(a.arm, env, a.skill_dir, repo, include_wip=not a.head_only)
+        else:
+            os.makedirs(env, exist_ok=True)
+            build_env(a.arm, env, a.skill_dir)
+
+        discoverable = sorted(os.listdir(os.path.join(env, ".github", "skills")))
+        plugin_dir = None
+        if a.arm == "with":
+            name = os.path.basename(os.path.normpath(a.skill_dir))
+            blocked = undispatchable_agents(env, name)
+            if blocked:
+                cleanup_env(a.mode, env, repo)
+                force_cleaned = True
+                raise SystemExit(
+                    "Cannot measure skill value: headless Copilot CLI cannot dispatch bundled agents "
+                    "hidden from both users and the model ({}). Review their invocation flags or use "
+                    "a compatible runtime; do not score this as a skill failure.".format(", ".join(blocked))
+                )
+            candidate = os.path.join(env, ".github", "skills", name)
+            if os.path.isfile(os.path.join(candidate, "plugin.json")):
+                plugin_dir = candidate
+        out, ok, err = run_arm(
+            env, task, a.model, a.timeout, plugin_dir,
+            os.path.basename(os.path.normpath(a.skill_dir)) if a.arm == "with" else None)
+
+        os.makedirs(os.path.dirname(os.path.abspath(a.out)) or ".", exist_ok=True)
+        with open(a.out, "w", encoding="utf-8") as fh:
+            fh.write(out + "\n")
+        with open(os.path.join(env, "run.json"), "w", encoding="utf-8") as fh:
+            json.dump({"arm": a.arm, "mode": a.mode, "skill_dir": a.skill_dir, "repo": repo,
+                       "model": a.model, "discoverable_skills": discoverable, "ok": ok,
+                       "plugin_dir": plugin_dir, "out": os.path.abspath(a.out)}, fh, indent=2)
+
+        print("arm={}  ok={}".format(a.arm, ok))
+        print("env={}".format(env))
+        print("skills discoverable in this env: {}".format(", ".join(discoverable) or "(none)"))
+        print("response -> {} ({} chars)".format(a.out, len(out)))
+        if err.strip():
+            sys.stderr.write(err.strip() + "\n")
+        return 0 if ok else 1
+    finally:
+        if a.cleanup and not force_cleaned:
             cleanup_env(a.mode, env, repo)
-            raise SystemExit(
-                "Cannot measure skill value: headless Copilot CLI cannot dispatch bundled agents "
-                "hidden from both users and the model ({}). Review their invocation flags or use "
-                "a compatible runtime; do not score this as a skill failure.".format(", ".join(blocked))
-            )
-        candidate = os.path.join(env, ".github", "skills", name)
-        if os.path.isfile(os.path.join(candidate, "plugin.json")):
-            plugin_dir = candidate
-    out, ok, err = run_arm(env, task, a.model, a.timeout, plugin_dir,
-                           os.path.basename(os.path.normpath(a.skill_dir)) if a.arm == "with" else None)
-
-    os.makedirs(os.path.dirname(os.path.abspath(a.out)) or ".", exist_ok=True)
-    with open(a.out, "w", encoding="utf-8") as fh:
-        fh.write(out + "\n")
-    with open(os.path.join(env, "run.json"), "w", encoding="utf-8") as fh:
-        json.dump({"arm": a.arm, "mode": a.mode, "skill_dir": a.skill_dir, "repo": repo,
-                   "model": a.model, "discoverable_skills": discoverable, "ok": ok,
-                   "plugin_dir": plugin_dir, "out": os.path.abspath(a.out)}, fh, indent=2)
-
-    print("arm={}  ok={}".format(a.arm, ok))
-    print("env={}".format(env))
-    print("skills discoverable in this env: {}".format(", ".join(discoverable) or "(none)"))
-    print("response -> {} ({} chars)".format(a.out, len(out)))
-    if err.strip():
-        sys.stderr.write(err.strip() + "\n")
-    if a.cleanup:
-        cleanup_env(a.mode, env, repo)
-    return 0 if ok else 1
 
 
 if __name__ == "__main__":

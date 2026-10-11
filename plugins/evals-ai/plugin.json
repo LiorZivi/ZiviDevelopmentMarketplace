@@ -1,6 +1,6 @@
 {
   "name": "evals-ai",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Evaluate AI skills with static-quality scoring, real trigger checks, isolated with/without comparisons, blind judging, and self-contained local reports.",
   "author": {
     "name": "lizi@microsoft.com"

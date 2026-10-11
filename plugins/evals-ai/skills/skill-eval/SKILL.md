@@ -10,7 +10,8 @@ description: >
   "how do I know if my skill works"; wants a with/without comparison, a description/trigger check,
   or a skill quality report; or wants to compare skills against each other. Operates on any local
   skill directory, including workspace skills and skills inside plugins. Diagnose-only: it never
-  edits the evaluated skill's implementation.
+  edits the evaluated skill's implementation or instructions; it may create reviewed test cases and
+  local artifacts under evals/.
 argument-hint: "<skill-name-or-path> [evaluation options]"
 user-invocable: true
 ---
@@ -19,8 +20,9 @@ user-invocable: true
 
 Measure whether a skill is well-written, correctly triggered, and genuinely valuable. One **sweep**
 evaluates one target skill three ways and writes two local artifacts the author can review and
-compare across skills and over time. This is **diagnose-only** — it never edits the target; acting on
-the findings (fixing the skill) is the author's job.
+compare across skills and over time. This is **diagnose-only** — it never edits the target's
+implementation or instructions. It may create or update reviewed test cases in `evals/evals.json`
+and write local run artifacts under `evals/results/`; acting on the findings is the author's job.
 
 ## When to use
 
@@ -30,8 +32,9 @@ skills — that is where the with/without comparison has signal.
 
 ## When not to use
 
-Don't use it to *change* a skill (that's the author's job, informed by the findings), to evaluate
-untrusted third-party skills, or to run unattended CI — it is a manual, human-in-the-loop tool.
+Don't use it to change a skill's implementation or instructions (that's the author's job, informed
+by the findings), to evaluate untrusted third-party skills, or to run unattended CI — it is a
+manual, human-in-the-loop tool.
 
 ## Self-contained — no external dependencies
 
@@ -182,8 +185,12 @@ the private home is removed when the process exits. Either way the env, not an i
 controls what the runtime can discover, which keeps the comparison honest (see *Why isolated
 processes* and *Two baseline modes*). You (the
 orchestrator) then persist each arm's response (already written to `--out`) plus any files it produced
-into `runs/`. Spawn `evals-ai:skill-eval-judge` once per output as a **blind** grader
-scoring it against the task's `expectations[]` into a `pass_rate`. Aggregate each configuration to
+into `runs/`. Before grading, stage each output with
+`<eval-tool-dir>/scripts/prepare_blind_judge_input.py`; give `evals-ai:skill-eval-judge` only the
+resulting randomized `candidate-output.md` path (or its contents), never the source `with`/`without`
+path or sibling run directory. Remove the neutral directory immediately after that grade. Spawn the
+judge once per output as a **blind** grader scoring it against the task's `expectations[]` into a
+`pass_rate`. Aggregate each configuration to
 `mean ± stddev`, compute a single `delta = with_mean − without_mean`, and a `verdict` (skill helps /
 no clear value / skill hurts). Independent blind scoring means there is no pairing and no position
 bias to correct. Write the `value_comparison` block and append each run to the `runs[]` registry.
@@ -194,7 +201,7 @@ missing coverage; do not treat a CLI compatibility failure as evidence that the 
 
 Follow `references/findings-synthesis.md`. Merge the three blocks into one deduplicated,
 severity-ranked `consolidated_findings` list, each with `source_modes`, a concrete `recommendation`,
-and a `phase2_actionable` flag. **Recommend only — never edit the target skill.**
+and a `phase2_actionable` flag. **Recommend only — never edit the target implementation or instructions.**
 
 ## Step 8: Assemble + validate
 
@@ -245,8 +252,9 @@ together on the local machine.
 
 ## Must not
 
-- **Never edit the evaluated skill.** This sweep diagnoses and recommends; applying the fixes is the
-  author's job.
+- **Never edit the evaluated skill's implementation or instructions.** Creating reviewed
+  `evals/evals.json` cases and local `evals/results/` artifacts is expected; applying recommended
+  skill changes is the author's job.
 - **Run every Mode-3 arm in an isolated environment, never as a subagent.** The Copilot runtime
   auto-advertises workspace skills (even to subagents), so a subagent baseline is not skill-free. Use
   `scripts/run_isolated_arm.py` (a headless `copilot -C <env>` per arm). In `isolated` mode the baseline

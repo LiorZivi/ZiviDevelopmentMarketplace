@@ -4,6 +4,7 @@ import subprocess
 import sys
 import tempfile
 import unittest
+from copy import deepcopy
 from html.parser import HTMLParser
 from pathlib import Path
 from unittest import mock
@@ -16,6 +17,7 @@ import assemble_triggering
 import eval_schema
 import generate_report
 import new_sweep
+import prepare_blind_judge_input
 import run_isolated_arm
 import run_trigger_check
 import stage_skill
@@ -126,6 +128,298 @@ class ReportTests(unittest.TestCase):
         banner = generate_report.override_banner(override, result)
         self.assertIn("Trigger <b>p1</b> Expected Result", banner)
         self.assertIn("Should trigger", banner)
+
+
+class StaticValidationTests(unittest.TestCase):
+    def static_block(self, scores=None):
+        scores = scores or [4, 4, 4, 4, 4]
+        return {
+            "dimension_set_version": eval_schema.DIMENSION_SET_VERSION,
+            "scale": "1-5",
+            "dimensions": [
+                {
+                    "name": name,
+                    "score": score,
+                    "rationale": "rationale",
+                    "evidence": "evidence",
+                }
+                for name, score in zip(eval_schema.STATIC_DIMENSIONS, scores)
+            ],
+            "average_score": round(
+                sum(score for score in scores if score != eval_schema.NA_SCORE)
+                / len([score for score in scores if score != eval_schema.NA_SCORE]),
+                1,
+            ),
+            "top_improvements": [],
+        }
+
+    def validate(self, block):
+        errors = []
+        eval_schema._validate_static(block, "static_quality", errors)
+        return errors
+
+    def test_static_contract_requires_fixed_version_and_scale(self):
+        block = self.static_block()
+        block["dimension_set_version"] = "custom-dimensions"
+        block["scale"] = "0-100"
+
+        errors = self.validate(block)
+
+        self.assertTrue(any("dimension_set_version" in error for error in errors), errors)
+        self.assertTrue(any(".scale" in error for error in errors), errors)
+
+    def test_static_contract_requires_exact_dimensions_in_order(self):
+        for names in (
+            ["Made-up dimension"],
+            list(reversed(eval_schema.STATIC_DIMENSIONS)),
+            eval_schema.STATIC_DIMENSIONS[:-1],
+            eval_schema.STATIC_DIMENSIONS[:-1] + [eval_schema.STATIC_DIMENSIONS[0]],
+        ):
+            block = self.static_block()
+            block["dimensions"] = [
+                {
+                    "name": name,
+                    "score": 4,
+                    "rationale": "rationale",
+                    "evidence": "evidence",
+                }
+                for name in names
+            ]
+
+            errors = self.validate(block)
+
+            self.assertTrue(
+                any("expected exactly the fixed dimensions in order" in error for error in errors),
+                (names, errors),
+            )
+
+    def test_static_contract_recomputes_average_excluding_na(self):
+        block = self.static_block([5, 4, eval_schema.NA_SCORE, 3, 2])
+        self.assertEqual(self.validate(block), [])
+
+        block["average_score"] = 5.0
+        errors = self.validate(block)
+
+        self.assertTrue(any("expected 3.5" in error for error in errors), errors)
+
+    def test_static_contract_rejects_non_numeric_average_and_all_na(self):
+        block = self.static_block()
+        block["average_score"] = "4.0"
+        self.assertTrue(
+            any("average_score: expected a number" in error for error in self.validate(block))
+        )
+
+        block = self.static_block()
+        for dimension in block["dimensions"]:
+            dimension["score"] = eval_schema.NA_SCORE
+        block["average_score"] = 1
+        self.assertTrue(
+            any("at least one dimension must have a numeric score" in error
+                for error in self.validate(block))
+        )
+
+
+class OverrideValidationTests(unittest.TestCase):
+    def override(self, finding_overrides):
+        return {
+            "schema_version": eval_schema.SCHEMA_VERSION,
+            "target_skill": "probe",
+            "sweep_ref": "results/test",
+            "created_at": "2026-10-11T00:00:00Z",
+            "value_verdict": None,
+            "value_note": "",
+            "static_average": None,
+            "static_note": "",
+            "dimension_overrides": [],
+            "trigger_overrides": [],
+            "finding_overrides": finding_overrides,
+            "overall_note": "",
+        }
+
+    def test_reseverity_requires_valid_severity(self):
+        for finding in (
+            {"finding_id": "f1", "action": "reseverity", "note": ""},
+            {"finding_id": "f1", "action": "reseverity", "severity": "", "note": ""},
+        ):
+            ok, errors = eval_schema.validate_override(self.override([finding]))
+            self.assertFalse(ok)
+            self.assertTrue(any("severity" in error for error in errors), errors)
+
+        ok, errors = eval_schema.validate_override(self.override([{
+            "finding_id": "f1", "action": "reseverity", "severity": "low", "note": "",
+        }]))
+        self.assertTrue(ok, errors)
+
+    def test_non_reseverity_action_rejects_severity(self):
+        ok, errors = eval_schema.validate_override(self.override([{
+            "finding_id": "f1", "action": "dismiss", "severity": "low", "note": "",
+        }]))
+
+        self.assertFalse(ok)
+        self.assertTrue(any("only allowed when action is 'reseverity'" in error
+                            for error in errors), errors)
+
+
+class StructuralSignatureTests(unittest.TestCase):
+    def result(self):
+        args = new_sweep._parse_args(["unused-skill-dir"])
+        with tempfile.TemporaryDirectory() as tmp:
+            result = new_sweep._skeleton(tmp, "test-sweep", args)
+        result["static_quality"] = {
+            "dimension_set_version": eval_schema.DIMENSION_SET_VERSION,
+            "scale": "1-5",
+            "dimensions": [
+                {"name": name, "score": 4, "rationale": "ok", "evidence": "text"}
+                for name in eval_schema.STATIC_DIMENSIONS
+            ],
+            "average_score": 4.0,
+            "top_improvements": [],
+        }
+        result["triggering"] = {
+            "trigger_repeats": 1,
+            "prompts": [],
+            "summary": {
+                "matches": 0, "mismatches": 0, "total": 0, "accuracy": 0,
+                "false_positive": 0, "false_negative": 0,
+            },
+        }
+        result["value_comparison"] = {
+            "value_repeats": 1,
+            "tasks": [],
+            "summary": {"delta": 0, "verdict": "no clear value", "confidence": "low"},
+        }
+        result["consolidated_findings"] = {
+            "findings": [], "priority_order": [], "overall_assessment": "ok",
+        }
+        return result
+
+    def test_signature_ignores_empty_and_populated_lists(self):
+        empty = self.result()
+        populated = deepcopy(empty)
+        populated["static_quality"]["top_improvements"] = [{
+            "text": "Improve recovery guidance", "priority": "high",
+            "dimension": "Robustness",
+        }]
+        populated["value_comparison"]["tasks"] = [{
+            "id": "task", "prompt": "Do the task", "expectations": ["Produces output"],
+            "runs": [{
+                "run_index": 1, "configuration": "with_skill",
+                "score": {
+                    "pass_rate": 1.0, "passed": 1, "total": 1, "quality_score": 9,
+                },
+                "output_ref": "runs/task/output.md",
+                "transcript_ref": "runs/task/transcript.md",
+            }],
+            "with_skill_summary": {"mean": 1.0, "stddev": 0.0, "n": 1},
+            "without_skill_summary": {"mean": 0.0, "stddev": 0.0, "n": 1},
+            "delta": 1.0, "verdict": "skill helps",
+        }]
+        populated["consolidated_findings"] = {
+            "findings": [{
+                "id": "f1", "title": "Finding", "severity": "low",
+                "source_modes": ["static"], "recommendation": "Improve it",
+                "rationale": "Evidence", "phase2_actionable": True,
+            }],
+            "priority_order": ["f1"],
+            "overall_assessment": "One finding",
+        }
+        populated["runs"] = [{
+            "run_id": "run-1", "configuration": "with_skill", "task_id": "task",
+            "run_index": 1, "transcript_ref": "runs/task/transcript.md",
+            "output_ref": "runs/task/output.md", "metrics": {},
+        }]
+
+        self.assertTrue(eval_schema.validate_result(empty)[0])
+        self.assertTrue(eval_schema.validate_result(populated)[0])
+        self.assertEqual(
+            eval_schema.structural_signature(empty),
+            eval_schema.structural_signature(populated),
+        )
+
+    def test_signature_rejects_invalid_results(self):
+        with self.assertRaisesRegex(ValueError, "invalid result"):
+            eval_schema.structural_signature({"schema_version": eval_schema.SCHEMA_VERSION})
+
+
+class EvalCaseIdTests(unittest.TestCase):
+    def evals(self):
+        return {
+            "evals_version": eval_schema.EVALS_VERSION,
+            "target_skill": "probe",
+            "generated_at": "2026-10-11T00:00:00Z",
+            "value_tasks": [{
+                "id": "value-case",
+                "prompt": "Do the task",
+                "expectations": ["Produces output"],
+            }],
+            "trigger_prompts": [{
+                "id": "trigger-case",
+                "prompt_text": "Use the skill",
+                "intent": "should_trigger",
+            }],
+        }
+
+    def test_evals_require_unique_path_safe_ids(self):
+        for bad_id in ("", "../escape", "has space", "under_score", "UPPER", "a/b", "."):
+            evals = self.evals()
+            evals["value_tasks"][0]["id"] = bad_id
+            ok, errors = eval_schema.validate_evals(evals)
+            self.assertFalse(ok, (bad_id, errors))
+            self.assertTrue(any("value_tasks[0].id" in error for error in errors), errors)
+
+        evals = self.evals()
+        evals["trigger_prompts"].append(dict(evals["trigger_prompts"][0]))
+        ok, errors = eval_schema.validate_evals(evals)
+        self.assertFalse(ok)
+        self.assertTrue(any("duplicate id 'trigger-case'" in error for error in errors), errors)
+
+        evals = self.evals()
+        evals["value_tasks"].append(dict(evals["value_tasks"][0]))
+        ok, errors = eval_schema.validate_evals(evals)
+        self.assertFalse(ok)
+        self.assertTrue(any("duplicate id 'value-case'" in error for error in errors), errors)
+
+    def test_trigger_paths_must_remain_under_runs_root(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp) / "trigger-runs"
+            root.mkdir()
+            inside = assemble_triggering._under(str(root), "safe-case-1")
+            self.assertEqual(Path(inside).parent, root)
+            with self.assertRaisesRegex(ValueError, "escapes runs root"):
+                assemble_triggering._under(str(root), "..", "outside")
+
+
+class BlindJudgeInputTests(unittest.TestCase):
+    def test_stages_content_at_a_neutral_one_file_path_and_cleans_it(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            source = root / "runs" / "task-with-skill-1" / "output.md"
+            neutral_root = root / "neutral"
+            write(source, "candidate response\n")
+
+            candidate = Path(prepare_blind_judge_input.stage(
+                str(source), str(neutral_root)))
+            relative = candidate.relative_to(neutral_root).as_posix()
+
+            self.assertEqual(candidate.name, "candidate-output.md")
+            self.assertNotIn("with", relative)
+            self.assertNotIn("without", relative)
+            self.assertEqual(candidate.read_text(encoding="utf-8"), "candidate response\n")
+            self.assertEqual(
+                {path.name for path in candidate.parent.iterdir()},
+                {"candidate-output.md", ".skill-eval-blind-input"},
+            )
+
+            prepare_blind_judge_input.cleanup(str(candidate))
+            self.assertFalse(candidate.parent.exists())
+
+    def test_cleanup_refuses_unrecognized_directories(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            candidate = Path(tmp) / "candidate-output.md"
+            write(candidate, "do not delete parent\n")
+            with self.assertRaisesRegex(ValueError, "refusing to remove"):
+                prepare_blind_judge_input.cleanup(str(candidate))
+            self.assertTrue(candidate.exists())
 
 
 class StagingTests(unittest.TestCase):
@@ -291,6 +585,55 @@ class ArmTests(unittest.TestCase):
                     ])
                 executor.assert_not_called()
             self.assertEqual(list(env_root.iterdir()), [])
+
+    def test_cleanup_removes_isolated_env_when_execution_raises(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            env_root = Path(tmp) / "scratch"
+            env_root.mkdir()
+            with mock.patch.object(
+                    run_isolated_arm, "run_arm", side_effect=RuntimeError("executor failed")):
+                with self.assertRaisesRegex(RuntimeError, "executor failed"):
+                    run_isolated_arm.main([
+                        "--arm", "without", "--task", "review",
+                        "--out", str(Path(tmp) / "output.md"),
+                        "--env-root", str(env_root), "--cleanup",
+                    ])
+            self.assertEqual(list(env_root.iterdir()), [])
+
+    def test_cleanup_removes_registered_worktree_when_execution_raises(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            repo = Path(tmp) / "repo"
+            repo.mkdir()
+            subprocess.run(["git", "init", "-q", str(repo)], check=True)
+            subprocess.run(["git", "-C", str(repo), "config", "user.name", "Test"], check=True)
+            subprocess.run(
+                ["git", "-C", str(repo), "config", "user.email", "test@example.invalid"],
+                check=True,
+            )
+            write(repo / "README.md", "base\n")
+            subprocess.run(["git", "-C", str(repo), "add", "README.md"], check=True)
+            subprocess.run(["git", "-C", str(repo), "commit", "-qm", "base"], check=True)
+            skill = Path(tmp) / "resources" / "skills" / "reviewer"
+            skill.mkdir(parents=True)
+            env_root = Path(tmp) / "scratch"
+            env_root.mkdir()
+
+            with mock.patch.object(
+                    run_isolated_arm, "run_arm", side_effect=RuntimeError("executor failed")):
+                with self.assertRaisesRegex(RuntimeError, "executor failed"):
+                    run_isolated_arm.main([
+                        "--arm", "without", "--mode", "in-context",
+                        "--skill-dir", str(skill), "--repo", str(repo),
+                        "--task", "review", "--out", str(Path(tmp) / "output.md"),
+                        "--env-root", str(env_root), "--cleanup",
+                    ])
+
+            self.assertEqual(list(env_root.iterdir()), [])
+            worktrees = subprocess.run(
+                ["git", "-C", str(repo), "worktree", "list", "--porcelain"],
+                capture_output=True, encoding="utf-8", check=True,
+            ).stdout
+            self.assertNotIn(str(env_root), worktrees)
 
     def test_invocable_agent_passes_preflight(self):
         with tempfile.TemporaryDirectory() as tmp:

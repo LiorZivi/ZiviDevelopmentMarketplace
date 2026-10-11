@@ -113,13 +113,31 @@ lacks), spot-check the baseline `output.md` for stray reads.
 
 ## Grading (blind)
 
-For **every** output (all `2 × value_repeats` of them), spawn `evals-ai:skill-eval-judge` with the output (or
-its path), the task `prompt`, and the task's `expectations[]`. If `metadata.judge_guidance.general`
-or `.value` is non-empty, pass it under an **"Author guidance"** heading — it clarifies what a good
-answer means for this task, but the judge still grades each expectation honestly. **Do not tell the
-judge which configuration produced the output.** It returns per-expectation pass/fail + evidence and a
-`pass_rate` (0–1). Because each output is scored independently and blind, there is no pairing and
-therefore no position bias to correct; blindness handles any pro-skill bias.
+For **every** output (all `2 × value_repeats` of them), first make a content-only neutral copy:
+
+```
+python "<eval-tool-dir>/scripts/prepare_blind_judge_input.py" stage <source-output.md>
+```
+
+The command prints a randomized path ending in `candidate-output.md`. Its directory contains only
+that candidate and an internal marker; neither the path nor neighboring files reveal `with`,
+`without`, baseline, treatment, task ordering, or the other runs. Spawn `evals-ai:skill-eval-judge`
+with only that neutral path (or paste the candidate contents directly), the task `prompt`, and the
+task's `expectations[]`. **Never pass `output_ref`, `transcript_ref`, the original run path, or its
+parent directory to the judge.** If `metadata.judge_guidance.general` or `.value` is non-empty, pass
+it under an **"Author guidance"** heading — it clarifies what a good answer means for this task, but
+the judge still grades each expectation honestly. Do not tell the judge which configuration produced
+the output.
+
+After persisting the grade, remove the neutral copy even if judging failed:
+
+```
+python "<eval-tool-dir>/scripts/prepare_blind_judge_input.py" cleanup <neutral-candidate-path>
+```
+
+The judge returns per-expectation pass/fail + evidence and a `pass_rate` (0–1). Because each output
+is scored independently and blind, there is no pairing and therefore no position bias to correct;
+blindness handles any pro-skill bias.
 
 ## Aggregate (orchestrator)
 

@@ -46,6 +46,8 @@ _SEVERITIES = ("high", "medium", "low")
 _STANCES = ("agree", "disagree", "edit", "annotate")
 _OVERRIDE_ACTIONS = ("keep", "dismiss", "reseverity")
 _BASELINE_MODES = ("isolated", "in-context")
+_CASE_ID_RE = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
+_CASE_ID_MAX_LENGTH = 64
 
 
 # ---------------------------------------------------------------------------
@@ -86,6 +88,23 @@ def _in_range(val, lo, hi, path, errors):
             _err(errors, path, "value {} out of range [{}, {}]".format(val, lo, hi))
     elif val is not None:
         _err(errors, path, "expected a number")
+
+
+def _case_id(obj, path, errors, seen):
+    value = _need(obj, "id", path, errors)
+    if not isinstance(value, str) or not value:
+        if value is not None:
+            _err(errors, path + ".id", "expected a non-empty path-safe slug")
+        return value
+    if len(value) > _CASE_ID_MAX_LENGTH or not _CASE_ID_RE.fullmatch(value):
+        _err(errors, path + ".id",
+             "expected 1-{} lowercase letters/digits separated by single hyphens".format(
+                 _CASE_ID_MAX_LENGTH))
+    if value in seen:
+        _err(errors, path + ".id", "duplicate id '{}'".format(value))
+    else:
+        seen.add(value)
+    return value
 
 
 # ---------------------------------------------------------------------------
@@ -155,19 +174,48 @@ def _validate_static(sq, path, errors):
     if sq is None:
         _err(errors, path, "missing")
         return
-    _need(sq, "dimension_set_version", path, errors)
-    _need(sq, "scale", path, errors)
-    _need(sq, "average_score", path, errors)
+    dimension_version = _need(sq, "dimension_set_version", path, errors)
+    if dimension_version is not None and dimension_version != DIMENSION_SET_VERSION:
+        _err(errors, path + ".dimension_set_version",
+             "expected '{}', got '{}'".format(DIMENSION_SET_VERSION, dimension_version))
+    scale = _need(sq, "scale", path, errors)
+    if scale is not None and scale != "1-5":
+        _err(errors, path + ".scale", "expected '1-5', got '{}'".format(scale))
+    average = _need(sq, "average_score", path, errors)
+    if isinstance(average, bool) or not isinstance(average, (int, float)):
+        if average is not None:
+            _err(errors, path + ".average_score", "expected a number")
+        average = None
+    else:
+        _in_range(average, 1, 5, path + ".average_score", errors)
     dims = _need(sq, "dimensions", path, errors, list)
     if isinstance(dims, list):
+        names = []
+        numeric_scores = []
         for i, d in enumerate(dims):
             dp = "{}.dimensions[{}]".format(path, i)
-            _need(d, "name", dp, errors)
+            names.append(_need(d, "name", dp, errors))
             score = _need(d, "score", dp, errors)
             if score != NA_SCORE:
-                _in_range(score, 1, 5, dp + ".score", errors)
+                if isinstance(score, bool):
+                    _err(errors, dp + ".score", "expected a number or '{}'".format(NA_SCORE))
+                else:
+                    _in_range(score, 1, 5, dp + ".score", errors)
+                    if isinstance(score, (int, float)):
+                        numeric_scores.append(score)
             _need(d, "rationale", dp, errors)
             _need(d, "evidence", dp, errors)
+        if names != STATIC_DIMENSIONS:
+            _err(errors, path + ".dimensions",
+                 "expected exactly the fixed dimensions in order: {}".format(STATIC_DIMENSIONS))
+        if not numeric_scores:
+            _err(errors, path + ".dimensions", "at least one dimension must have a numeric score")
+        elif average is not None:
+            expected_average = round(sum(numeric_scores) / len(numeric_scores), 1)
+            if abs(average - expected_average) > 1e-9:
+                _err(errors, path + ".average_score",
+                     "expected {} from numeric dimension scores, got {}".format(
+                         expected_average, average))
     ti = _need(sq, "top_improvements", path, errors, list)
     if isinstance(ti, list):
         for i, t in enumerate(ti):
@@ -186,9 +234,10 @@ def _validate_triggering(tr, path, errors):
         _err(errors, path + ".trigger_repeats", "must be at least 1")
     prompts = _need(tr, "prompts", path, errors, list)
     if isinstance(prompts, list):
+        prompt_ids = set()
         for i, p in enumerate(prompts):
             pp = "{}.prompts[{}]".format(path, i)
-            _need(p, "id", pp, errors)
+            _case_id(p, pp, errors, prompt_ids)
             _need(p, "prompt_text", pp, errors)
             _enum(_need(p, "expected_result", pp, errors),
                   _TRIGGER_INTENTS, pp + ".expected_result", errors)
@@ -226,9 +275,10 @@ def _validate_value(vc, path, errors):
     _need(vc, "value_repeats", path, errors)
     tasks = _need(vc, "tasks", path, errors, list)
     if isinstance(tasks, list):
+        task_ids = set()
         for i, t in enumerate(tasks):
             tp = "{}.tasks[{}]".format(path, i)
-            _need(t, "id", tp, errors)
+            _case_id(t, tp, errors, task_ids)
             _need(t, "prompt", tp, errors)
             _need(t, "expectations", tp, errors, list)
             runs = _need(t, "runs", tp, errors, list)
@@ -317,9 +367,10 @@ def validate_evals(obj):
     if isinstance(vts, list):
         if len(vts) == 0:
             _err(errors, "value_tasks", "must contain at least one task")
+        task_ids = set()
         for i, t in enumerate(vts):
             tp = "value_tasks[{}]".format(i)
-            _need(t, "id", tp, errors)
+            _case_id(t, tp, errors, task_ids)
             _need(t, "prompt", tp, errors)
             exp = _need(t, "expectations", tp, errors, list)
             if isinstance(exp, list) and len(exp) == 0:
@@ -328,9 +379,10 @@ def validate_evals(obj):
     if isinstance(tps, list):
         if len(tps) == 0:
             _err(errors, "trigger_prompts", "must contain at least one prompt")
+        prompt_ids = set()
         for i, p in enumerate(tps):
             pp = "trigger_prompts[{}]".format(i)
-            _need(p, "id", pp, errors)
+            _case_id(p, pp, errors, prompt_ids)
             _need(p, "prompt_text", pp, errors)
             _enum(_need(p, "intent", pp, errors), _TRIGGER_INTENTS, pp + ".intent", errors)
     return (len(errors) == 0), errors
@@ -420,7 +472,11 @@ def validate_override(obj):
             action = _need(f, "action", fp, errors)
             _enum(action, _OVERRIDE_ACTIONS, fp + ".action", errors)
             if action == "reseverity":
-                _enum(f.get("severity"), _SEVERITIES, fp + ".severity", errors)
+                severity = _need(f, "severity", fp, errors)
+                _enum(severity, _SEVERITIES, fp + ".severity", errors)
+            elif "severity" in (f or {}):
+                _err(errors, fp + ".severity",
+                     "only allowed when action is 'reseverity'")
     return (len(errors) == 0), errors
 
 
@@ -489,11 +545,14 @@ def _scalar_field(block, key):
 # ---------------------------------------------------------------------------
 def structural_signature(obj):
     """
-    A content-independent key skeleton. Two conformant results for ANY two skills
-    must yield the same signature, proving identical structure. Values are ignored;
-    dict keys are sorted; a list is represented by the merged skeleton of its
-    elements (so element count never affects the signature).
+    A content-independent key skeleton for a valid result. Two conformant results
+    for ANY two skills yield the same signature. Values are ignored, dict keys are
+    sorted, and every validated list collapses to one schema marker, so empty versus
+    populated lists and optional element fields never change the signature.
     """
+    ok, errors = validate_result(obj)
+    if not ok:
+        raise ValueError("invalid result: {}".format("; ".join(errors)))
     return _sig(obj)
 
 
@@ -501,14 +560,9 @@ def _sig(obj):
     if isinstance(obj, dict):
         return "{" + ",".join("{}:{}".format(k, _sig(obj[k])) for k in sorted(obj.keys())) + "}"
     if isinstance(obj, list):
-        merged = {}
-        order = []
-        for el in obj:
-            s = _sig(el)
-            if s not in merged:
-                merged[s] = True
-                order.append(s)
-        return "[" + "|".join(order) + "]"
+        # validate_result already checks the schema-defined element shape. The
+        # signature tracks the list field itself, not its runtime population.
+        return "[*]"
     # all scalars collapse to a single placeholder so values never matter
     return "*"
 
@@ -540,10 +594,15 @@ def _main(argv):
         ok, errors = validate_frontmatter(raw)
     elif kind == "signature":
         try:
-            print(structural_signature(json.loads(raw)))
-            return 0
+            obj = json.loads(raw)
         except ValueError as exc:
             sys.stderr.write("invalid JSON: {}\n".format(exc))
+            return 1
+        try:
+            print(structural_signature(obj))
+            return 0
+        except ValueError as exc:
+            sys.stderr.write("{}\n".format(exc))
             return 1
     elif kind in _VALIDATORS:
         try:

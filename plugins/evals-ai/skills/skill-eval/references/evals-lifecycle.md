@@ -22,7 +22,9 @@ Read the target `SKILL.md` to understand what the skill is for, then write reali
 Each task is a realistic, substantive request a real user of this skill's domain would make — the
 kind of multi-step task where a good skill should actually help. For each task write:
 
-- `id` — short stable slug (e.g. `"rotate-pdf"`).
+- `id` — unique within its list and a 1–64 character lowercase kebab-case slug
+  (`[a-z0-9]+(-[a-z0-9]+)*`, e.g. `"rotate-pdf"`). IDs become directory names, so no spaces,
+  separators, dots, underscores, duplicates, or traversal segments are allowed.
 - `prompt` — the user request, concrete and self-contained (include any small inputs inline).
 - `expectations[]` — 3–6 **objectively checkable** statements the output must satisfy (these are
   what the blind judge grades against). Good expectations test *outcomes*, not style:
@@ -38,7 +40,9 @@ where the comparison has signal. Avoid trivial one-step prompts.
 Half `should_trigger`, half `should_not_trigger`. Make them realistic — what a user would actually
 type, with concrete detail (file names, context, casual phrasing). For `should_not_trigger`, the
 valuable ones are **near-misses**: prompts that share vocabulary with the skill but actually need
-something else. Avoid obviously-irrelevant negatives — they test nothing. Each prompt: `id`, `prompt_text`, `intent` (`should_trigger` | `should_not_trigger`).
+something else. Avoid obviously-irrelevant negatives — they test nothing. Each prompt: a unique
+path-safe `id` using the same slug rule, `prompt_text`, and `intent`
+(`should_trigger` | `should_not_trigger`).
 The intent is the skill author's Expected Result. The user reviews it before execution and may
 override it by flipping the value; the Actual Result comes from three isolated Copilot runs.
 
