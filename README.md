@@ -16,6 +16,7 @@ Copilot plugin marketplace for ZiviDevelopment team. A curated collection of ski
 | [evals-ai](plugins/evals-ai/) | Local | Repeatable skill evaluation with static scoring, real trigger checks, isolated with/without comparisons, and local HTML reports |
 | [remote-plugin-blader](plugins/remote-plugin-blader/) | Local | humanizer — removes signs of AI-generated writing (from blader/humanizer) |
 | [remote-plugin-199-biotechnologies](plugins/remote-plugin-199-biotechnologies/) | Local | deep-research — multi-source research with citations (from 199-biotechnologies) |
+| [ads-commercials](plugins/ads-commercials/) | Local | Paid ads and commercials — ads, ad creative, attribution, analytics, CRO, signup, paywalls, pricing, video, and product-marketing (vendored from coreyhaines31/marketingskills) |
 | [code-simplifier](https://github.com/anthropics/claude-plugins-official/tree/main/plugins/code-simplifier) | Referenced → Anthropic | Simplifies and refines code for clarity, consistency, and maintainability |
 | [frontend-design](https://github.com/anthropics/claude-plugins-official/tree/main/plugins/frontend-design) | Referenced → Anthropic | Production-grade frontend interfaces with high design quality |
 | [skill-creator](https://github.com/anthropics/claude-plugins-official/tree/main/plugins/skill-creator) | Referenced → Anthropic | Create, improve, and measure the performance of skills |
