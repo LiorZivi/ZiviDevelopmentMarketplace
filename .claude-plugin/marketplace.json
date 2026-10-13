@@ -69,6 +69,14 @@
       "tags": ["skills", "evaluation", "benchmarking", "quality", "triggering", "copilot-cli"]
     },
     {
+      "name": "ads-commercials",
+      "source": "./plugins/ads-commercials",
+      "description": "Vendored subset of coreyhaines31/marketingskills for paid ads and commercials: ads, ad-creative, attribution, analytics, cro, signup, paywalls, pricing, video, and product-marketing.",
+      "version": "1.0.0",
+      "author": { "name": "lizi@microsoft.com" },
+      "tags": ["ads", "paid-ads", "meta-ads", "ad-creative", "attribution", "analytics", "cro", "pricing", "video", "marketing"]
+    },
+    {
       "name": "code-simplifier",
       "source": {
         "source": "github",

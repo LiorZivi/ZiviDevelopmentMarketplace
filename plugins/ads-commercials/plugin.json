@@ -1,0 +1,8 @@
+{
+  "name": "ads-commercials",
+  "version": "1.0.0",
+  "description": "Vendored subset of coreyhaines31/marketingskills for paid ads and commercials: ads, ad-creative, attribution, analytics, cro, signup, paywalls, pricing, video, and product-marketing.",
+  "author": {
+    "name": "lizi@microsoft.com"
+  }
+}
