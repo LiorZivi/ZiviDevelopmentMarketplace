@@ -1,5 +1,9 @@
 {
   "mcpServers": {
+    "excalidraw": {
+      "type": "http",
+      "url": "https://mcp.excalidraw.com/mcp"
+    },
     "playwright": {
       "command": "npx",
       "args": ["@playwright/mcp@latest", "--allow-unrestricted-file-access"]
@@ -12,9 +16,59 @@
       "command": "npx",
       "args": ["-y", "@azure/mcp@latest", "server", "start"]
     },
-    "excalidraw": {
+    "mongodb": {
+      "command": "npx",
+      "args": ["-y", "mongodb-mcp-server@latest", "--readOnly"],
+      "env": {
+        "MDB_MCP_CONNECTION_STRING": "${MDB_MCP_CONNECTION_STRING}"
+      }
+    },
+    "meta-ads": {
       "type": "http",
-      "url": "https://mcp.excalidraw.com/mcp"
+      "url": "https://mcp.facebook.com/ads",
+      "headers": {
+        "Authorization": "Bearer ${META_ADS_ACCESS_TOKEN}"
+      },
+      "timeout": 60000,
+      "tools": [
+        "ads_get_ad_accounts",
+        "ads_get_ad_account_pages",
+        "ads_get_pages_for_business",
+        "ads_get_user_pages",
+        "ads_get_field_context",
+        "ads_get_ad_entities",
+        "ads_get_opportunity_score",
+        "ads_insights_advertiser_context",
+        "ads_insights_anomaly_signal",
+        "ads_insights_auction_ranking_benchmarks",
+        "ads_insights_industry_benchmark",
+        "ads_insights_performance_trend",
+        "ads_get_creatives",
+        "ads_get_creative_ads",
+        "ads_get_ad_images",
+        "ads_get_ad_videos",
+        "ads_get_ad_preview",
+        "ads_library_search",
+        "ads_get_ig_accounts",
+        "ads_get_ig_media",
+        "ads_get_ad_account_custom_audiences",
+        "ads_get_custom_audience",
+        "ads_get_custom_audience_adsets",
+        "ads_get_datasets",
+        "ads_get_dataset_details",
+        "ads_get_dataset_stats",
+        "ads_get_dataset_quality",
+        "ads_pixel_event_read",
+        "ads_pixel_parameter_read",
+        "ads_get_customconversions",
+        "ads_get_errors",
+        "ads_get_help_article",
+        "ads_account_get_activity_logs",
+        "ads_experiment_list_tests",
+        "ads_experiment_check_eligibility",
+        "ads_experiment_abtest_get_test",
+        "ads_experiment_lift_get_test"
+      ]
     }
   }
 }

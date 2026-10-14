@@ -32,9 +32,9 @@
     {
       "name": "general-mcp",
       "source": "./plugins/general-mcp",
-      "description": "Bundles user-wide MCP servers for Playwright, Azure DevOps/ADO, Azure (azmcp), and Excalidraw. Local servers launch via npx; ADO reuses your Azure CLI sign-in, while Excalidraw uses remote HTTP.",
-      "version": "1.2.0",
-      "tags": ["mcp", "playwright", "azure", "azure-devops", "ado", "excalidraw", "diagramming", "browser-automation", "copilot-cli", "tools"]
+      "description": "Bundles user-wide MCP servers for Excalidraw, Playwright, Azure DevOps/ADO, Azure (azmcp), MongoDB (read-only), and Meta Ads (read-only tools). Local servers launch via npx; ADO and Azure reuse your Azure CLI sign-in, MongoDB and Meta Ads read credentials from environment variables, and Excalidraw and Meta Ads use remote HTTP.",
+      "version": "1.3.0",
+      "tags": ["mcp", "playwright", "azure", "azure-devops", "ado", "excalidraw", "diagramming", "browser-automation", "copilot-cli", "tools", "mongodb", "meta-ads", "advertising"]
     },
     {
       "name": "remote-plugin-blader",
