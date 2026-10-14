@@ -69,6 +69,13 @@
         "ads_experiment_abtest_get_test",
         "ads_experiment_lift_get_test"
       ]
+    },
+    "clarity": {
+      "command": "npx",
+      "args": ["-y", "@microsoft/clarity-mcp-server@latest"],
+      "env": {
+        "CLARITY_API_TOKEN": "${CLARITY_API_TOKEN}"
+      }
     }
   }
 }

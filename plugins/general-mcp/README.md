@@ -12,6 +12,7 @@ Bundles ready-to-use **MCP servers** as a marketplace plugin. Installing the plu
 | `azure` | `npx -y @azure/mcp@latest server start` | `azmcp`: query and manage Azure resources (storage, Key Vault, Cosmos DB, Monitor, and more). | Azure CLI (`az login`) / `DefaultAzureCredential`. |
 | `mongodb` | `npx -y mongodb-mcp-server@latest --readOnly` | Read-only MongoDB: list databases and collections, find, aggregate, count, schema, indexes. | `MDB_MCP_CONNECTION_STRING` user environment variable. |
 | `meta-ads` | `https://mcp.facebook.com/ads` (HTTP) | Meta's official Ads MCP, limited to **37 read-only tools**: ad accounts, campaigns, creatives, insights, benchmarks, anomalies, delivery errors, activity logs, datasets/Pixel quality, A/B test reads. | `META_ADS_ACCESS_TOKEN` user environment variable, sent as a Bearer header. |
+| `clarity` | `npx -y @microsoft/clarity-mcp-server@latest` | Microsoft's official Clarity MCP, with **3 read-only tools**: query dashboard analytics, list session recordings, and search Clarity documentation. | `CLARITY_API_TOKEN` user environment variable (a Clarity **Data Export** API token). |
 
 This is a pure MCP-only plugin — it ships no skills or agents, just the server definitions.
 
@@ -29,7 +30,8 @@ A local `mcp-config.json` only lives on your machine. Publishing the same server
 - **Azure CLI** signed in for the `ado` and `azure` servers: `az login`.
 - **MongoDB** (optional): set the user environment variable `MDB_MCP_CONNECTION_STRING` to your connection string. Never commit it.
 - **Meta Ads** (optional): create a Meta app with the **Create & manage ads with ads MCP server** use case, generate an access token (Meta's OAuth dynamic registration rejects Copilot CLI), and store it in the user environment variable `META_ADS_ACCESS_TOKEN`. For read-only use, grant only `ads_mcp_management`, `ads_read`, `pages_show_list`, `instagram_basic`, and `pages_read_engagement`. Never commit the token.
-- Restart the terminal and the CLI after setting either variable; values are read at startup. Without them, `mongodb` cannot connect and `meta-ads` fails with 401.
+- **Microsoft Clarity** (optional): as a Clarity project admin, open **Settings → Data Export → Generate new API token**, then store the token in the user environment variable `CLARITY_API_TOKEN`. Each token reads only the project that generated it. Never commit the token.
+- Restart the terminal and the CLI after setting any of these variables; values are read at startup. Without them, `mongodb` cannot connect, `meta-ads` fails with 401, and `clarity` tools return a missing-token message.
 - Network access on first run (npx package downloads + Playwright browsers).
 
 ## Install
@@ -39,7 +41,7 @@ A local `mcp-config.json` only lives on your machine. Publishing the same server
 /plugin install general-mcp@zivi-development-marketplace
 ```
 
-Then run `/mcp` to confirm `excalidraw`, `playwright`, `ado`, `azure`, `mongodb`, and `meta-ads` are listed with source `plugin`.
+Then run `/mcp` to confirm `excalidraw`, `playwright`, `ado`, `azure`, `mongodb`, `meta-ads`, and `clarity` are listed with source `plugin`.
 
 ## Configuration format
 
@@ -52,7 +54,8 @@ This keeps a single `.mcp.json` portable across both hosts. Excalidraw uses the
 remote form `{ "type": "http", "url": "https://mcp.excalidraw.com/mcp" }`.
 Secrets stay out of the file: `mongodb` passes `${MDB_MCP_CONNECTION_STRING}` through
 `env`, and `meta-ads` sends `Bearer ${META_ADS_ACCESS_TOKEN}` through `headers`. Both
-are expanded from your environment when the CLI starts.
+are expanded from your environment when the CLI starts. `clarity` passes
+`${CLARITY_API_TOKEN}` through `env` the same way.
 
 ## Customization
 
