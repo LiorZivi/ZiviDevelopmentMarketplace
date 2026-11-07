@@ -215,10 +215,10 @@ Run the **`humanizer`** skill (from the `remote-plugin-blader` plugin) on `{DocN
 
 ## Step 7: Use the fixed author identity and report the publish workflow
 
-The article author is always **Lior Zivi, AI Engineer**. Do not replace this identity or ask for an author name or role. Fill `{Newsletter name}` from what you know; if unknown, leave that placeholder and ask once. Optionally open the HTML in the user's browser for them (e.g. `Start-Process msedge "file:///<abs-path>/{DocName}-LinkedIn-Article.html"`). Then report this exact flow:
+The article author is always **Lior Zivi, AI Engineer**. Do not replace this identity or ask for an author name or role. The newsletter name is **AI - Explained**. Fill `{Newsletter name}` with this exact name and do not ask for it again. Optionally open the HTML in the user's browser for them (e.g. `Start-Process msedge "file:///<abs-path>/{DocName}-LinkedIn-Article.html"`). Then report this exact flow:
 
 **Article**
-1. LinkedIn → Home → **Write article** → select your newsletter.
+1. LinkedIn → Home → **Write article** → select **AI - Explained**.
 2. **Cover:** upload `images/cover.png` (1920 × 1080).
 3. **Title:** copy the article title from the `<title>…</title>` tag in the `<head>` of `{DocName}-LinkedIn-Article.html`, and paste it into LinkedIn's Title field.
 4. **Body:** open `{DocName}-LinkedIn-Article.html` **in a browser** — paste its `file:///…` path into the address bar (do NOT open it in a code editor). **Ctrl+A → Ctrl+C** on the rendered page, click the article body, **Ctrl+V**. Headings, subheadings, bold, italic, lists, quotes, code blocks, and links all carry over.
