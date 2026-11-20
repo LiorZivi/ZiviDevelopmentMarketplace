@@ -40,6 +40,7 @@ sys.path.insert(0, str(HERE.parent / "lib"))
 sys.path.insert(0, str(HERE))
 
 from state import (  # noqa: E402
+    get_state_dir,
     load_state,
     resolve_session_id,
     save_state,
@@ -50,6 +51,7 @@ set_subsystem("telegram-remote")
 
 from telegram_transport import (  # noqa: E402
     TelegramError,
+    download_file,
     get_updates,
     load_credentials,
     parse_message,
@@ -61,6 +63,14 @@ _TERM_RE = re.compile(
 )
 _SEND_SCRIPT = str(HERE / "send.py")
 _END_SCRIPT = str(HERE / "end.py")
+_ATTACHMENTS_DIRNAME = "attachments"
+_ATTACHMENT_HINT = (
+    "Some replies carry `attachments`: local copies of files the user sent "
+    "(photos, screenshots, documents). Open every image attachment with the "
+    "view tool before acting on its reply; the reply's `text` is the file's "
+    "caption, and a photo without a caption belongs with the user's text "
+    "message next to it."
+)
 
 
 def _now() -> dt.datetime:
@@ -152,7 +162,7 @@ def _long_poll(state: dict, token: str) -> Optional[list]:
 
 
 def _collect(state: dict, updates: list) -> list:
-    """Advance the offset past the whole batch, return in-chat text messages."""
+    """Advance the offset past the whole batch, return in-chat messages (text and files)."""
     ids = [u.get("update_id") for u in updates if isinstance(u.get("update_id"), int)]
     if ids:
         state["last_update_id"] = max(max(ids), int(state.get("last_update_id", 0)))
@@ -160,10 +170,32 @@ def _collect(state: dict, updates: list) -> list:
     msgs = []
     for up in updates:
         norm = parse_message(up)
-        if norm and norm["text"] and norm["chat_id"] == chat_id:
+        if norm and (norm["text"] or norm["attachments"]) and norm["chat_id"] == chat_id:
             msgs.append(norm)
     msgs.sort(key=lambda m: m["timestamp"] or "")
     return msgs
+
+
+def _download_attachments(session_id: str, token: str, msgs: list) -> None:
+    """Save every file the user sent under the session state folder and replace its Telegram file id with the
+    local ``path``. A file that cannot be downloaded keeps an ``error`` instead, so the user's message is still
+    injected and the agent can ask them to send it again."""
+    dest_dir = get_state_dir(session_id) / _ATTACHMENTS_DIRNAME
+    for m in msgs:
+        for index, attachment in enumerate(m.get("attachments") or []):
+            file_id = attachment.pop("file_id", None)
+            if not file_id:
+                attachment["error"] = "no file id"
+                continue
+            try:
+                path = download_file(token, file_id, dest_dir, f"message-{m['id']}-{index}")
+                attachment["path"] = str(path)
+            except TelegramError as exc:
+                attachment["error"] = str(exc)
+
+
+def _has_attachments(msgs: list) -> bool:
+    return any(m.get("attachments") for m in msgs)
 
 
 def _handle_idle(session_id: str, state: dict, msgs: list) -> int:
@@ -194,19 +226,22 @@ def _handle_idle(session_id: str, state: dict, msgs: list) -> int:
     state["last_idle_heartbeat_time"] = _now_iso()
     state["message_count"] = int(state.get("message_count", 0)) + len(events)
     save_state(session_id, state)
+    ack_hint = (
+        "Post a short acknowledgement IN PARALLEL with starting the work "
+        "(one sentence, paraphrase what you understood), then do the task:\n"
+        f'  python "{_SEND_SCRIPT}" --text "<ack>" --session-id {session_id}\n'
+        "Post concise progress updates at meaningful execution stages. "
+        "After successful completion, send the fixed completion marker:\n"
+        f'  python "{_SEND_SCRIPT}" --completed --text "<outcome>" '
+        f"--session-id {session_id}\n"
+        "Then tick the idle poll again."
+    )
+    if _has_attachments(events):
+        ack_hint += "\n" + _ATTACHMENT_HINT
     _emit({
         "action": "inject",
         "replies": events,
-        "ack_hint": (
-            "Post a short acknowledgement IN PARALLEL with starting the work "
-            "(one sentence, paraphrase what you understood), then do the task:\n"
-            f'  python "{_SEND_SCRIPT}" --text "<ack>" --session-id {session_id}\n'
-            "Post concise progress updates at meaningful execution stages. "
-            "After successful completion, send the fixed completion marker:\n"
-            f'  python "{_SEND_SCRIPT}" --completed --text "<outcome>" '
-            f"--session-id {session_id}\n"
-            "Then tick the idle poll again."
-        ),
+        "ack_hint": ack_hint,
         "send_script": _SEND_SCRIPT,
         "next_step": "tick",
     })
@@ -250,12 +285,16 @@ def _handle_input(session_id: str, state: dict, msgs: list) -> int:
     answer = msgs[0]
     state["message_count"] = int(state.get("message_count", 0)) + 1
     save_state(session_id, state)
-    _emit({
+    answer_envelope = {
         "action": "answer",
         "text": answer["text"],
         "sender": answer["sender"],
         "reply_id": answer["id"],
-    })
+        "attachments": answer.get("attachments") or [],
+    }
+    if answer_envelope["attachments"]:
+        answer_envelope["attachment_hint"] = _ATTACHMENT_HINT
+    _emit(answer_envelope)
     return 0
 
 
@@ -276,6 +315,7 @@ def cmd_tick(args: argparse.Namespace) -> int:
         return 1  # error already emitted (conflict)
 
     msgs = _collect(state, updates)
+    _download_attachments(session_id, token, msgs)
     if args.mode == "input":
         return _handle_input(session_id, state, msgs)
     return _handle_idle(session_id, state, msgs)

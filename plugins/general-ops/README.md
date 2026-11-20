@@ -125,7 +125,7 @@ telegram-remote          # activate: posts a root message, enters away_mode, lon
 telegram-remote end      # end: posts a summary, deletes state
 ```
 
-From your phone, just message the bot: each message is injected as a new prompt. Reply `end` / `/end` / `/telegram-remote end` to stop.
+From your phone, just message the bot: each message is injected as a new prompt. Photos, screenshots, and files you send are downloaded into the session and injected with their caption, so the agent can look at them. Reply `end` / `/end` / `/telegram-remote end` to stop.
 
 ### How it works (brief)
 
