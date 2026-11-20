@@ -67,8 +67,8 @@ before ending your turn. Only `ended` is terminal.
 | `ready` (ask) | Question posted. Switch to input poll (`poll.py --mode input`). |
 | `need_input` / `error` | Relay to the user and stop. |
 | `already_active` | A session is already running for this CLI session. |
-| `inject` | Each item in `replies` is a new user prompt. Post an ack, do the work, tick again. |
-| `answer` | The user's answer to your pending question. Continue the task. |
+| `inject` | Each item in `replies` is a new user prompt. Post an ack, do the work, tick again. A reply may carry `attachments` (see Rule 1). |
+| `answer` | The user's answer to your pending question, with any `attachments`. Continue the task. |
 | `continue` | Nothing new in the poll window. Tick again. |
 | `terminate` | User replied `end`. Run the [End Flow](#end-flow) (reason `remote-triggered`). |
 | `timeout` | The question window elapsed. Decide how to proceed without the answer. |
@@ -105,6 +105,13 @@ a long idle window instead of hundreds. Branch on the returned action:
   **in parallel** with starting the first real-work tool call (see Rule 2), post
   stage updates while working (Rule 4), and send the fixed completion message
   before returning to idle polling (Rule 5).
+  Photos, screenshots, and other files the user sends are downloaded into the
+  session state folder: such a reply lists them in `replies[i].attachments`
+  (`kind`, `mime_type`, `file_name`, and the local `path`, or an `error` when
+  the download failed). Open every image `path` with the view tool before
+  acting on the reply; `text` is the file's caption, and a photo sent without
+  a caption belongs with the user's text message next to it. Ask the user to
+  resend a file that has an `error`.
 - `terminate` — run the `end_hint` command → [End Flow](#end-flow).
 - `continue` — loop (tick again).
 

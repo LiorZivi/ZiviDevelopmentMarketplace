@@ -56,13 +56,18 @@ class TelegramRemoteFlowTest(unittest.TestCase):
                 return self.update_queue.pop(0) if self.update_queue else []
             if method == "deleteWebhook":
                 return True
+            if method == "getFile":
+                return {"file_id": params["file_id"], "file_size": 8, "file_path": "photos/file_9.jpg"}
             raise AssertionError("unexpected method " + method)
 
         self._orig_api = tt._api_call
         tt._api_call = fake_api
+        self._orig_download_bytes = tt._download_bytes
+        tt._download_bytes = lambda url, timeout: b"JPEGDATA"
 
     def tearDown(self) -> None:
         self.tt._api_call = self._orig_api
+        self.tt._download_bytes = self._orig_download_bytes
 
     @staticmethod
     def _run(fn, *a, **k):
@@ -78,6 +83,45 @@ class TelegramRemoteFlowTest(unittest.TestCase):
         return {"update_id": update_id, "message": {
             "message_id": message_id, "date": 1700000000 + update_id,
             "from": {"username": "LiorZivi"}, "chat": {"id": chat_id}, "text": text}}
+
+    @staticmethod
+    def _photo(update_id, message_id, caption, chat_id=999):
+        message = {
+            "message_id": message_id, "date": 1700000000 + update_id,
+            "from": {"username": "LiorZivi"}, "chat": {"id": chat_id},
+            "photo": [
+                {"file_id": "small", "width": 90, "height": 160, "file_size": 2},
+                {"file_id": "large", "width": 720, "height": 1280, "file_size": 8},
+            ],
+        }
+        if caption is not None:
+            message["caption"] = caption
+        return {"update_id": update_id, "message": message}
+
+    def test_photo_replies_are_downloaded_and_injected(self) -> None:
+        import activate
+        import poll
+
+        self.update_queue.append([])  # empty backlog drain
+        self._run(activate.cmd_run, SimpleNamespace(
+            step="run", session_id=None, chat_id=None, user_display="Lior"))
+
+        # A captioned screenshot and a photo sent without a caption both reach the agent as local files.
+        self.update_queue.append([
+            self._photo(6001, 21, "why is this broken?"),
+            self._photo(6002, 22, None),
+        ])
+        rc, env, _ = self._run(poll.cmd_tick, SimpleNamespace(
+            step="tick", mode="idle", session_id=None, long_poll=True, with_sleep=False))
+
+        self.assertEqual(env["action"], "inject")
+        self.assertEqual([r["text"] for r in env["replies"]], ["why is this broken?", ""])
+        for reply in env["replies"]:
+            attachment = reply["attachments"][0]
+            self.assertEqual(attachment["kind"], "photo")
+            self.assertNotIn("file_id", attachment)
+            self.assertEqual(Path(attachment["path"]).read_bytes(), b"JPEGDATA")
+        self.assertIn("view tool", env["ack_hint"])
 
     def test_full_flow(self) -> None:
         import activate

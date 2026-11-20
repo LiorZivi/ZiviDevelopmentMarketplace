@@ -10,7 +10,8 @@ token refresh, and no SSE. Two primitives cover the whole skill:
 * :func:`send_document` — multipart ``POST /sendDocument`` for requested local
   files up to Telegram's 50 MB bot limit.
 * :func:`get_updates` — ``GET /getUpdates?offset&timeout`` long-poll (inbound:
-  the user's replies in the bot DM).
+  the user's replies in the bot DM, including photos, screenshots and other
+  files, which :func:`download_file` saves locally).
 
 **Why there is no self-filtering.** ``getUpdates`` only ever returns *incoming*
 updates (messages sent *to* the bot). The bot's own outbound ``sendMessage``
@@ -273,12 +274,48 @@ def delete_webhook(token: str, *, timeout: float = 15.0) -> None:
 # --------------------------------------------------------------------------- #
 # Parsing helpers
 # --------------------------------------------------------------------------- #
-def parse_message(update: dict) -> Optional[dict]:
-    """Normalise a raw update into ``{update_id, id, text, sender, timestamp}``.
+# Message fields that carry one downloadable file, in the order they are read. A photo is handled separately
+# because Telegram sends it as a list of sizes.
+_FILE_MESSAGE_KINDS = ("document", "video", "animation", "audio", "voice", "video_note", "sticker")
+# Bot API ``getFile`` only serves files up to 20 MB.
+BOT_DOWNLOAD_LIMIT_BYTES = 20 * 1024 * 1024
 
-    Returns None for updates that are not plain text messages. ``id`` is the
-    string ``message_id`` (parallels teams-remote's reply id); ``timestamp`` is
-    the ISO-8601 form of the Telegram ``date`` (unix seconds).
+
+def _attachment_of(msg: dict) -> Optional[dict]:
+    """Describe the file a message carries (the largest size of a photo, or a document, video, voice note...)."""
+    photos = msg.get("photo")
+    if isinstance(photos, list):
+        sizes = [p for p in photos if isinstance(p, dict) and p.get("file_id")]
+        if sizes:
+            largest = max(sizes, key=lambda p: (p.get("file_size") or 0, (p.get("width") or 0) * (p.get("height") or 0)))
+            return {
+                "kind": "photo",
+                "file_id": largest["file_id"],
+                "file_name": "",
+                "mime_type": "image/jpeg",
+                "file_size": largest.get("file_size"),
+            }
+    for kind in _FILE_MESSAGE_KINDS:
+        item = msg.get(kind)
+        if isinstance(item, dict) and item.get("file_id"):
+            return {
+                "kind": kind,
+                "file_id": item["file_id"],
+                "file_name": item.get("file_name") or "",
+                "mime_type": item.get("mime_type") or "",
+                "file_size": item.get("file_size"),
+            }
+    return None
+
+
+def parse_message(update: dict) -> Optional[dict]:
+    """Normalise a raw update into ``{update_id, id, text, attachments, sender, timestamp, chat_id}``.
+
+    A message is kept when it has text or carries a file (photo, screenshot, document, voice note...). For a file,
+    ``text`` is its caption (empty when it has none) and ``attachments`` describes the file so the caller can
+    download it with :func:`download_file`. Returns None for updates that are neither. ``id`` is the string
+    ``message_id`` (parallels teams-remote's reply id); ``timestamp`` is the ISO-8601 form of the Telegram
+    ``date`` (unix seconds).
     """
     if not isinstance(update, dict):
         return None
@@ -286,7 +323,10 @@ def parse_message(update: dict) -> Optional[dict]:
     if not isinstance(msg, dict):
         return None
     text = msg.get("text")
-    if not isinstance(text, str) or not text.strip():
+    if not isinstance(text, str):
+        text = msg.get("caption") if isinstance(msg.get("caption"), str) else ""
+    attachment = _attachment_of(msg)
+    if not text.strip() and attachment is None:
         return None
     frm = msg.get("from") or {}
     sender = (
@@ -304,10 +344,36 @@ def parse_message(update: dict) -> Optional[dict]:
         "update_id": update.get("update_id"),
         "id": str(msg.get("message_id", "")),
         "text": text,
+        "attachments": [attachment] if attachment else [],
         "sender": sender,
         "timestamp": iso,
         "chat_id": str((msg.get("chat") or {}).get("id", "")),
     }
+
+
+def _download_bytes(url: str, timeout: float) -> bytes:
+    try:
+        with urllib.request.urlopen(url, timeout=timeout) as response:
+            return response.read()
+    except (urllib.error.URLError, TimeoutError, ValueError, OSError) as exc:
+        # The URL holds the bot token, so it is never part of the error message.
+        raise TelegramError(f"file download failed: {type(exc).__name__}") from exc
+
+
+def download_file(token: str, file_id: str, dest_dir: Path, base_name: str, *, timeout: float = 60.0) -> Path:
+    """Download one file the user sent (``getFile``) into ``dest_dir`` as ``base_name`` plus its extension."""
+    info = _api_call(token, "getFile", {"file_id": file_id}, timeout)
+    if not isinstance(info, dict) or not info.get("file_path"):
+        raise TelegramError("getFile returned no file_path")
+    size = info.get("file_size")
+    if isinstance(size, int) and size > BOT_DOWNLOAD_LIMIT_BYTES:
+        raise TelegramError("file exceeds the 20 MB Bot API download limit")
+    extension = Path(str(info["file_path"])).suffix or ".bin"
+    dest_dir = Path(dest_dir)
+    dest_dir.mkdir(parents=True, exist_ok=True)
+    destination = dest_dir / f"{base_name}{extension}"
+    destination.write_bytes(_download_bytes(f"{API_BASE}/file/bot{token}/{info['file_path']}", timeout))
+    return destination
 
 
 # --------------------------------------------------------------------------- #
